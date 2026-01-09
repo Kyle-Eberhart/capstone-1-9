@@ -6,6 +6,16 @@
 
 However, **if you want AI-generated questions and AI grading**, you'll need a Together.ai API key.
 
+### 🚀 Quick Setup (30 seconds)
+
+1. Get your API key from: https://together.ai/ (sign up for free)
+2. Create a file named `.env` in the project root with:
+   ```
+   TOGETHER_API_KEY=your_actual_api_key_here
+   ```
+3. Restart the app: `python run.py`
+4. Done! The app will now use AI features.
+
 ---
 
 ## Two Modes of Operation
@@ -57,18 +67,25 @@ If you want the full AI-powered experience:
 
 3. **Set up the API key:**
 
-   **Option A: Environment Variable (Recommended)**
-   ```powershell
-   # Windows PowerShell (current session only)
-   $env:TOGETHER_API_KEY="your_api_key_here"
-   ```
-
-   **Option B: Create .env file (Persistent)**
-   ```bash
-   # Create a file named .env in the project root
+   **Option A: Create .env file (Recommended - Persistent)**
+   
+   Create a file named `.env` in your project root directory (`C:\Users\eberh\capstone-1-9\.env`) with this content:
+   ```env
    TOGETHER_API_KEY=your_api_key_here
    DATABASE_URL=sqlite:///./exam_grader.db
    ```
+   
+   Replace `your_api_key_here` with your actual API key from Together.ai.
+   
+   **Option B: Environment Variable (Temporary - Current Session Only)**
+   ```powershell
+   # Windows PowerShell (only works for current PowerShell window)
+   $env:TOGETHER_API_KEY="your_api_key_here"
+   ```
+   
+   **Which method to use?**
+   - Use **Option A (.env file)** if you want the API key to persist across sessions
+   - Use **Option B (environment variable)** if you only want it for this one session
 
 4. **Restart the server:**
    ```bash
