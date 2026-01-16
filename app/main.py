@@ -7,13 +7,17 @@ from app.api.router import api_router
 from app.db.base import Base, engine
 from app.logging_config import setup_logging
 
-
+# Import seeding function
+from app.db.seed_users import seed_users
 
 # Setup logging
 setup_logging()
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Seed users if they don’t already exist
+seed_users()
 
 # Create FastAPI app
 app = FastAPI(
@@ -46,7 +50,13 @@ async def root(request: Request):
     return render_template("login.html", {"request": request, "error": error})
 
 
+@app.get("/question/{question_id}", response_class=HTMLResponse)
+async def question_page(request: Request, question_id: int):
+    """Dummy question page for testing login."""
+    # You can later render question.html template here
+    return render_template("question.html", {"request": request, "question_id": question_id})
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-
