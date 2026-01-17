@@ -42,6 +42,10 @@ def render_template(template_name: str, context: dict) -> HTMLResponse:
     html_content = template.render(**context)
     return HTMLResponse(content=html_content)
 
+@app.get("/student/dashboard", response_class=HTMLResponse)
+async def student_dashboard(request: Request):
+    """Blank student dashboard page."""
+    return render_template("student_dashboard.html", {"request": request})
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
