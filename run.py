@@ -1,4 +1,6 @@
 """Simple script to run the application."""
+from urllib.request import Request
+from app.api.exam import render_template
 import uvicorn
 from pathlib import Path
 
