@@ -5,6 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Oral Exam Grader - Login</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .exam-selector {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .exam-option {
+            margin-bottom: 10px;
+        }
+        .exam-option input[type="radio"] {
+            margin-right: 10px;
+        }
+        .exam-option label {
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .exam-description {
+            font-size: 0.9em;
+            color: #666;
+            margin-left: 25px;
+            margin-top: 5px;
+        }
+        .teacher-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .teacher-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .teacher-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -22,13 +61,65 @@
             </div>
             {% endif %}
             
-            <form method="post" action="/api/login" class="login-form">
+            {% if not username %}
+            <form method="get" action="/" class="login-form" id="usernameForm">
                 <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required autofocus>
+                    <label for="username">Enter Your Username:</label>
+                    <input type="text" id="username" name="username" required autofocus placeholder="Enter your username">
+                </div>
+                <button type="submit" class="btn btn-primary">Continue</button>
+            </form>
+            {% else %}
+            <form method="post" action="/api/login" class="login-form">
+                <input type="hidden" name="username" value="{{ username }}">
+                <div class="form-group">
+                    <label>Welcome, <strong>{{ username }}</strong></label>
+                    <p style="color: #666; font-size: 0.9em; margin-top: 5px;">Select an exam to begin:</p>
+                </div>
+                
+                <div class="exam-selector">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">Select Exam:</label>
+                    
+                    {% if available_exams %}
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Your Available Teacher Exams:</p>
+                        {% for exam in available_exams %}
+                        <div class="exam-option">
+                            <input type="radio" id="exam_{{ exam.id }}" name="exam_template_id" value="{{ exam.id }}" {% if loop.first %}checked{% endif %}>
+                            <label for="exam_{{ exam.id }}">{{ exam.title }}</label>
+                            {% if exam.description %}
+                            <div class="exam-description">{{ exam.description }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <div style="margin: 15px 0; border-top: 1px solid #e0e0e0; padding-top: 15px;">
+                            <div class="exam-option">
+                                <input type="radio" id="exam_default" name="exam_template_id" value="">
+                                <label for="exam_default">Default AI-Generated Exam</label>
+                                <div class="exam-description">AI will generate questions automatically</div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                            <p style="margin: 0; color: #856404; font-size: 0.9em;">
+                                <strong>No teacher exams available.</strong> You can still use the default AI-generated exam below.
+                            </p>
+                        </div>
+                        <div class="exam-option">
+                            <input type="radio" id="exam_default" name="exam_template_id" value="" checked>
+                            <label for="exam_default">Default AI-Generated Exam</label>
+                            <div class="exam-description">AI will generate questions automatically</div>
+                        </div>
+                    {% endif %}
                 </div>
                 <button type="submit" class="btn btn-primary">Start Exam</button>
+                <a href="/" class="btn btn-secondary" style="margin-left: 10px;">Change Username</a>
             </form>
+            {% endif %}
+            
+            <div class="teacher-link">
+                <a href="/api/teacher/login">👨‍🏫 Teacher Login</a>
+            </div>
         </div>
     </div>
 </body>

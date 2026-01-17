@@ -24,6 +24,8 @@ def render_template(template_name: str, context: dict) -> HTMLResponse:
 @router.get("/exam/{exam_id}", response_class=HTMLResponse)
 async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)):
     """Get current question for exam."""
+    from app.db.models import Exam, ExamTemplate
+    
     exam_service = ExamService()
     question = await exam_service.get_current_question(db, exam_id)
     
@@ -34,12 +36,36 @@ async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)
     # Get exam status
     status = exam_service.get_exam_status(db, exam_id)
     
+    # Get exam template to check time limits
+    exam = ExamRepository.get(db, exam_id)
+    time_limit_type = None
+    time_limit_minutes = None
+    if exam and exam.exam_template_id:
+        exam_template = db.query(ExamTemplate).filter(ExamTemplate.id == exam.exam_template_id).first()
+        if exam_template:
+            time_limit_type = exam_template.time_limit_type
+            time_limit_minutes = exam_template.time_limit_minutes
+    
+    # Parse rubric if it's JSON format
+    rubric_parsed = None
+    if question.rubric:
+        import json
+        try:
+            rubric_data = json.loads(question.rubric)
+            if isinstance(rubric_data, dict) and "type" in rubric_data and "criteria" in rubric_data:
+                rubric_parsed = rubric_data
+        except:
+            pass
+    
     return render_template("question.html", {
         "request": request,
         "question": question,
         "exam_id": exam_id,
         "question_number": status["questions_completed"] + 1,
-        "total_questions": status["total_questions"]
+        "total_questions": status["total_questions"],
+        "rubric_parsed": rubric_parsed,
+        "time_limit_type": time_limit_type,
+        "time_limit_minutes": time_limit_minutes
     })
 
 
@@ -66,6 +92,21 @@ async def submit_answer(
     
     # Go to next question
     return RedirectResponse(url=f"/api/exam/{exam_id}", status_code=302)
+
+
+@router.get("/exam/{exam_id}/exit")
+async def exit_exam(request: Request, exam_id: int, db: Session = Depends(get_db)):
+    """Exit exam early - mark as incomplete and return to home."""
+    exam = ExamRepository.get(db, exam_id)
+    if exam and exam.status == "in_progress":
+        # Mark exam as incomplete (don't calculate final grade)
+        ExamRepository.update_status(db, exam_id, "incomplete", None, "Exam exited early by student")
+    
+    # Clear cookies and redirect to home
+    response = RedirectResponse(url="/", status_code=302)
+    response.delete_cookie(key="exam_id")
+    response.delete_cookie(key="username")
+    return response
 
 
 @router.get("/exam/{exam_id}/complete", response_class=HTMLResponse)

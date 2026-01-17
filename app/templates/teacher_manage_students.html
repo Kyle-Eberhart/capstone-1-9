@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Students - Teacher Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .students-list {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .student-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .student-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        .student-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .student-exams {
+            margin-top: 15px;
+        }
+        .exam-badge {
+            display: inline-block;
+            background: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            margin: 5px 5px 5px 0;
+            font-size: 0.85em;
+            border: 1px solid #667eea;
+        }
+        .exam-badge.active {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .exam-badge.inactive {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .add-student-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 40px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+        .remove-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link" style="background: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+            <a href="/api/teacher/dashboard">← Back to Dashboard</a>
+        </div>
+        
+        <div class="students-list">
+            <h2>Manage Students</h2>
+            <p class="subtitle">View and manage all students who have access to your exams</p>
+            
+            {% if students %}
+                {% for student in students %}
+                <div class="student-item">
+                    <div class="student-header">
+                        <h3>{{ student.username }}</h3>
+                    </div>
+                    <div class="student-stats">
+                        <div class="stat-item">
+                            <strong>Total Exams:</strong> {{ student.total_exams }}
+                        </div>
+                        <div class="stat-item">
+                            <strong>Active Access:</strong> {{ student.active_exams }}
+                        </div>
+                    </div>
+                    <div class="student-exams">
+                        <strong style="display: block; margin-bottom: 10px;">Exams with Access:</strong>
+                        {% for exam in student.exams %}
+                        <span class="exam-badge {% if exam.is_active %}active{% else %}inactive{% endif %}">
+                            {{ exam.exam_title }}
+                            <form method="post" action="/api/teacher/students/remove" style="display: inline; margin-left: 8px;">
+                                <input type="hidden" name="student_username" value="{{ student.username }}">
+                                <input type="hidden" name="exam_template_id" value="{{ exam.exam_id }}">
+                                <button type="submit" class="remove-btn" onclick="return confirm('Remove {{ student.username }} from {{ exam.exam_title }}?')">×</button>
+                            </form>
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No students have access to your exams yet.</p>
+                    <p style="margin-top: 10px;">Add students to exams using the form below or from individual exam pages.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="add-student-section">
+            <h2>Add Student to Exam</h2>
+            <form method="post" action="/api/teacher/students/add">
+                <div class="form-group">
+                    <label for="student_username">Student Username *</label>
+                    <input type="text" id="student_username" name="student_username" required placeholder="Enter student username">
+                </div>
+                <div class="form-group">
+                    <label for="exam_template_id">Select Exam *</label>
+                    <select id="exam_template_id" name="exam_template_id" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 16px; font-family: inherit;">
+                        <option value="">-- Select an exam --</option>
+                        {% for exam in exam_templates %}
+                        <option value="{{ exam.id }}">{{ exam.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Student to Exam</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

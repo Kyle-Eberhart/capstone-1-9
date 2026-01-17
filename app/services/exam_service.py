@@ -1,7 +1,7 @@
 """Exam service for managing exam workflow."""
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from app.db.models import Exam, Question
+from app.db.models import Exam, Question, ExamTemplate, CustomQuestion, ExamAccess
 from app.db.repo import ExamRepository, QuestionRepository, StudentRepository
 from app.core.grading.generator import QuestionGenerator
 from app.core.grading.grader import AnswerGrader
@@ -44,35 +44,80 @@ class ExamService:
             self._final_grade_calculator = FinalGradeCalculator()
         return self._final_grade_calculator
     
-    async def start_exam(self, db: Session, username: str) -> Exam:
+    async def start_exam(self, db: Session, username: str, exam_template_id: Optional[int] = None) -> Exam:
         """Start a new exam session for a student."""
         student = StudentRepository.get_or_create(db, username)
-        exam = ExamRepository.create(db, student.id)
         
-        # Generate initial questions
-        for i in range(1, self.settings.exam_question_count + 1):
-            try:
-                generated = await self.question_generator.generate_question(
-                    topic="Computer Science",
-                    difficulty="Intermediate",
-                    question_number=i
-                )
+        # If exam_template_id is provided, use teacher-created exam
+        if exam_template_id:
+            # Check if student has access
+            access = db.query(ExamAccess).filter(
+                ExamAccess.exam_template_id == exam_template_id,
+                ExamAccess.student_username == username,
+                ExamAccess.is_active == True
+            ).first()
+            
+            if not access:
+                raise ValueError(f"Student {username} does not have access to this exam")
+            
+            # Get exam template
+            exam_template = db.query(ExamTemplate).filter(
+                ExamTemplate.id == exam_template_id,
+                ExamTemplate.is_active == True
+            ).first()
+            
+            if not exam_template:
+                raise ValueError("Exam template not found or inactive")
+            
+            # Create exam linked to template
+            exam = ExamRepository.create(db, student.id, exam_template_id)
+            
+            # Load questions from template
+            custom_questions = db.query(CustomQuestion).filter(
+                CustomQuestion.exam_template_id == exam_template_id
+            ).order_by(CustomQuestion.question_number).all()
+            
+            if not custom_questions:
+                raise ValueError("Exam template has no questions")
+            
+            # Create exam questions from template
+            for custom_q in custom_questions:
                 QuestionRepository.create(
                     db,
                     exam.id,
-                    i,
-                    generated.question_text,
-                    generated.context,
-                    generated.rubric
+                    custom_q.question_number,
+                    custom_q.question_text,
+                    custom_q.context,
+                    custom_q.rubric
                 )
-            except Exception as e:
-                logger.warning(f"Error generating question {i} (likely no API key): {e}")
-                # Create different fallback questions based on question number
-                generated = await self.question_generator.generate_question(
-                    topic="Computer Science",
-                    difficulty="Intermediate",
-                    question_number=i
-                )
+        else:
+            # Default: Generate AI questions (original behavior)
+            exam = ExamRepository.create(db, student.id)
+            
+            # Generate initial questions
+            for i in range(1, self.settings.exam_question_count + 1):
+                try:
+                    generated = await self.question_generator.generate_question(
+                        topic="Computer Science",
+                        difficulty="Intermediate",
+                        question_number=i
+                    )
+                    QuestionRepository.create(
+                        db,
+                        exam.id,
+                        i,
+                        generated.question_text,
+                        generated.context,
+                        generated.rubric
+                    )
+                except Exception as e:
+                    logger.warning(f"Error generating question {i} (likely no API key): {e}")
+                    # Create different fallback questions based on question number
+                    generated = await self.question_generator.generate_question(
+                        topic="Computer Science",
+                        difficulty="Intermediate",
+                        question_number=i
+                    )
 
         return exam
     

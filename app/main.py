@@ -1,10 +1,13 @@
 """Main FastAPI application."""
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
+from sqlalchemy.orm import Session
 from app.api.router import api_router
 from app.db.base import Base, engine
+from app.db.session import get_db
+from app.db.models import ExamTemplate
 from app.logging_config import setup_logging
 
 
@@ -40,10 +43,42 @@ def render_template(template_name: str, context: dict) -> HTMLResponse:
 
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
+async def root(request: Request, db: Session = Depends(get_db)):
     """Root page - login form."""
     error = request.query_params.get("error", "")
-    return render_template("login.html", {"request": request, "error": error})
+    username = request.query_params.get("username", "")
+    
+    available_exams = []
+    if username:
+        # Get exams this student has access to
+        from app.db.models import ExamTemplate, ExamAccess
+        try:
+            # Get all active exam templates that this student has access to
+            accesses = db.query(ExamAccess).filter(
+                ExamAccess.student_username == username,
+                ExamAccess.is_active == True
+            ).all()
+            
+            exam_template_ids = [access.exam_template_id for access in accesses]
+            
+            if exam_template_ids:
+                # Only show active exams that the student has access to
+                available_exams = db.query(ExamTemplate).filter(
+                    ExamTemplate.id.in_(exam_template_ids),
+                    ExamTemplate.is_active == True
+                ).all()
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Error loading accessible exams: {e}")
+            available_exams = []
+    
+    return render_template("login.html", {
+        "request": request, 
+        "error": error,
+        "available_exams": available_exams,
+        "username": username
+    })
 
 
 if __name__ == "__main__":

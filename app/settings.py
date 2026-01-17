@@ -16,6 +16,16 @@ class Settings(BaseSettings):
     # Database Configuration
     database_url: str = "sqlite:///./exam_grader.db"
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Convert relative path to absolute if it's a relative SQLite path
+        if self.database_url.startswith("sqlite:///./"):
+            from pathlib import Path
+            db_name = self.database_url.replace("sqlite:///./", "")
+            project_root = Path(__file__).parent.parent
+            db_path = project_root / db_name
+            self.database_url = f"sqlite:///{db_path.absolute()}"
+    
     # Application Settings
     secret_key: str = "change-this-in-production"
     environment: str = "development"

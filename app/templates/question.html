@@ -13,6 +13,17 @@
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {{ (question_number / total_questions * 100) }}%"></div>
             </div>
+            {% if time_limit_type and time_limit_type != 'none' and time_limit_minutes %}
+            <div id="timer-container" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <div id="timer-display" style="font-size: 1.2em; font-weight: bold; color: #667eea;">
+                    {% if time_limit_type == 'per_question' %}
+                        Time remaining for this question: <span id="timer">--:--</span>
+                    {% else %}
+                        Time remaining for exam: <span id="timer">--:--</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
         
         <div class="question-card">
@@ -31,7 +42,22 @@
             {% if question.rubric %}
             <div class="rubric-box">
                 <h3>Grading Rubric</h3>
-                <p>{{ question.rubric }}</p>
+                {% if rubric_parsed %}
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        {% for criterion in rubric_parsed.criteria %}
+                            <li>
+                                <strong>{{ criterion.name }}:</strong>
+                                {% if rubric_parsed.type == 'percentage' %}
+                                    {{ criterion.points }} points
+                                {% else %}
+                                    {{ criterion.grade }}
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>{{ question.rubric }}</p>
+                {% endif %}
             </div>
             {% endif %}
             
@@ -48,12 +74,106 @@
                         placeholder="Type your answer here..."></textarea>
                 </div>
                 
-                <div class="form-actions">
+                <div class="form-actions" style="display: flex; justify-content: space-between; align-items: center;">
+                    <a href="/api/exam/{{ exam_id }}/exit" class="btn btn-secondary" id="exit-btn" onclick="return confirmExit()">Exit Test</a>
                     <button type="submit" class="btn btn-primary">Submit Answer</button>
                 </div>
             </form>
         </div>
     </div>
+    
+    <script>
+        {% if time_limit_type and time_limit_type != 'none' and time_limit_minutes %}
+        // Time limit functionality
+        let timeRemaining = {{ time_limit_minutes }} * 60; // Convert to seconds
+        let timerInterval = null;
+        let examStartTime = null;
+        
+        // Check if this is per-question or total exam time
+        const isPerQuestion = '{{ time_limit_type }}' === 'per_question';
+        
+        // Initialize timer
+        function initTimer() {
+            // Get start time from sessionStorage or set it
+            const storageKey = isPerQuestion ? 
+                `question_start_${exam_id}_${question_number}` : 
+                `exam_start_${exam_id}`;
+            
+            const storedStart = sessionStorage.getItem(storageKey);
+            if (storedStart) {
+                // Calculate elapsed time
+                const elapsed = Math.floor((Date.now() - parseInt(storedStart)) / 1000);
+                timeRemaining = {{ time_limit_minutes }} * 60 - elapsed;
+            } else {
+                // Set start time
+                sessionStorage.setItem(storageKey, Date.now().toString());
+            }
+            
+            // Start timer
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        function updateTimer() {
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                handleTimeUp();
+                return;
+            }
+            
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('timer').textContent = display;
+            
+            // Change color when time is running low
+            if (timeRemaining <= 60) {
+                document.getElementById('timer').style.color = '#dc3545';
+            } else if (timeRemaining <= 300) {
+                document.getElementById('timer').style.color = '#ffc107';
+            }
+            
+            timeRemaining--;
+        }
+        
+        function handleTimeUp() {
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('timer').style.color = '#dc3545';
+            
+            alert('Time is up! Your answer will be submitted automatically.');
+            
+            // Auto-submit the form
+            const form = document.querySelector('.answer-form');
+            if (form) {
+                const answerInput = document.getElementById('answer');
+                if (!answerInput.value.trim()) {
+                    answerInput.value = '[No answer provided - time expired]';
+                }
+                form.submit();
+            }
+        }
+        
+        // Initialize timer when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            initTimer();
+        });
+        
+        // Clean up timer when leaving page
+        window.addEventListener('beforeunload', function() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+        });
+        {% endif %}
+        
+        function confirmExit() {
+            if (confirm('Are you sure you want to exit the test? This will end the test and you will be returned to the home page.')) {
+                return true;
+            }
+            return false;
+        }
+    </script>
 </body>
 </html>
 
