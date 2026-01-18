@@ -159,6 +159,17 @@ python run.py
 
 Then open **http://localhost:8000** in your browser!
 
+Current working Login
+(Both have same results until dashboards are added)
+
+Student: 
+student@test.com
+password123
+
+Teacher:
+teacher@test.com
+password123
+
 ### Manual Setup (5 Steps)
 
 1. **Clone the repository:**
@@ -178,7 +189,7 @@ Then open **http://localhost:8000** in your browser!
    python -m app.db.init_db
    ```
 
-4. **Run the application:**
+4. **Run the application(Run seed_users.py once):**
    ```bash
    python run.py
    ```

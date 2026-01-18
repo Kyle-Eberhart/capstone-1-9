@@ -49,14 +49,14 @@
     <div class="container">
         <div class="login-card">
             <h1>AI Oral Exam Grader</h1>
-            <p class="subtitle">Enter your username to begin your exam</p>
+            <p class="subtitle">Enter your email and password to begin your exam</p>
             
             {% if error %}
-            <div class="error-message">
-                {% if error == "username_required" %}
-                Please enter a username.
+            <div class="error-message" style="color:red; margin-bottom: 10px;">
+                {% if error == "invalid_login" %}
+                    Invalid login
                 {% else %}
-                {{ error }}
+                    {{ error }}
                 {% endif %}
             </div>
             {% endif %}
@@ -111,6 +111,12 @@
                             <div class="exam-description">AI will generate questions automatically</div>
                         </div>
                     {% endif %}
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Start Exam</button>
                 <a href="/" class="btn btn-secondary" style="margin-left: 10px;">Change Username</a>
@@ -124,4 +130,3 @@
     </div>
 </body>
 </html>
-

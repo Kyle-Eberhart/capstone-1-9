@@ -5,6 +5,16 @@ from sqlalchemy.sql import func
 from app.db.base import Base
 
 
+
+class User(Base):
+    """User login model."""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(100), unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String(50), nullable=False)  # "student" or "teacher"
+    
 class Student(Base):
     """Student model."""
     __tablename__ = "students"

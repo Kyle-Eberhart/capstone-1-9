@@ -10,13 +10,17 @@ from app.db.session import get_db
 from app.db.models import ExamTemplate
 from app.logging_config import setup_logging
 
-
+# Import seeding function
+from app.db.seed_users import seed_users
 
 # Setup logging
 setup_logging()
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Seed users if they don’t already exist
+seed_users()
 
 # Create FastAPI app
 app = FastAPI(
@@ -41,6 +45,10 @@ def render_template(template_name: str, context: dict) -> HTMLResponse:
     html_content = template.render(**context)
     return HTMLResponse(content=html_content)
 
+@app.get("/student/dashboard", response_class=HTMLResponse)
+async def student_dashboard(request: Request):
+    """Blank student dashboard page."""
+    return render_template("student_dashboard.html", {"request": request})
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request, db: Session = Depends(get_db)):
@@ -81,7 +89,13 @@ async def root(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@app.get("/question/{question_id}", response_class=HTMLResponse)
+async def question_page(request: Request, question_id: int):
+    """Dummy question page for testing login."""
+    # You can later render question.html template here
+    return render_template("question.html", {"request": request, "question_id": question_id})
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-
