@@ -24,11 +24,17 @@ async def login(
         # Invalid login → stay on login page with error
         return RedirectResponse(url="/?error=invalid_login", status_code=302)
     
-    # Successful login → start exam
+    # If the user is a student, redirect to student dashboard
+    if user.role == "student":
+        response = RedirectResponse(url="/student/dashboard", status_code=302)
+        response.set_cookie(key="username", value=email)
+        return response
+    
+    # Otherwise (teacher or other roles) → start exam as before
     exam_service = ExamService()
     exam = await exam_service.start_exam(db, email)  # email used as placeholder username
     
-    # Redirect to the normal exam route (like original code)
+    # Redirect to the normal exam route
     response = RedirectResponse(url=f"/api/exam/{exam.id}", status_code=302)
     response.set_cookie(key="exam_id", value=str(exam.id))
     response.set_cookie(key="username", value=email)
