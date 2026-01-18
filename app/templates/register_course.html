@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register New Course - Teacher Portal</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .register-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .register-card h1 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .form-group input {
+            text-transform: uppercase;
+        }
+        .sections-container {
+            margin-bottom: 15px;
+        }
+        .section-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .section-input-group input {
+            flex: 1;
+            text-transform: none;
+        }
+        .btn-remove-section {
+            padding: 8px 15px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .btn-remove-section:hover {
+            background-color: #da190b;
+        }
+        .btn-add-section {
+            padding: 8px 15px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        .btn-add-section:hover {
+            background-color: #0b7dda;
+        }
+        .quarter-year-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .btn-secondary {
+            background-color: #666;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 100%;
+            margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .btn-secondary:hover {
+            background-color: #555;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+        }
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="register-card">
+            <h1>Register New Course</h1>
+            
+            {% if error %}
+            <div class="error-message">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="post" action="/teacher/register-course" id="register-course-form">
+                <div class="form-group">
+                    <label for="course_number">Course Number:</label>
+                    <input 
+                        type="text" 
+                        id="course_number" 
+                        name="course_number" 
+                        required 
+                        autofocus
+                        placeholder="e.g., CSC376"
+                        pattern="[A-Za-z0-9]+"
+                        title="Course number (letters and numbers only)"
+                    >
+                    <p class="info-text">Enter the course code (will be converted to uppercase automatically)</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Sections:</label>
+                    <div class="sections-container" id="sections-container">
+                        <div class="section-input-group">
+                            <input 
+                                type="text" 
+                                name="sections[]" 
+                                required 
+                                placeholder="e.g., 424"
+                                pattern="[0-9]+"
+                                title="Section number (numbers only)"
+                            >
+                        </div>
+                    </div>
+                    <button type="button" class="btn-add-section" id="add-section-btn">Add Another Section</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Quarter / Year:</label>
+                    <div class="quarter-year-group">
+                        <div>
+                            <label for="quarter" style="margin-bottom: 8px;">Quarter:</label>
+                            <select id="quarter" name="quarter" required>
+                                <option value="">Select Quarter</option>
+                                <option value="Fall">Fall</option>
+                                <option value="Winter">Winter</option>
+                                <option value="Spring">Spring</option>
+                                <option value="Summer">Summer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="year" style="margin-bottom: 8px;">Year:</label>
+                                <select id="year" name="year" required>
+                                    <option value="">Select Year</option>
+                                    {% for year in year_options %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-primary">Register Course</button>
+                <a href="/teacher/dashboard" class="btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auto-uppercase course number input
+        document.getElementById('course_number').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+
+        // Add section button functionality
+        document.getElementById('add-section-btn').addEventListener('click', function() {
+            const container = document.getElementById('sections-container');
+            const sectionCount = container.children.length;
+            
+            const newSectionGroup = document.createElement('div');
+            newSectionGroup.className = 'section-input-group';
+            newSectionGroup.innerHTML = `
+                <input 
+                    type="text" 
+                    name="sections[]" 
+                    required 
+                    placeholder="e.g., 424"
+                    pattern="[0-9]+"
+                    title="Section number (numbers only)"
+                >
+                <button type="button" class="btn-remove-section" onclick="this.parentElement.remove()">Remove</button>
+            `;
+            
+            container.appendChild(newSectionGroup);
+            
+            // Focus on new input
+            newSectionGroup.querySelector('input').focus();
+        });
+
+        // Ensure at least one section exists
+        document.getElementById('register-course-form').addEventListener('submit', function(e) {
+            const sections = document.querySelectorAll('input[name="sections[]"]');
+            if (sections.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one section.');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
