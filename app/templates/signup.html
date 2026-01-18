@@ -3,36 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Oral Exam Grader - Login</title>
+    <title>AI Oral Exam Grader - Create Account</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
         <div class="login-card">
             <h1>AI Oral Exam Grader</h1>
-            <p class="subtitle">Enter your email and password to begin your exam</p>
+            <p class="subtitle">Create a new account</p>
             
             {% if error %}
             <div class="error-message" style="color:red; margin-bottom: 10px;">
-                {% if error == "invalid_login" %}
-                    Invalid login
+                {% if error == "email_exists" %}
+                    An account with this email already exists. Please use a different email or <a href="/">log in</a>.
                 {% else %}
                     {{ error }}
                 {% endif %}
             </div>
             {% endif %}
             
-            {% if success %}
-            <div class="success-message" style="color:green; margin-bottom: 10px;">
-                {% if success == "account_created" %}
-                    Account created successfully! Please log in with your email and password.
-                {% else %}
-                    {{ success }}
-                {% endif %}
-            </div>
-            {% endif %}
-            
-            <form method="post" action="/api/login" class="login-form">
+            <form method="post" action="/api/signup" class="login-form">
                 <div class="form-group">
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required autofocus>
@@ -41,11 +31,18 @@
                     <label for="password">Password:</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Start Exam</button>
+                <div class="form-group">
+                    <label for="role">Account Type:</label>
+                    <select id="role" name="role" required>
+                        <option value="student" selected>Student</option>
+                        <option value="teacher">Teacher</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Account</button>
             </form>
             
             <p style="text-align: center; margin-top: 20px;">
-                Don't have an account? <a href="/signup">Create one here</a>
+                Already have an account? <a href="/">Log in here</a>
             </p>
         </div>
     </div>

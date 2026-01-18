@@ -51,7 +51,14 @@ async def student_dashboard(request: Request):
 async def root(request: Request):
     """Root page - login form."""
     error = request.query_params.get("error", "")
-    return render_template("login.html", {"request": request, "error": error})
+    success = request.query_params.get("success", "")
+    return render_template("login.html", {"request": request, "error": error, "success": success})
+
+@app.get("/signup", response_class=HTMLResponse)
+async def signup_page(request: Request):
+    """Signup page - create new account."""
+    error = request.query_params.get("error", "")
+    return render_template("signup.html", {"request": request, "error": error})
 
 
 @app.get("/question/{question_id}", response_class=HTMLResponse)
