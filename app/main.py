@@ -88,14 +88,14 @@ async def teacher_dashboard(request: Request, db: Session = Depends(get_db)):
     # Query courses for this instructor from database
     courses = db.query(Course).filter(Course.instructor_id == user.id).all()
     
-    # Query open exams for this instructor (published exams)
+    # Query open exams for this instructor (only published exams that students can take)
     # Join with Student to get student info, then try to match with User
     open_exams_query = db.query(Exam).outerjoin(
         Student, Exam.student_id == Student.id
     ).filter(
         Exam.instructor_id == user.id,
         Exam.date_published.isnot(None)  # Only published exams
-    )
+    ).order_by(Exam.date_published.desc())  # Show most recent first
     
     # Build exam data with student info
     open_exams = []
@@ -456,14 +456,15 @@ async def create_exam(
             # Some succeeded, some failed
             return RedirectResponse(url=f"/teacher/dashboard?warning=Some exams created successfully. Issues: {'; '.join(errors)}", status_code=302)
         
-        # Success - redirect to dashboard (all exams created)
-        if len(created_exams) == 1:
-            # If only one exam created, redirect to its course page
+        # Success - redirect to review page for the first exam
+        # If multiple exams created, they all have the same LLM prompt, so review one to update all
+        if len(created_exams) >= 1:
+            # Redirect to review page for the first exam
             exam = created_exams[0]
-            return RedirectResponse(url=f"/teacher/course/{course_number.upper()}/{exam.section}?exam_created={exam.exam_id}", status_code=302)
+            return RedirectResponse(url=f"/teacher/exam/{exam.exam_id}/review", status_code=302)
         else:
-            # Multiple exams created, redirect to dashboard
-            return RedirectResponse(url=f"/teacher/dashboard?success=exams_created&count={len(created_exams)}", status_code=302)
+            # This shouldn't happen, but redirect to dashboard
+            return RedirectResponse(url=f"/teacher/dashboard?error=No exams created", status_code=302)
             
     except Exception as e:
         # Catch any unexpected errors
@@ -530,6 +531,145 @@ async def course_page(
         "open_exams": open_exams,
         "closed_exams": closed_exams
     })
+
+@app.get("/teacher/exam/{exam_id}/review", response_class=HTMLResponse)
+async def exam_review_page(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Display exam review page where instructor can edit and publish."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database (using exam_id string, not id integer)
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    
+    if not exam:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Verify exam belongs to this instructor
+    if exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=access_denied", status_code=302)
+    
+    # Get all exams with the same course_number, exam_name, and quarter_year (in case multiple sections)
+    related_exams = db.query(Exam).filter(
+        Exam.instructor_id == user.id,
+        Exam.course_number == exam.course_number,
+        Exam.exam_name == exam.exam_name,
+        Exam.quarter_year == exam.quarter_year,
+        Exam.date_published.is_(None)  # Only unpublished
+    ).all()
+    
+    error = request.query_params.get("error", "")
+    success = request.query_params.get("success", "")
+    
+    return render_template("exam_review.html", {
+        "request": request,
+        "exam": exam,
+        "related_exams": related_exams,
+        "error": error,
+        "success": success
+    })
+
+@app.post("/teacher/exam/{exam_id}/update")
+async def update_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Update exam LLM prompt/criteria."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Get form data
+    form_data = await request.form()
+    llm_prompt = form_data.get("llm_prompt", "").strip()
+    
+    if not llm_prompt:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=LLM prompt cannot be empty", status_code=302)
+    
+    # Update this exam and all related unpublished exams with the same criteria
+    related_exams = db.query(Exam).filter(
+        Exam.instructor_id == user.id,
+        Exam.course_number == exam.course_number,
+        Exam.exam_name == exam.exam_name,
+        Exam.quarter_year == exam.quarter_year,
+        Exam.date_published.is_(None)  # Only unpublished
+    ).all()
+    
+    for related_exam in related_exams:
+        related_exam.final_explanation = llm_prompt
+    
+    try:
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?success=Exam criteria updated", status_code=302)
+    except Exception as e:
+        db.rollback()
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Error updating exam: {str(e)}", status_code=302)
+
+@app.post("/teacher/exam/{exam_id}/publish")
+async def publish_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Publish exam so it appears in open exams and is available to students."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Get all related exams (same course, exam name, quarter) that are unpublished
+    related_exams = db.query(Exam).filter(
+        Exam.instructor_id == user.id,
+        Exam.course_number == exam.course_number,
+        Exam.exam_name == exam.exam_name,
+        Exam.quarter_year == exam.quarter_year,
+        Exam.date_published.is_(None)  # Only unpublished
+    ).all()
+    
+    # Publish all related exams at once
+    now = datetime.now(timezone.utc)
+    for related_exam in related_exams:
+        related_exam.date_published = now
+        related_exam.status = "active"  # Change from "not_started" to "active"
+    
+    try:
+        db.commit()
+        return RedirectResponse(url=f"/teacher/dashboard?success=Exam published successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Error publishing exam: {str(e)}", status_code=302)
 
 @app.get("/teacher/exam/{exam_id}", response_class=HTMLResponse)
 async def exam_details_page(
