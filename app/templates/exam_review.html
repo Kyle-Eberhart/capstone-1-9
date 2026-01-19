@@ -276,6 +276,16 @@
                         {% endif %}
                     </div>
                 </div>
+                <div class="info-item">
+                    <div class="info-label">Timed Exam</div>
+                    <div class="info-value">
+                        {% if exam.is_timed %}
+                            <span style="color: #2196F3; font-weight: 600;">Yes - {{ exam.duration_hours }}h {{ exam.duration_minutes }}m</span>
+                        {% else %}
+                            <span style="color: #666;">No</span>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 

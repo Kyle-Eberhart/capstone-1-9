@@ -387,6 +387,21 @@ async def create_exam(
         exam_name = form_data.get("exam_name", "").strip()
         llm_prompt = form_data.get("llm_prompt", "").strip()
         
+        # Extract timed exam fields
+        is_timed = form_data.get("is_timed", "no") == "yes"
+        duration_hours = None
+        duration_minutes = None
+        
+        if is_timed:
+            try:
+                duration_hours = int(form_data.get("duration_hours", 0))
+                duration_minutes = int(form_data.get("duration_minutes", 0))
+                # Validate duration is greater than 0
+                if duration_hours == 0 and duration_minutes == 0:
+                    return RedirectResponse(url="/teacher/create-exam?error=Duration must be greater than 0 for timed exams", status_code=302)
+            except (ValueError, TypeError):
+                return RedirectResponse(url="/teacher/create-exam?error=Invalid duration values", status_code=302)
+        
         # Validate required fields
         if not course_number:
             return RedirectResponse(url="/teacher/create-exam?error=Course number is required", status_code=302)
@@ -499,7 +514,11 @@ async def create_exam(
                 status="not_started",  # Not yet published
                 # Store LLM prompt in final_explanation field for now (or create a separate field later)
                 # For now, we'll store it in final_explanation temporarily
-                final_explanation=llm_prompt
+                final_explanation=llm_prompt,
+                # Timed exam fields
+                is_timed=is_timed,
+                duration_hours=duration_hours if is_timed else None,
+                duration_minutes=duration_minutes if is_timed else None
             )
             
             try:

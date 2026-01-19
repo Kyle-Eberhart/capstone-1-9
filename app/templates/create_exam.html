@@ -219,6 +219,47 @@
                     >
                 </div>
                 
+                <!-- Timed Exam Selection -->
+                <div class="form-group">
+                    <label>Timed Exam:</label>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: inline-flex; align-items: center; margin-right: 20px;">
+                            <input type="radio" name="is_timed" value="no" checked onchange="toggleDurationFields()" style="margin-right: 8px;">
+                            No
+                        </label>
+                        <label style="display: inline-flex; align-items: center;">
+                            <input type="radio" name="is_timed" value="yes" onchange="toggleDurationFields()" style="margin-right: 8px;">
+                            Yes
+                        </label>
+                    </div>
+                    <div id="duration-fields" style="display: none; margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                        <label style="margin-bottom: 8px; display: block;">Exam Duration:</label>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div>
+                                <select id="duration_hours" name="duration_hours" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2" selected>2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                </select>
+                                <label for="duration_hours" style="margin-left: 5px;">hours</label>
+                            </div>
+                            <div>
+                                <select id="duration_minutes" name="duration_minutes" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="0" selected>0</option>
+                                    <option value="15">15</option>
+                                    <option value="30">30</option>
+                                    <option value="45">45</option>
+                                </select>
+                                <label for="duration_minutes" style="margin-left: 5px;">minutes</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- LLM Prompt Input -->
                 <div class="form-group llm-prompt-group">
                     <label for="llm_prompt">Exam Instructions for AI Question Generator:</label>

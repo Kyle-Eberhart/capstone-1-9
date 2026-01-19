@@ -52,6 +52,12 @@ class Exam(Base):
     date_published = Column(DateTime(timezone=True), nullable=True)  # When exam was published
     date_end_availability = Column(DateTime(timezone=True), nullable=True)  # When exam availability ends
     
+    # Timed exam fields
+    is_timed = Column(Boolean, default=False, nullable=False)  # Whether the exam is timed
+    duration_hours = Column(Integer, nullable=True)  # Exam duration in hours (if timed)
+    duration_minutes = Column(Integer, nullable=True)  # Exam duration in minutes (if timed)
+    student_exam_start_time = Column(DateTime(timezone=True), nullable=True)  # When student started the exam
+    
     # Student exam session fields (existing)
     student_id = Column(Integer, ForeignKey("students.id"), nullable=True)  # Nullable for teacher-created exams
     status = Column(String(50), default="in_progress")  # in_progress, completed, active, not_started
