@@ -163,17 +163,9 @@
             font-weight: bold;
         }
 
-        .closed-exams-select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.95em;
-            margin-bottom: 15px;
-        }
-
-        .closed-exams-results {
-            margin-top: 15px;
+        .status-terminated {
+            color: #dc3545;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -261,33 +253,57 @@
             <!-- Closed Exams Section -->
             <div class="dashboard-section full-width">
                 <h2>Closed Exams</h2>
-                <select id="course-section-select" class="closed-exams-select">
-                    <option value="">Select a Course / Section</option>
-                    {% for course in courses %}
-                    <option value="{{ course.course_number }}-{{ course.section }}">{{ course.course_number }} - Section {{ course.section }}</option>
-                    {% endfor %}
-                </select>
-                <div id="closed-exams-results" class="closed-exams-results">
-                    <!-- Results will be loaded here via JavaScript or server-side -->
+                <div class="open-exams-container">
+                    {% if closed_exams %}
+                    <table class="exams-table">
+                        <thead>
+                            <tr>
+                                <th>Exam ID</th>
+                                <th>Student ID</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Status</th>
+                                <th>Percent</th>
+                                <th>Grade</th>
+                                <th>Date/Time Started</th>
+                                <th>Date/Time Completed</th>
+                                <th>Date/Time Published</th>
+                                <th>Date/Time Terminated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in closed_exams %}
+                            <tr>
+                                <td><a href="/teacher/exam/{{ exam.exam_id }}">{{ exam.exam_id }}</a></td>
+                                <td>{{ exam.student_id or 'N/A' }}</td>
+                                <td>{{ exam.first_name or 'N/A' }}</td>
+                                <td>{{ exam.last_name or 'N/A' }}</td>
+                                <td>
+                                    {% if exam.status == 'terminated' %}
+                                        <span class="status-terminated">Terminated</span>
+                                    {% elif exam.status == 'completed' %}
+                                        <span class="status-completed">Completed</span>
+                                    {% else %}
+                                        <span class="status-not-started">{{ exam.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
+                                <td>{{ exam.grade or 'N/A' }}</td>
+                                <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
+                                <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
+                                <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
+                                <td>{{ exam.date_end_availability.strftime('%m/%d/%Y %I:%M %p') if exam.date_end_availability else 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="no-courses" style="padding: 20px;">No closed exams at this time</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Handle closed exams dropdown selection
-        document.getElementById('course-section-select').addEventListener('change', function() {
-            const value = this.value;
-            const resultsDiv = document.getElementById('closed-exams-results');
-            
-            if (value) {
-                const [courseNumber, section] = value.split('-');
-                // Redirect to course page for closed exams
-                window.location.href = `/teacher/course/${courseNumber}/${section}/exams/closed`;
-            } else {
-                resultsDiv.innerHTML = '';
-            }
-        });
-    </script>
 </body>
 </html>

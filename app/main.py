@@ -140,11 +140,69 @@ async def teacher_dashboard(request: Request, db: Session = Depends(get_db)):
             "date_published": exam.date_published
         })
     
+    # Query closed exams for this instructor (terminated or completed)
+    now = datetime.now(timezone.utc)
+    closed_exams_query = db.query(Exam).outerjoin(
+        Student, Exam.student_id == Student.id
+    ).filter(
+        Exam.instructor_id == user.id,
+        Exam.date_published.isnot(None),  # Must have been published
+        or_(
+            Exam.status == "terminated",
+            Exam.status == "completed",
+            and_(Exam.date_end_availability.isnot(None), Exam.date_end_availability < now)
+        )
+    ).order_by(Exam.date_end_availability.desc(), Exam.completed_at.desc(), Exam.date_published.desc()).all()  # Show most recently closed first
+    
+    # Build closed exam data with student info
+    closed_exams = []
+    for exam in closed_exams_query:
+        student = None
+        user_obj = None
+        
+        if exam.student_id:
+            student = db.query(Student).filter(Student.id == exam.student_id).first()
+            if student:
+                # Try to find User by email (assuming username might be email)
+                user_obj = db.query(User).filter(User.email == student.username).first()
+        
+        # Calculate percent if final_grade exists
+        percent = exam.final_grade * 100 if exam.final_grade else None
+        
+        # Calculate letter grade
+        grade = None
+        if percent is not None:
+            if percent >= 90:
+                grade = "A"
+            elif percent >= 80:
+                grade = "B"
+            elif percent >= 70:
+                grade = "C"
+            elif percent >= 60:
+                grade = "D"
+            else:
+                grade = "F"
+        
+        closed_exams.append({
+            "exam_id": exam.exam_id,
+            "student_id": user_obj.student_id if user_obj else (student.username if student else None),
+            "first_name": user_obj.first_name if user_obj else None,
+            "last_name": user_obj.last_name if user_obj else None,
+            "status": exam.status,
+            "percent": percent,
+            "grade": grade,
+            "date_started": exam.created_at if exam.student_id else None,
+            "date_completed": exam.completed_at,
+            "date_published": exam.date_published,
+            "date_end_availability": exam.date_end_availability
+        })
+    
     return render_template("teacher_dashboard.html", {
         "request": request,
         "first_name": first_name,
         "courses": courses,
-        "open_exams": open_exams
+        "open_exams": open_exams,
+        "closed_exams": closed_exams
     })
 
 @app.get("/teacher/register-course", response_class=HTMLResponse)
