@@ -72,13 +72,17 @@
             display: block;
             margin: 15px 0;
             font-size: 0.9em;
+            text-align: center;
+            color: #666;
         }
 
-        .register-button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            cursor: pointer;
+        .error-message {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #ff9999;
         }
     </style>
 </head>
@@ -88,31 +92,38 @@
     <!-- Welcome Header -->
     <h1>Welcome, {{ first_name }}</h1>
 
-    <!-- Exam Code Input -->
-    <input
-        type="text"
-        id="exam_code"
-        name="exam_code"
-        placeholder="Enter Exam Code"
-        class="exam-code-input"
-    >
+    {% if error %}
+    <div class="error-message">
+        {{ error }}
+    </div>
+    {% endif %}
 
-    <!-- Submit Button -->
-    <button type="button" class="submit-button">
-        Submit
-    </button>
-
-    <!-- Exam Preview -->
-    <p>You are registering for:</p>
-    <div class="exam-preview-box">Exam Name</div>
+    <!-- Course Search Section -->
+    <div style="margin-bottom: 30px;">
+        <h2 style="font-size: 1.2em; margin-bottom: 15px;">Find Your Course</h2>
+        <form method="get" action="/student/search-course" style="display: flex; flex-direction: column; gap: 10px;">
+            <input
+                type="text"
+                name="course_number"
+                placeholder="Course Number (e.g. CSC299)"
+                style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box;"
+                required
+            >
+            <input
+                type="text"
+                name="section"
+                placeholder="Section (e.g. 002)"
+                style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box;"
+                required
+            >
+            <button type="submit" style="padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Search Course
+            </button>
+        </form>
+    </div>
 
     <!-- Logout -->
     <a href="/" class="logout">Logout</a>
-
-    <!-- Register Button -->
-    <button type="button" class="register-button">
-        Register for Exam
-    </button>
 </div>
 
 </body>

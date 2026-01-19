@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Details - {{ exam.exam_name }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .exam-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .exam-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .exam-header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .back-link {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 0.95em;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            padding: 12px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #ff9999;
+        }
+
+        .details-section {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .details-section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5em;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .detail-item {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 1em;
+        }
+
+        .actions-section {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .completed-notice {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #2196F3;
+            margin-bottom: 20px;
+        }
+
+        .completed-notice strong {
+            color: #1976D2;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="exam-container">
+        <div class="exam-header">
+            <h1>{{ exam.exam_name }} - Exam Details</h1>
+            <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="back-link">← Back to Course</a>
+        </div>
+
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if completed_exam %}
+        <div class="completed-notice">
+            <strong>You have already completed this exam.</strong>
+            {% if completed_exam.final_grade is not none %}
+                <br>Final Grade: {{ "%.1f"|format(completed_exam.final_grade * 100) }}%
+            {% endif %}
+            {% if completed_exam.completed_at %}
+                <br>Completed on: {{ completed_exam.completed_at.strftime('%m/%d/%Y %I:%M %p') }}
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="details-section">
+            <h2>Exam Information</h2>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Exam ID</div>
+                    <div class="detail-value">{{ exam.exam_id }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Course</div>
+                    <div class="detail-value">{{ exam.course_number }} - Section {{ exam.section }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Quarter / Year</div>
+                    <div class="detail-value">{{ exam.quarter_year }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Instructor</div>
+                    <div class="detail-value">{{ exam.instructor_name or 'N/A' }}</div>
+                </div>
+                {% if exam.is_timed and exam.duration_hours is not none and exam.duration_minutes is not none %}
+                <div class="detail-item">
+                    <div class="detail-label">Timed Exam</div>
+                    <div class="detail-value">
+                        <strong style="color: #2196F3;">Yes - {{ exam.duration_hours }}h {{ exam.duration_minutes }}m</strong>
+                    </div>
+                </div>
+                {% else %}
+                <div class="detail-item">
+                    <div class="detail-label">Timed Exam</div>
+                    <div class="detail-value">No</div>
+                </div>
+                {% endif %}
+                <div class="detail-item">
+                    <div class="detail-label">Published</div>
+                    <div class="detail-value">{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if not completed_exam %}
+        <div class="actions-section">
+            <h2>Start Exam</h2>
+            <p style="margin-bottom: 20px; color: #666;">
+                {% if exam.is_timed and exam.duration_hours is not none and exam.duration_minutes is not none %}
+                    This is a timed exam. You will have <strong>{{ exam.duration_hours }} hours and {{ exam.duration_minutes }} minutes</strong> to complete it once you start.
+                {% else %}
+                    This exam has no time limit. You can work at your own pace.
+                {% endif %}
+            </p>
+            {% if student_exam and student_exam.status != 'completed' %}
+                <div class="info-box">
+                    <strong>You have already started this exam.</strong>
+                    <br>Click below to continue.
+                </div>
+            {% endif %}
+            <form method="post" action="/student/exam/{{ exam.exam_id }}/start">
+                <button type="submit" class="btn btn-primary">
+                    {% if student_exam and student_exam.status != 'completed' %}Continue Exam{% else %}Start Exam{% endif %}
+                </button>
+                <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
+            </form>
+        </div>
+        {% else %}
+        <div class="actions-section">
+            <p style="color: #666;">This exam has been completed and cannot be retaken.</p>
+            <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="btn btn-secondary">Back to Course</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

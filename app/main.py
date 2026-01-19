@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_, and_
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from app.api.router import api_router
 from app.db.base import Base, engine
 from app.db.session import get_db
@@ -64,10 +64,293 @@ async def student_dashboard(request: Request, db: Session = Depends(get_db)):
     # Use first_name if available, otherwise fallback to "Student"
     first_name = user.first_name if user.first_name else "Student"
     
+    error = request.query_params.get("error", "")
+    
     return render_template("student_dashboard.html", {
         "request": request,
-        "first_name": first_name
+        "first_name": first_name,
+        "error": error
     })
+
+@app.get("/student/search-course", response_class=HTMLResponse)
+async def student_search_course(
+    request: Request,
+    course_number: str = None,
+    section: str = None,
+    db: Session = Depends(get_db)
+):
+    """Handle course search and redirect to course page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "student":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get query parameters
+    course_number = request.query_params.get("course_number", "").strip().upper()
+    section = request.query_params.get("section", "").strip()
+    
+    if not course_number or not section:
+        return RedirectResponse(url="/student/dashboard?error=Please provide both course number and section", status_code=302)
+    
+    # Verify course exists
+    course = db.query(Course).filter(
+        Course.course_number == course_number.upper(),
+        Course.section == section
+    ).first()
+    
+    if not course:
+        return RedirectResponse(url=f"/student/dashboard?error=Course {course_number} Section {section} not found", status_code=302)
+    
+    # Redirect to student course page
+    return RedirectResponse(url=f"/student/course/{course_number}/{section}", status_code=302)
+
+@app.get("/student/course/{course_number}/{section}", response_class=HTMLResponse)
+async def student_course_page(
+    request: Request,
+    course_number: str,
+    section: str,
+    db: Session = Depends(get_db)
+):
+    """Display course page with open exams for students."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "student":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get course from database
+    course = db.query(Course).filter(
+        Course.course_number == course_number.upper(),
+        Course.section == section
+    ).first()
+    
+    if not course:
+        return RedirectResponse(url="/student/dashboard?error=course_not_found", status_code=302)
+    
+    # Query open exams for this course/section (published, not terminated)
+    # Only show template exams (instructor-created exams with no student_id)
+    open_exams = db.query(Exam).filter(
+        Exam.course_number == course_number.upper(),
+        Exam.section == section,
+        Exam.quarter_year == course.quarter_year,
+        Exam.date_published.isnot(None),  # Must be published
+        Exam.status != "terminated",  # Not terminated
+        Exam.student_id.is_(None)  # Only template exams (not student-specific)
+    ).order_by(Exam.date_published.desc()).all()
+    
+    # Get or create Student record for this user
+    student_record = db.query(Student).filter(Student.username == user.email).first()
+    
+    # Filter out exams that this student has already completed
+    available_exams = []
+    for exam in open_exams:
+        # Check if this student has already taken this exam
+        if student_record:
+            existing_student_exam = db.query(Exam).filter(
+                Exam.course_number == exam.course_number,
+                Exam.section == exam.section,
+                Exam.exam_name == exam.exam_name,
+                Exam.quarter_year == exam.quarter_year,
+                Exam.student_id == student_record.id,
+                Exam.status == "completed"
+            ).first()
+            
+            if not existing_student_exam:
+                available_exams.append(exam)
+        else:
+            # Student record doesn't exist yet, show all exams
+            available_exams.append(exam)
+    
+    error = request.query_params.get("error", "")
+    
+    return render_template("student_course_page.html", {
+        "request": request,
+        "course_number": course_number.upper(),
+        "section": section,
+        "quarter_year": course.quarter_year,
+        "open_exams": available_exams,
+        "error": error
+    })
+
+@app.get("/student/exam/{exam_id}", response_class=HTMLResponse)
+async def student_exam_details_page(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Display exam details page for students with option to start exam."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "student":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database (using exam_id string, not id integer)
+    # This gets the template exam (instructor-created exam with no student)
+    exam = db.query(Exam).filter(
+        Exam.exam_id == exam_id,
+        Exam.student_id.is_(None)  # Template exam (no student)
+    ).first()
+    
+    if not exam:
+        return RedirectResponse(url="/student/dashboard?error=exam_not_found", status_code=302)
+    
+    # Verify exam is available (published and not terminated)
+    if not exam.date_published or exam.status == "terminated":
+        return RedirectResponse(url="/student/dashboard?error=This exam is not available", status_code=302)
+    
+    # Get or create Student record for this user
+    student_record = db.query(Student).filter(Student.username == user.email).first()
+    
+    # Check if student has already started this exam
+    # Look for exam with same course, section, exam_name, quarter, and student
+    student_exam = None
+    if student_record:
+        student_exam = db.query(Exam).filter(
+            Exam.course_number == exam.course_number,
+            Exam.section == exam.section,
+            Exam.exam_name == exam.exam_name,
+            Exam.quarter_year == exam.quarter_year,
+            Exam.student_id == student_record.id
+        ).first()
+    
+    # Check if student has already completed this exam
+    completed_exam = None
+    if student_exam and student_exam.status == "completed":
+        completed_exam = student_exam
+    
+    error = request.query_params.get("error", "")
+    
+    return render_template("student_exam_details.html", {
+        "request": request,
+        "exam": exam,
+        "student_exam": student_exam,
+        "completed_exam": completed_exam,
+        "error": error
+    })
+
+@app.post("/student/exam/{exam_id}/start")
+async def student_start_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Start an exam for a student."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "student":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database (template exam - instructor-created with no student)
+    exam = db.query(Exam).filter(
+        Exam.exam_id == exam_id,
+        Exam.student_id.is_(None)  # Template exam (no student)
+    ).first()
+    
+    if not exam:
+        return RedirectResponse(url="/student/dashboard?error=exam_not_found", status_code=302)
+    
+    # Verify exam is available (published and not terminated)
+    if not exam.date_published or exam.status == "terminated":
+        return RedirectResponse(url=f"/student/exam/{exam_id}?error=This exam is not available", status_code=302)
+    
+    # Get or create Student record for this user
+    student_record = db.query(Student).filter(Student.username == user.email).first()
+    if not student_record:
+        student_record = Student(username=user.email)
+        db.add(student_record)
+        db.commit()
+        db.refresh(student_record)
+    
+    # Check if student has already started this exam
+    # Look for exam with same course, section, exam_name, quarter, and student
+    student_exam = db.query(Exam).filter(
+        Exam.course_number == exam.course_number,
+        Exam.section == exam.section,
+        Exam.exam_name == exam.exam_name,
+        Exam.quarter_year == exam.quarter_year,
+        Exam.student_id == student_record.id
+    ).first()
+    
+    now = datetime.now(timezone.utc)
+    
+    if student_exam:
+        # Student has already started this exam
+        if student_exam.status == "completed":
+            return RedirectResponse(url=f"/student/exam/{exam_id}?error=You have already completed this exam", status_code=302)
+        
+        # Continue existing exam - redirect to exam taking page
+        # TODO: Implement actual exam taking page
+        return RedirectResponse(url=f"/api/exam/{student_exam.id}", status_code=302)
+    else:
+        # Create new exam session for this student
+        # Generate unique exam_id for this student's exam session
+        new_exam_id = f"{exam.exam_id}-student-{student_record.id}-{int(now.timestamp())}"
+        
+        # Create new exam session based on the template exam
+        new_student_exam = Exam(
+            exam_id=new_exam_id,
+            course_number=exam.course_number,
+            section=exam.section,
+            exam_name=exam.exam_name,
+            quarter_year=exam.quarter_year,
+            instructor_name=exam.instructor_name,
+            instructor_id=exam.instructor_id,
+            student_id=student_record.id,
+            status="in_progress",
+            date_published=exam.date_published,
+            is_timed=exam.is_timed,
+            duration_hours=exam.duration_hours,
+            duration_minutes=exam.duration_minutes,
+            student_exam_start_time=now if exam.is_timed else None,
+            final_explanation=exam.final_explanation  # Copy LLM prompt
+        )
+        
+        # Calculate end time if timed
+        if exam.is_timed and exam.duration_hours is not None and exam.duration_minutes is not None:
+            duration = timedelta(hours=exam.duration_hours, minutes=exam.duration_minutes)
+            new_student_exam.date_end = now + duration
+        
+        try:
+            db.add(new_student_exam)
+            db.commit()
+            db.refresh(new_student_exam)
+            
+            # Redirect to exam taking page
+            # TODO: Implement actual exam taking page
+            return RedirectResponse(url=f"/api/exam/{new_student_exam.id}", status_code=302)
+        except IntegrityError as e:
+            db.rollback()
+            # Exam session might already exist, try to find it
+            existing = db.query(Exam).filter(
+                Exam.course_number == exam.course_number,
+                Exam.section == exam.section,
+                Exam.exam_name == exam.exam_name,
+                Exam.quarter_year == exam.quarter_year,
+                Exam.student_id == student_record.id,
+                Exam.status != "completed"
+            ).first()
+            if existing:
+                return RedirectResponse(url=f"/api/exam/{existing.id}", status_code=302)
+            return RedirectResponse(url=f"/student/exam/{exam_id}?error=Error starting exam: {str(e)}", status_code=302)
 
 @app.get("/teacher/dashboard", response_class=HTMLResponse)
 async def teacher_dashboard(request: Request, db: Session = Depends(get_db)):
