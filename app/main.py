@@ -347,105 +347,105 @@ async def create_exam(
             sections = sections_raw
         
         # Validate input
-    if not sections or len(sections) == 0:
-        return RedirectResponse(url="/teacher/create-exam?error=At least one section must be selected", status_code=302)
-    
-    # Remove duplicates and empty strings
-    sections = list(set([s.strip() for s in sections if s and s.strip()]))
-    if not sections:
-        return RedirectResponse(url="/teacher/create-exam?error=At least one section must be selected", status_code=302)
-    
-    # Validate that all sections belong to the same course and quarter/year
-    courses_for_sections = db.query(Course).filter(
-        Course.course_number == course_number.upper(),
-        Course.section.in_(sections),
-        Course.instructor_id == user.id
-    ).all()
-    
-    # Check that all sections exist and match the quarter/year
-    valid_sections = []
-    validation_errors = []
-    for section in sections:
-        matching_course = next((c for c in courses_for_sections if c.section == section), None)
-        if not matching_course:
-            validation_errors.append(f"Section {section} not found for course {course_number}")
-            continue
-        if matching_course.quarter_year != quarter_year:
-            validation_errors.append(f"Section {section} is for {matching_course.quarter_year}, not {quarter_year}")
-            continue
-        valid_sections.append(section)
-    
-    if not valid_sections:
-        error_msg = "; ".join(validation_errors) if validation_errors else "No valid sections selected"
-        return RedirectResponse(url=f"/teacher/create-exam?error={error_msg}", status_code=302)
-    
-    # Use only valid sections
-    sections = valid_sections
-    
-    # Get instructor name
-    instructor_name = f"{user.first_name} {user.last_name}"
-    
-    # Create an exam for each selected section
-    created_exams = []
-    errors = []
-    
-    for section in sections:
-        section = section.strip()
-        if not section:
-            continue
+        if not sections or len(sections) == 0:
+            return RedirectResponse(url="/teacher/create-exam?error=At least one section must be selected", status_code=302)
         
-        # Verify the course belongs to this instructor
-        course = db.query(Course).filter(
+        # Remove duplicates and empty strings
+        sections = list(set([s.strip() for s in sections if s and s.strip()]))
+        if not sections:
+            return RedirectResponse(url="/teacher/create-exam?error=At least one section must be selected", status_code=302)
+        
+        # Validate that all sections belong to the same course and quarter/year
+        courses_for_sections = db.query(Course).filter(
             Course.course_number == course_number.upper(),
-            Course.section == section,
-            Course.quarter_year == quarter_year,
+            Course.section.in_(sections),
             Course.instructor_id == user.id
-        ).first()
+        ).all()
         
-        if not course:
-            errors.append(f"Course {course_number} Section {section} for {quarter_year} not found or access denied")
-            continue
+        # Check that all sections exist and match the quarter/year
+        valid_sections = []
+        validation_errors = []
+        for section in sections:
+            matching_course = next((c for c in courses_for_sections if c.section == section), None)
+            if not matching_course:
+                validation_errors.append(f"Section {section} not found for course {course_number}")
+                continue
+            if matching_course.quarter_year != quarter_year:
+                validation_errors.append(f"Section {section} is for {matching_course.quarter_year}, not {quarter_year}")
+                continue
+            valid_sections.append(section)
         
-        # Generate exam_id: course_number-section-exam_name-quarter_year
-        exam_id = f"{course_number.upper()}-{section}-{exam_name.lower().replace(' ', '-')}-{quarter_year}"
+        if not valid_sections:
+            error_msg = "; ".join(validation_errors) if validation_errors else "No valid sections selected"
+            return RedirectResponse(url=f"/teacher/create-exam?error={error_msg}", status_code=302)
         
-        # Check if exam with this ID already exists
-        existing_exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
-        if existing_exam:
-            errors.append(f"Exam '{exam_name}' for Section {section} already exists")
-            continue
+        # Use only valid sections
+        sections = valid_sections
         
-        # Create new exam (not published yet, status = "not_started")
-        exam = Exam(
-            exam_id=exam_id,
-            course_number=course_number.upper(),
-            section=section,
-            exam_name=exam_name,
-            quarter_year=quarter_year,
-            instructor_name=instructor_name,
-            instructor_id=user.id,
-            status="not_started",  # Not yet published
-            # Store LLM prompt in final_explanation field for now (or create a separate field later)
-            # For now, we'll store it in final_explanation temporarily
-            final_explanation=llm_prompt
-        )
+        # Get instructor name
+        instructor_name = f"{user.first_name} {user.last_name}"
         
-        try:
-            db.add(exam)
-            created_exams.append(exam)
-        except IntegrityError as e:
-            errors.append(f"Error creating exam for Section {section}: {str(e)}")
-    
-    # Commit all exams at once
-    if created_exams:
-        try:
-            db.commit()
-            # Refresh all created exams
-            for exam in created_exams:
-                db.refresh(exam)
-        except Exception as e:
-            db.rollback()
-            return RedirectResponse(url=f"/teacher/create-exam?error=Error saving exams: {str(e)}", status_code=302)
+        # Create an exam for each selected section
+        created_exams = []
+        errors = []
+        
+        for section in sections:
+            section = section.strip()
+            if not section:
+                continue
+            
+            # Verify the course belongs to this instructor
+            course = db.query(Course).filter(
+                Course.course_number == course_number.upper(),
+                Course.section == section,
+                Course.quarter_year == quarter_year,
+                Course.instructor_id == user.id
+            ).first()
+            
+            if not course:
+                errors.append(f"Course {course_number} Section {section} for {quarter_year} not found or access denied")
+                continue
+            
+            # Generate exam_id: course_number-section-exam_name-quarter_year
+            exam_id = f"{course_number.upper()}-{section}-{exam_name.lower().replace(' ', '-')}-{quarter_year}"
+            
+            # Check if exam with this ID already exists
+            existing_exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+            if existing_exam:
+                errors.append(f"Exam '{exam_name}' for Section {section} already exists")
+                continue
+            
+            # Create new exam (not published yet, status = "not_started")
+            exam = Exam(
+                exam_id=exam_id,
+                course_number=course_number.upper(),
+                section=section,
+                exam_name=exam_name,
+                quarter_year=quarter_year,
+                instructor_name=instructor_name,
+                instructor_id=user.id,
+                status="not_started",  # Not yet published
+                # Store LLM prompt in final_explanation field for now (or create a separate field later)
+                # For now, we'll store it in final_explanation temporarily
+                final_explanation=llm_prompt
+            )
+            
+            try:
+                db.add(exam)
+                created_exams.append(exam)
+            except IntegrityError as e:
+                errors.append(f"Error creating exam for Section {section}: {str(e)}")
+        
+        # Commit all exams at once
+        if created_exams:
+            try:
+                db.commit()
+                # Refresh all created exams
+                for exam in created_exams:
+                    db.refresh(exam)
+            except Exception as e:
+                db.rollback()
+                return RedirectResponse(url=f"/teacher/create-exam?error=Error saving exams: {str(e)}", status_code=302)
         
         # Handle results
         if errors and not created_exams:
