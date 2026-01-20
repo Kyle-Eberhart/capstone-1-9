@@ -72,10 +72,23 @@
         <a href="/student/dashboard" class="btn">Return to Dashboard</a>
     </div>
     <script>
-        // Auto-refresh every 5 seconds to check if questions are ready
-        setTimeout(function() {
+        // Auto-refresh every 3 seconds to check if questions are ready
+        let refreshCount = 0;
+        const maxRefreshes = 20; // Stop after 1 minute (20 * 3 seconds)
+        
+        function checkExamReady() {
+            refreshCount++;
+            if (refreshCount >= maxRefreshes) {
+                // Stop refreshing and show error message
+                document.querySelector('.message').innerHTML = 
+                    '<p style="color: #cc0000;"><strong>Exam generation is taking longer than expected.</strong></p>' +
+                    '<p>Please try refreshing the page or contact support if the problem persists.</p>';
+                return;
+            }
             window.location.reload();
-        }, 5000);
+        }
+        
+        setTimeout(checkExamReady, 3000);
     </script>
 </body>
 </html>

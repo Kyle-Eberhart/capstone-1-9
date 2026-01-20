@@ -1,4 +1,5 @@
 """Main FastAPI application."""
+import logging
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,6 +15,8 @@ from app.db.models import User, Course, Exam, Student, Enrollment, Question
 from app.db.repo import QuestionRepository
 from app.core.grading.generator import QuestionGenerator
 from app.logging_config import setup_logging
+
+logger = logging.getLogger(__name__)
 
 # Import seeding function
 from app.db.seed_users import seed_users
@@ -546,8 +549,54 @@ async def student_start_exam(
         if student_exam.status == "completed":
             return RedirectResponse(url=f"/student/exam/{exam_id}?error=You have already completed this exam", status_code=302)
         
+        # Check if student exam has questions, if not generate them (safety check for incomplete generation)
+        student_questions = QuestionRepository.get_by_exam(db, student_exam.id)
+        if not student_questions:
+            # Generate questions for this student's unique exam
+            exam_topic = ""
+            num_questions = 5  # Default
+            additional_details = ""
+            
+            if exam.final_explanation:
+                lines = exam.final_explanation.split('\n', 1)
+                if lines[0].startswith("Topic:"):
+                    exam_topic = lines[0].replace("Topic:", "").strip()
+                    if len(lines) > 1 and lines[1].startswith("Additional Details:"):
+                        additional_details = lines[1].replace("Additional Details:", "").strip()
+                else:
+                    additional_details = exam.final_explanation
+            
+            if not exam_topic:
+                exam_topic = f"{exam.course_number} - {exam.exam_name}"
+            
+            template_questions = QuestionRepository.get_by_exam(db, exam.id)
+            if template_questions:
+                num_questions = len(template_questions)
+            
+            generator = QuestionGenerator()
+            try:
+                generated_exam = await generator.generate_exam(
+                    topic=exam_topic,
+                    num_questions=num_questions,
+                    additional_details=additional_details if additional_details else ""
+                )
+                
+                for gen_question in generated_exam.questions:
+                    QuestionRepository.create(
+                        db=db,
+                        exam_id=student_exam.id,
+                        question_number=gen_question.question_number,
+                        question_text=gen_question.question_text,
+                        context=gen_question.context,
+                        rubric=gen_question.rubric,
+                        is_followup=False
+                    )
+                db.commit()
+            except Exception as e:
+                logger.error(f"Error generating questions for existing student exam: {e}")
+                return RedirectResponse(url=f"/student/exam/{exam_id}?error=Error generating exam questions: {str(e)}", status_code=302)
+        
         # Continue existing exam - redirect to exam taking page
-        # TODO: Implement actual exam taking page
         return RedirectResponse(url=f"/api/exam/{student_exam.id}", status_code=302)
     else:
         # Create new exam session for this student
@@ -583,8 +632,65 @@ async def student_start_exam(
             db.commit()
             db.refresh(new_student_exam)
             
+            # Generate questions for this student's unique exam
+            # Get topic and number of questions from template exam's metadata
+            exam_topic = ""
+            num_questions = 5  # Default
+            additional_details = ""
+            
+            if exam.final_explanation:
+                # Parse metadata: "Topic: <topic>\n\nAdditional Details: <details>"
+                lines = exam.final_explanation.split('\n', 1)
+                if lines[0].startswith("Topic:"):
+                    exam_topic = lines[0].replace("Topic:", "").strip()
+                    if len(lines) > 1 and lines[1].startswith("Additional Details:"):
+                        additional_details = lines[1].replace("Additional Details:", "").strip()
+                else:
+                    # Old format, use as additional details
+                    additional_details = exam.final_explanation
+            
+            # If no topic found, use a default
+            if not exam_topic:
+                exam_topic = f"{exam.course_number} - {exam.exam_name}"
+            
+            # Get number of questions from template exam (count existing questions)
+            template_questions = QuestionRepository.get_by_exam(db, exam.id)
+            if template_questions:
+                num_questions = len(template_questions)
+            
+            # Generate questions using AI
+            logger.info(f"Starting question generation for student exam {new_student_exam.id}, topic: {exam_topic}, num_questions: {num_questions}")
+            generator = QuestionGenerator()
+            try:
+                generated_exam = await generator.generate_exam(
+                    topic=exam_topic,
+                    num_questions=num_questions,
+                    additional_details=additional_details if additional_details else ""
+                )
+                
+                logger.info(f"Successfully generated {len(generated_exam.questions)} questions for student exam {new_student_exam.id}")
+                
+                # Create questions for student's exam
+                for gen_question in generated_exam.questions:
+                    QuestionRepository.create(
+                        db=db,
+                        exam_id=new_student_exam.id,
+                        question_number=gen_question.question_number,
+                        question_text=gen_question.question_text,
+                        context=gen_question.context,
+                        rubric=gen_question.rubric,
+                        is_followup=False
+                    )
+                db.commit()
+                logger.info(f"Successfully saved {len(generated_exam.questions)} questions to database for student exam {new_student_exam.id}")
+            except Exception as e:
+                import traceback
+                error_trace = traceback.format_exc()
+                logger.error(f"Error generating questions for student exam {new_student_exam.id}: {e}\n{error_trace}")
+                db.rollback()
+                return RedirectResponse(url=f"/student/exam/{exam_id}?error=Error generating exam questions: {str(e)}", status_code=302)
+            
             # Redirect to exam taking page
-            # TODO: Implement actual exam taking page
             return RedirectResponse(url=f"/api/exam/{new_student_exam.id}", status_code=302)
         except IntegrityError as e:
             db.rollback()
@@ -1502,9 +1608,25 @@ async def exam_details_page(
     if exam.instructor_id != user.id:
         return RedirectResponse(url="/teacher/dashboard?error=access_denied", status_code=302)
     
+    # Check if this is a student exam (has student_id)
+    is_student_exam = exam.student_id is not None
+    questions = []
+    student = None
+    
+    if is_student_exam:
+        # Get all questions and answers for this student's exam
+        questions = QuestionRepository.get_by_exam(db, exam.id)
+        questions = sorted(questions, key=lambda q: q.question_number)
+        
+        # Get student information
+        student = db.query(Student).filter(Student.id == exam.student_id).first()
+    
     return render_template("exam_details.html", {
         "request": request,
-        "exam": exam
+        "exam": exam,
+        "is_student_exam": is_student_exam,
+        "questions": questions,
+        "student": student
     })
 
 @app.post("/teacher/exam/{exam_id}/terminate")

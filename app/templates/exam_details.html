@@ -150,7 +150,7 @@
 <body>
     <div class="exam-container">
         <div class="exam-header">
-            <h1>{{ exam.exam_name }} - Exam Details</h1>
+            <h1>{{ exam.exam_name }} - Exam Details{% if is_student_exam and student %} - {{ student.username }}{% endif %}</h1>
             <a href="/teacher/dashboard" class="back-link">← Back to Dashboard</a>
         </div>
 
@@ -204,8 +204,15 @@
                 
                 <div class="detail-item">
                     <div class="detail-label">Final Grade</div>
-                    <div class="detail-value">{{ "%.1f"|format(exam.final_grade) if exam.final_grade else 'N/A' }}</div>
+                    <div class="detail-value">{{ "%.1f"|format(exam.final_grade) if exam.final_grade else 'N/A' }}{% if exam.final_grade %}%{% endif %}</div>
                 </div>
+                
+                {% if is_student_exam and student %}
+                <div class="detail-item">
+                    <div class="detail-label">Student</div>
+                    <div class="detail-value">{{ student.username }}</div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -266,6 +273,78 @@
             <div style="padding: 15px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">
                 <strong>This exam has been terminated.</strong> It is no longer available to students.
             </div>
+        </div>
+        {% endif %}
+        
+        {% if is_student_exam and questions %}
+        <div class="details-section">
+            <h2>Questions and Answers</h2>
+            {% for question in questions %}
+            <div style="margin-bottom: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0; color: #333;">Question {{ question.question_number }}</h3>
+                    {% if question.grade is not none %}
+                    <div style="font-size: 1.2em; font-weight: 600; color: #4CAF50;">
+                        Grade: {{ "%.1f"|format(question.grade) }}%
+                    </div>
+                    {% else %}
+                    <div style="font-size: 1em; color: #999; font-style: italic;">
+                        Not graded yet
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666; display: block; margin-bottom: 5px;">Question:</strong>
+                    <div style="padding: 12px; background-color: white; border-radius: 4px; color: #333;">
+                        {{ question.question_text }}
+                    </div>
+                </div>
+                
+                {% if question.context %}
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666; display: block; margin-bottom: 5px;">Context:</strong>
+                    <div style="padding: 12px; background-color: white; border-radius: 4px; color: #666; font-size: 0.95em;">
+                        {{ question.context }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if question.rubric %}
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666; display: block; margin-bottom: 5px;">Rubric:</strong>
+                    <div style="padding: 12px; background-color: white; border-radius: 4px; color: #666; font-size: 0.95em;">
+                        {{ question.rubric }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if question.student_answer %}
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666; display: block; margin-bottom: 5px;">Student Answer:</strong>
+                    <div style="padding: 12px; background-color: #e7f3ff; border-radius: 4px; color: #333; white-space: pre-wrap; word-wrap: break-word;">
+                        {{ question.student_answer }}
+                    </div>
+                </div>
+                {% else %}
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666; display: block; margin-bottom: 5px;">Student Answer:</strong>
+                    <div style="padding: 12px; background-color: #fff3cd; border-radius: 4px; color: #856404; font-style: italic;">
+                        No answer provided
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if question.feedback %}
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666; display: block; margin-bottom: 5px;">Feedback:</strong>
+                    <div style="padding: 12px; background-color: #f0f0f0; border-radius: 4px; color: #333; white-space: pre-wrap; word-wrap: break-word;">
+                        {{ question.feedback }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
         {% endif %}
     </div>
