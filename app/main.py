@@ -1129,8 +1129,12 @@ async def create_exam(
         except Exception as e:
             import traceback
             error_details = str(e)
-            print(f"Error generating exam questions: {error_details}")
-            print(traceback.format_exc())
+            error_trace = traceback.format_exc()
+            logger.error(f"Error generating exam questions: {error_details}")
+            logger.error(f"Traceback: {error_trace}")
+            # Truncate error message if too long for URL
+            if len(error_details) > 200:
+                error_details = error_details[:200] + "..."
             return RedirectResponse(url=f"/teacher/create-exam?error=Error generating exam questions: {error_details}", status_code=302)
         
         # Create an exam for each selected section

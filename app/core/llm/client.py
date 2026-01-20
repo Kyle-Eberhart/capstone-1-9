@@ -85,17 +85,37 @@ class LLMClient:
             # Simple retry for temporary server issues (503)
             client = self._get_client()
             model = self._get_model()
-            for _ in range(3):
+            settings = self._get_settings()
+            temperature = settings.llm_temperature
+            max_tokens = settings.llm_max_tokens
+            logger.info(f"Calling LLM API - Model: {model}, Temperature: {temperature}, Max tokens: {max_tokens}, API Key present: {bool(api_key)}")
+            last_error = None
+            for attempt in range(3):
                 try:
+                    logger.debug(f"LLM API call attempt {attempt + 1}/3")
                     response = client.chat.completions.create(
                         model=model,
-                        messages=messages
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens
                     )
-                    return response.choices[0].message.content
+                    content = response.choices[0].message.content
+                    logger.info(f"LLM API call successful. Response length: {len(content)} characters")
+                    logger.debug(f"LLM response preview (first 500 chars): {content[:500]}")
+                    return content
                 except Exception as e:
-                    logger.warning(f"LLM call failed, retrying: {e}")
+                    last_error = e
+                    error_type = type(e).__name__
+                    error_msg = str(e)
+                    logger.error(f"LLM API call failed on attempt {attempt + 1}/3 - Type: {error_type}, Error: {error_msg}")
+                    if hasattr(e, 'status_code'):
+                        logger.error(f"HTTP Status Code: {e.status_code}")
+                    if hasattr(e, 'response'):
+                        logger.error(f"Response details: {e.response}")
             # If all retries fail
-            raise RuntimeError("LLM request failed after 3 attempts")
+            error_summary = f"LLM request failed after 3 attempts. Last error: {type(last_error).__name__}: {str(last_error)}"
+            logger.error(error_summary)
+            raise RuntimeError(error_summary) from last_error
 
         result_text = await loop.run_in_executor(None, call_llm_with_retry)
 
@@ -133,8 +153,20 @@ class LLMClient:
         
         # Attempt to parse JSON
         try:
-            return json.loads(cleaned_text)
+            parsed_json = json.loads(cleaned_text)
+            logger.debug(f"Successfully parsed JSON. Keys: {list(parsed_json.keys()) if isinstance(parsed_json, dict) else 'N/A'}")
+            return parsed_json
         except json.JSONDecodeError as e:
-            # Provide debugging info if JSON is invalid
-            logger.error(f"Failed to parse LLM response as JSON. Original: {result_text[:200]}")
-            raise e
+            # Provide comprehensive debugging info if JSON is invalid
+            logger.error(f"Failed to parse LLM response as JSON")
+            logger.error(f"JSONDecodeError: {str(e)}")
+            logger.error(f"Cleaned text length: {len(cleaned_text)} characters")
+            logger.error(f"Cleaned text preview (first 1000 chars): {cleaned_text[:1000]}")
+            logger.error(f"Original response length: {len(result_text)} characters")
+            logger.error(f"Original response preview (first 1000 chars): {result_text[:1000]}")
+            logger.error(f"First brace position: {first_brace}, Last brace position: {last_brace if 'last_brace' in locals() else 'N/A'}")
+            raise json.JSONDecodeError(
+                f"Failed to parse LLM response as JSON: {str(e)}. Response preview: {result_text[:500]}",
+                e.doc,
+                e.pos
+            ) from e
