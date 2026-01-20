@@ -289,27 +289,81 @@
             </div>
         </div>
 
-        <form method="post" action="/teacher/exam/{{ exam.exam_id }}/update">
+        <!-- Display Generated Questions -->
+        {% if questions %}
+        <div class="form-section">
+            <h2>Generated Questions</h2>
+            {% for question in questions %}
+            <div style="margin-bottom: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 4px; border-left: 4px solid #4CAF50;">
+                <h3 style="margin-top: 0; color: #333;">Question {{ question.question_number }}</h3>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666;">Question:</strong>
+                    <p style="margin: 5px 0; color: #333;">{{ question.question_text }}</p>
+                </div>
+                {% if question.context %}
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #666;">Context:</strong>
+                    <p style="margin: 5px 0; color: #333;">{{ question.context }}</p>
+                </div>
+                {% endif %}
+                {% if question.rubric %}
+                <div>
+                    <strong style="color: #666;">Rubric:</strong>
+                    <p style="margin: 5px 0; color: #333;">{{ question.rubric }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Regenerate Questions Form -->
+        <form method="post" action="/teacher/exam/{{ exam.exam_id }}/regenerate">
             <div class="form-section">
-                <h2>Exam Criteria & Instructions</h2>
+                <h2>Regenerate Exam Questions</h2>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label for="exam_topic">Exam Topic: <span style="color: red;">*</span></label>
+                        <input 
+                            type="text" 
+                            id="exam_topic" 
+                            name="exam_topic" 
+                            required 
+                            value="{{ exam_topic }}"
+                            placeholder="e.g. Data Structures and Algorithms"
+                        >
+                    </div>
+                    <div>
+                        <label for="num_questions">Number of Questions: <span style="color: red;">*</span></label>
+                        <input 
+                            type="number" 
+                            id="num_questions" 
+                            name="num_questions" 
+                            required 
+                            min="1" 
+                            max="20"
+                            value="{{ questions|length if questions else 5 }}"
+                        >
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label for="llm_prompt">Instructions for AI Question Generator:</label>
+                    <label for="additional_details">Additional Details (Optional but Recommended):</label>
                     <textarea 
-                        id="llm_prompt" 
-                        name="llm_prompt" 
-                        required
-                        placeholder="Please enter exam topic, rubric, grading criteria, and any further expectations"
-                    >{{ exam.final_explanation or '' }}</textarea>
+                        id="additional_details" 
+                        name="additional_details" 
+                        placeholder="Please enter rubric, grading criteria, specific sub-topics, questions you want included, expected answers, or any further expectations."
+                    >{{ additional_details }}</textarea>
                     <p class="help-text">
-                        Describe the exam topic, grading criteria, and any specific expectations. 
-                        The AI will generate questions based on your instructions.
+                        Provide additional context such as: rubric, grading criteria, specific sub-topics, 
+                        questions you want included, expected answers, or any other expectations. 
+                        This is optional - the AI can create a good exam from just the topic, but more details will result in a better exam.
                     </p>
                 </div>
             </div>
 
             <div class="button-group">
                 <a href="/teacher/dashboard" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="submit" class="btn btn-primary">Generate and Review Again</button>
             </div>
         </form>
 

@@ -1,0 +1,46 @@
+You are an expert computer science professor creating a comprehensive oral exam.
+
+Topic: {topic}
+Number of Questions: {num_questions}
+{additional_details_section}
+
+Your task is to generate {num_questions} unique, high-quality exam questions that:
+1. Test the student's understanding of the topic comprehensively
+2. Are appropriate for an oral exam format (encourage discussion and explanation)
+3. Vary in difficulty and cover different aspects of the topic
+4. Are clear, well-structured, and thought-provoking
+5. Each question should be unique and not repeat concepts covered in other questions
+
+For each question, provide:
+- A clear, engaging question text that prompts detailed discussion
+- Relevant background context that helps frame the question
+- A detailed grading rubric with specific criteria and point allocations
+
+{guidance_section}
+
+Respond in JSON format with the following structure (no markdown formatting, just raw JSON):
+{{
+    "questions": [
+        {{
+            "question_number": 1,
+            "question_text": "The question text that will be displayed to the student",
+            "context": "Background context and information relevant to understanding the question",
+            "rubric": "Detailed grading rubric with specific criteria and point allocations"
+        }},
+        {{
+            "question_number": 2,
+            "question_text": "Another question text",
+            "context": "Context for this question",
+            "rubric": "Rubric for this question"
+        }}
+        // ... continue for all {num_questions} questions
+    ]
+}}
+
+Important:
+- Generate exactly {num_questions} questions
+- Number them sequentially from 1 to {num_questions}
+- Each question must be unique and test different aspects of the topic
+- Ensure questions are appropriate for oral examination (encourage discussion)
+- Provide detailed rubrics for each question
+- Respond with valid JSON only, no additional text outside the JSON object

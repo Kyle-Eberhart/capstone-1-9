@@ -10,6 +10,19 @@ class GeneratedQuestion(BaseModel):
     rubric: str = Field(..., description="Grading rubric for this question")
 
 
+class GeneratedQuestionWithNumber(BaseModel):
+    """Schema for generated question with question number."""
+    question_number: int = Field(..., description="The question number (1-indexed)")
+    question_text: str = Field(..., description="The exam question text")
+    context: str = Field(..., description="Background context for the question")
+    rubric: str = Field(..., description="Grading rubric for this question")
+
+
+class GeneratedExam(BaseModel):
+    """Schema for generated exam with multiple questions."""
+    questions: List[GeneratedQuestionWithNumber] = Field(..., description="List of generated exam questions")
+
+
 class GradingResult(BaseModel):
     """Schema for grading response."""
     grade: float = Field(..., ge=0.0, le=100.0, description="Grade out of 100")

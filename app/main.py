@@ -10,7 +10,9 @@ from datetime import datetime, timezone, timedelta
 from app.api.router import api_router
 from app.db.base import Base, engine
 from app.db.session import get_db
-from app.db.models import User, Course, Exam, Student, Enrollment
+from app.db.models import User, Course, Exam, Student, Enrollment, Question
+from app.db.repo import QuestionRepository
+from app.core.grading.generator import QuestionGenerator
 from app.logging_config import setup_logging
 
 # Import seeding function
@@ -915,7 +917,9 @@ async def create_exam(
         course_number = form_data.get("course_number", "").strip()
         quarter_year = form_data.get("quarter_year", "").strip()
         exam_name = form_data.get("exam_name", "").strip()
-        llm_prompt = form_data.get("llm_prompt", "").strip()
+        exam_topic = form_data.get("exam_topic", "").strip()
+        num_questions_str = form_data.get("num_questions", "").strip()
+        llm_prompt = form_data.get("llm_prompt", "").strip()  # Additional details (optional)
         
         # Extract timed exam fields
         is_timed = form_data.get("is_timed", "no") == "yes"
@@ -939,8 +943,18 @@ async def create_exam(
             return RedirectResponse(url="/teacher/create-exam?error=Quarter/Year is required", status_code=302)
         if not exam_name:
             return RedirectResponse(url="/teacher/create-exam?error=Exam name is required", status_code=302)
-        if not llm_prompt:
-            return RedirectResponse(url="/teacher/create-exam?error=LLM prompt is required", status_code=302)
+        if not exam_topic:
+            return RedirectResponse(url="/teacher/create-exam?error=Exam topic is required", status_code=302)
+        if not num_questions_str:
+            return RedirectResponse(url="/teacher/create-exam?error=Number of questions is required", status_code=302)
+        
+        # Validate and parse number of questions
+        try:
+            num_questions = int(num_questions_str)
+            if num_questions < 1 or num_questions > 20:
+                return RedirectResponse(url="/teacher/create-exam?error=Number of questions must be between 1 and 20", status_code=302)
+        except (ValueError, TypeError):
+            return RedirectResponse(url="/teacher/create-exam?error=Invalid number of questions", status_code=302)
         
         # Get sections from form (as list from checkboxes)
         sections_raw = form_data.getlist("sections[]")
@@ -989,6 +1003,21 @@ async def create_exam(
         # Get instructor name
         instructor_name = f"{user.first_name} {user.last_name}"
         
+        # Generate exam questions using AI
+        generator = QuestionGenerator()
+        try:
+            generated_exam = await generator.generate_exam(
+                topic=exam_topic,
+                num_questions=num_questions,
+                additional_details=llm_prompt if llm_prompt else ""
+            )
+        except Exception as e:
+            import traceback
+            error_details = str(e)
+            print(f"Error generating exam questions: {error_details}")
+            print(traceback.format_exc())
+            return RedirectResponse(url=f"/teacher/create-exam?error=Error generating exam questions: {error_details}", status_code=302)
+        
         # Create an exam for each selected section
         created_exams = []
         errors = []
@@ -1033,6 +1062,12 @@ async def create_exam(
                         continue
             
             # Create new exam (not published yet, status = "not_started")
+            # Store topic and additional details in final_explanation in a structured format
+            # Format: "Topic: <topic>\n\nAdditional Details: <details>"
+            exam_metadata = f"Topic: {exam_topic}"
+            if llm_prompt:
+                exam_metadata += f"\n\nAdditional Details: {llm_prompt}"
+            
             exam = Exam(
                 exam_id=exam_id,
                 course_number=course_number.upper(),
@@ -1042,9 +1077,8 @@ async def create_exam(
                 instructor_name=instructor_name,
                 instructor_id=user.id,
                 status="not_started",  # Not yet published
-                # Store LLM prompt in final_explanation field for now (or create a separate field later)
-                # For now, we'll store it in final_explanation temporarily
-                final_explanation=llm_prompt,
+                # Store topic and additional details in final_explanation field
+                final_explanation=exam_metadata,
                 # Timed exam fields
                 is_timed=is_timed,
                 duration_hours=duration_hours if is_timed else None,
@@ -1064,6 +1098,21 @@ async def create_exam(
                 # Refresh all created exams
                 for exam in created_exams:
                     db.refresh(exam)
+                
+                # Create questions for all exams (they all share the same questions)
+                for exam in created_exams:
+                    for gen_question in generated_exam.questions:
+                        QuestionRepository.create(
+                            db=db,
+                            exam_id=exam.id,
+                            question_number=gen_question.question_number,
+                            question_text=gen_question.question_text,
+                            context=gen_question.context,
+                            rubric=gen_question.rubric,
+                            is_followup=False
+                        )
+                
+                db.commit()
             except Exception as e:
                 db.rollback()
                 return RedirectResponse(url=f"/teacher/create-exam?error=Error saving exams: {str(e)}", status_code=302)
@@ -1196,6 +1245,25 @@ async def exam_review_page(
     sections_str = '-'.join(sections_list)
     combined_exam_id = f"{exam.course_number}-{sections_str}-{exam.exam_name.lower().replace(' ', '-')}-{exam.quarter_year}"
     
+    # Get questions for this exam
+    questions = QuestionRepository.get_by_exam(db, exam.id)
+    questions = sorted(questions, key=lambda q: q.question_number)
+    
+    # Extract topic and additional details from final_explanation
+    # Format: "Topic: <topic>\n\nAdditional Details: <details>" or just topic
+    exam_topic = ""
+    additional_details = ""
+    if exam.final_explanation:
+        # Try to parse topic and details
+        lines = exam.final_explanation.split('\n', 1)
+        if lines[0].startswith("Topic:"):
+            exam_topic = lines[0].replace("Topic:", "").strip()
+            if len(lines) > 1 and lines[1].startswith("Additional Details:"):
+                additional_details = lines[1].replace("Additional Details:", "").strip()
+        else:
+            # Old format, just use as additional details
+            additional_details = exam.final_explanation
+    
     error = request.query_params.get("error", "")
     success = request.query_params.get("success", "")
     
@@ -1205,6 +1273,9 @@ async def exam_review_page(
         "related_exams": related_exams,
         "combined_exam_id": combined_exam_id,
         "sections_list": sections_list,
+        "questions": questions,
+        "exam_topic": exam_topic,
+        "additional_details": additional_details,
         "error": error,
         "success": success
     })
@@ -1256,6 +1327,109 @@ async def update_exam(
     except Exception as e:
         db.rollback()
         return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Error updating exam: {str(e)}", status_code=302)
+
+@app.post("/teacher/exam/{exam_id}/regenerate")
+async def regenerate_exam_questions(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Regenerate exam questions using AI."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Don't allow regeneration if exam is published
+    if exam.date_published:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Cannot regenerate questions for published exam", status_code=302)
+    
+    # Get form data
+    form_data = await request.form()
+    exam_topic = form_data.get("exam_topic", "").strip()
+    num_questions_str = form_data.get("num_questions", "").strip()
+    additional_details = form_data.get("additional_details", "").strip()
+    
+    # Validate
+    if not exam_topic:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Topic is required", status_code=302)
+    if not num_questions_str:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Number of questions is required", status_code=302)
+    
+    try:
+        num_questions = int(num_questions_str)
+        if num_questions < 1 or num_questions > 20:
+            return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Number of questions must be between 1 and 20", status_code=302)
+    except (ValueError, TypeError):
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Invalid number of questions", status_code=302)
+    
+    # Get all related exams (same course, exam name, quarter) that are unpublished
+    related_exams = db.query(Exam).filter(
+        Exam.instructor_id == user.id,
+        Exam.course_number == exam.course_number,
+        Exam.exam_name == exam.exam_name,
+        Exam.quarter_year == exam.quarter_year,
+        Exam.date_published.is_(None)  # Only unpublished
+    ).all()
+    
+    # Generate new questions
+    generator = QuestionGenerator()
+    try:
+        generated_exam = await generator.generate_exam(
+            topic=exam_topic,
+            num_questions=num_questions,
+            additional_details=additional_details if additional_details else ""
+        )
+    except Exception as e:
+        import traceback
+        error_details = str(e)
+        print(f"Error regenerating exam questions: {error_details}")
+        print(traceback.format_exc())
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Error generating exam questions: {error_details}", status_code=302)
+    
+    # Delete existing questions and create new ones for all related exams
+    try:
+        for related_exam in related_exams:
+            # Delete existing questions
+            existing_questions = QuestionRepository.get_by_exam(db, related_exam.id)
+            for question in existing_questions:
+                db.delete(question)
+            
+            # Create new questions
+            for gen_question in generated_exam.questions:
+                QuestionRepository.create(
+                    db=db,
+                    exam_id=related_exam.id,
+                    question_number=gen_question.question_number,
+                    question_text=gen_question.question_text,
+                    context=gen_question.context,
+                    rubric=gen_question.rubric,
+                    is_followup=False
+                )
+        
+        # Update exam metadata
+        exam_metadata = f"Topic: {exam_topic}"
+        if additional_details:
+            exam_metadata += f"\n\nAdditional Details: {additional_details}"
+        
+        for related_exam in related_exams:
+            related_exam.final_explanation = exam_metadata
+        
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?success=Exam questions regenerated successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Error regenerating questions: {str(e)}", status_code=302)
 
 @app.post("/teacher/exam/{exam_id}/publish")
 async def publish_exam(

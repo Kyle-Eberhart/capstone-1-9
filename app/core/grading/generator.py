@@ -2,7 +2,7 @@
 from app.core.llm.client import LLMClient
 from app.core.llm.prompts import load_prompt, format_prompt
 from app.core.llm.guardrails import validate_response
-from app.core.schemas.llm_contracts import GeneratedQuestion
+from app.core.schemas.llm_contracts import GeneratedQuestion, GeneratedExam, GeneratedQuestionWithNumber
 import logging
 
 logger = logging.getLogger(__name__)
@@ -150,3 +150,133 @@ Required JSON format:
             "rubric": "Grading criteria: complete answer - 100 points."
         }
         return GeneratedQuestion(**generic_fallback)
+    
+    async def generate_exam(self, topic: str, num_questions: int, additional_details: str = "") -> GeneratedExam:
+        """Generate multiple exam questions at once using the LLM."""
+        logger.info(f"Generating exam with {num_questions} questions on topic: {topic}")
+        
+        # Load exam generation template
+        try:
+            exam_template = load_prompt("exam_gen_v1.txt")
+        except FileNotFoundError:
+            logger.warning("Exam generation prompt not found, using default")
+            exam_template = self._get_default_exam_template()
+        
+        # Format the prompt
+        prompt = format_prompt(
+            exam_template,
+            topic=topic,
+            num_questions=num_questions,
+            additional_details=additional_details if additional_details else None
+        )
+        
+        system_prompt = f"""You are an expert computer science professor creating a comprehensive oral exam.
+
+Topic: {topic}
+Number of Questions: {num_questions}
+{f'Additional Details: {additional_details}' if additional_details else ''}
+
+Rules:
+- Generate exactly {num_questions} unique questions
+- Each question must test different aspects of the topic
+- Questions should be appropriate for oral examination (encourage discussion)
+- Provide detailed rubrics for each question
+- Respond with VALID JSON ONLY
+- Do NOT include explanations or extra text outside the JSON object
+
+Required JSON format:
+{{
+  "questions": [
+    {{
+      "question_number": 1,
+      "question_text": "string",
+      "context": "string",
+      "rubric": "string"
+    }},
+    // ... more questions
+  ]
+}}
+"""
+        
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            try:
+                logger.info(f"Generating exam, attempt {attempt+1}")
+                response_dict = await self.llm_client.generate_json(prompt, system_prompt)
+                exam = validate_response(response_dict, GeneratedExam)
+                
+                if not exam:
+                    logger.warning(f"Invalid exam response on attempt {attempt+1}")
+                    continue
+                
+                # Validate we got the right number of questions
+                if len(exam.questions) != num_questions:
+                    logger.warning(f"Expected {num_questions} questions, got {len(exam.questions)}, retrying")
+                    continue
+                
+                # Validate question numbers are sequential
+                question_numbers = [q.question_number for q in exam.questions]
+                expected_numbers = list(range(1, num_questions + 1))
+                if sorted(question_numbers) != expected_numbers:
+                    logger.warning(f"Question numbers are not sequential, retrying")
+                    continue
+                
+                logger.info(f"Successfully generated exam with {len(exam.questions)} questions")
+                return exam
+                
+            except Exception as e:
+                logger.warning(f"Error generating exam on attempt {attempt+1}: {e}")
+                if attempt == max_attempts - 1:
+                    # Last attempt failed, use fallback
+                    logger.error("All attempts failed, using fallback exam")
+                    return self._get_fallback_exam(topic, num_questions)
+                continue
+        
+        # Should not reach here, but return fallback just in case
+        return self._get_fallback_exam(topic, num_questions)
+    
+    def _get_default_exam_template(self) -> str:
+        """Default exam generation template if file not found."""
+        return """Generate {num_questions} exam questions for topic: {topic}
+
+{% if additional_details %}
+Additional details: {additional_details}
+{% endif %}
+
+Respond in JSON format with a "questions" array containing {num_questions} question objects.
+Each question should have: question_number, question_text, context, and rubric."""
+    
+    def _get_fallback_exam(self, topic: str, num_questions: int) -> GeneratedExam:
+        """Get a fallback exam if LLM generation fails."""
+        logger.warning(f"Using fallback exam for topic: {topic}, num_questions: {num_questions}")
+        
+        fallback_questions = [
+            {
+                "question_number": 1,
+                "question_text": f"Explain the fundamental concepts related to {topic}. Provide examples and discuss their importance.",
+                "context": f"This question tests understanding of core concepts in {topic}.",
+                "rubric": "Grading: Understanding of concepts (40 points), Examples (30 points), Discussion of importance (30 points)."
+            },
+            {
+                "question_number": 2,
+                "question_text": f"Compare and contrast different approaches or methods within {topic}. When would you use each?",
+                "context": f"This question evaluates the ability to analyze different approaches in {topic}.",
+                "rubric": "Grading: Comparison (40 points), Contrast (30 points), Use cases (30 points)."
+            },
+            {
+                "question_number": 3,
+                "question_text": f"Describe a real-world application of {topic}. Explain how it works and why it's effective.",
+                "context": f"This question tests practical understanding of {topic}.",
+                "rubric": "Grading: Application description (40 points), Explanation (30 points), Effectiveness (30 points)."
+            }
+        ]
+        
+        # Use available fallback questions, repeat if needed
+        questions = []
+        for i in range(num_questions):
+            fallback_idx = i % len(fallback_questions)
+            question_data = fallback_questions[fallback_idx].copy()
+            question_data["question_number"] = i + 1
+            questions.append(GeneratedQuestionWithNumber(**question_data))
+        
+        return GeneratedExam(questions=questions)
