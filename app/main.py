@@ -951,8 +951,8 @@ async def create_exam(
         # Validate and parse number of questions
         try:
             num_questions = int(num_questions_str)
-            if num_questions < 1 or num_questions > 20:
-                return RedirectResponse(url="/teacher/create-exam?error=Number of questions must be between 1 and 20", status_code=302)
+            if num_questions < 1 or num_questions > 30:
+                return RedirectResponse(url="/teacher/create-exam?error=Number of questions must be between 1 and 30", status_code=302)
         except (ValueError, TypeError):
             return RedirectResponse(url="/teacher/create-exam?error=Invalid number of questions", status_code=302)
         
@@ -1368,8 +1368,8 @@ async def regenerate_exam_questions(
     
     try:
         num_questions = int(num_questions_str)
-        if num_questions < 1 or num_questions > 20:
-            return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Number of questions must be between 1 and 20", status_code=302)
+        if num_questions < 1 or num_questions > 30:
+            return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Number of questions must be between 1 and 30", status_code=302)
     except (ValueError, TypeError):
         return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Invalid number of questions", status_code=302)
     

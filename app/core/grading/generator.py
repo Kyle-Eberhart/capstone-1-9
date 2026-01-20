@@ -162,12 +162,25 @@ Required JSON format:
             logger.warning("Exam generation prompt not found, using default")
             exam_template = self._get_default_exam_template()
         
-        # Format the prompt
+        # Format the prompt - handle additional_details conditionally
+        if additional_details:
+            additional_details_section = f"Additional Details:\n{additional_details}"
+            guidance_section = """Use the additional details provided above to tailor the questions. Consider:
+- Any specific sub-topics mentioned
+- Grading criteria and expectations
+- Specific questions or concepts the instructor wants included
+- Expected answer elements
+- Any other guidance provided"""
+        else:
+            additional_details_section = ""
+            guidance_section = "Since no additional details were provided, create well-rounded questions that cover the topic comprehensively. Make reasonable assumptions about appropriate difficulty level and scope."
+        
         prompt = format_prompt(
             exam_template,
             topic=topic,
             num_questions=num_questions,
-            additional_details=additional_details if additional_details else None
+            additional_details_section=additional_details_section,
+            guidance_section=guidance_section
         )
         
         system_prompt = f"""You are an expert computer science professor creating a comprehensive oral exam.
