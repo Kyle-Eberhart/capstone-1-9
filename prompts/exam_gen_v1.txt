@@ -7,9 +7,19 @@ Number of Questions: {num_questions}
 Your task is to generate {num_questions} unique, high-quality exam questions that:
 1. Test the student's understanding of the topic comprehensively
 2. Are appropriate for an oral exam format (encourage discussion and explanation)
-3. Vary in difficulty and cover different aspects of the topic
+3. Vary in difficulty and cover DIFFERENT and DISTINCT aspects of the topic
 4. Are clear, well-structured, and thought-provoking
-5. Each question should be unique and not repeat concepts covered in other questions
+5. Each question must be COMPLETELY UNIQUE - no two questions should:
+   - Cover the same concept or sub-topic
+   - Ask about the same thing in different words
+   - Test the same knowledge or skill
+   - Be rewordings or variations of each other
+
+CRITICAL UNIQUENESS REQUIREMENT:
+- Each question must test a genuinely different aspect, concept, or skill
+- Questions should cover diverse sub-topics, perspectives, and approaches
+- Before finalizing, verify that no two questions overlap in content or concept
+- If you find any similarity, rewrite one of the questions to be completely different
 
 For each question, provide:
 - A clear, engaging question text that prompts detailed discussion

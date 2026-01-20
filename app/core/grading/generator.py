@@ -111,7 +111,34 @@ Required JSON format:
         return fallback
         
     def _normalize(self, text: str) -> str:
+        """Normalize text for comparison by removing extra whitespace and lowercasing."""
         return " ".join(text.lower().split())
+    
+    def _calculate_similarity(self, text1: str, text2: str) -> float:
+        """Calculate similarity between two normalized question texts using word overlap."""
+        words1 = set(text1.split())
+        words2 = set(text2.split())
+        
+        if not words1 or not words2:
+            return 0.0
+        
+        # Calculate Jaccard similarity (intersection over union)
+        intersection = len(words1 & words2)
+        union = len(words1 | words2)
+        
+        if union == 0:
+            return 0.0
+        
+        similarity = intersection / union
+        
+        # Also check for significant word overlap (if >50% of words overlap, consider similar)
+        min_len = min(len(words1), len(words2))
+        if min_len > 0:
+            overlap_ratio = intersection / min_len
+            # Use the higher of the two similarity measures
+            similarity = max(similarity, overlap_ratio * 0.8)  # Weighted overlap
+        
+        return similarity
 
     def _get_fallback_question(self, question_number: int) -> GeneratedQuestion:
         """Get a fallback question based on question number."""
@@ -191,11 +218,19 @@ Number of Questions: {num_questions}
 
 Rules:
 - Generate exactly {num_questions} unique questions
-- Each question must test different aspects of the topic
+- Each question must test DIFFERENT and DISTINCT aspects of the topic
+- NO two questions should cover the same concept or ask about the same thing
+- Questions should vary significantly in focus, approach, and subject matter
 - Questions should be appropriate for oral examination (encourage discussion)
 - Provide detailed rubrics for each question
 - Respond with VALID JSON ONLY
 - Do NOT include explanations or extra text outside the JSON object
+
+CRITICAL: Before finalizing your response, review all questions to ensure:
+- No two questions ask about the same concept
+- No two questions are rewordings of each other
+- Each question tests a genuinely different aspect of the topic
+- Questions cover diverse sub-topics and perspectives
 
 Required JSON format:
 {{
@@ -211,7 +246,7 @@ Required JSON format:
 }}
 """
         
-        max_attempts = 3
+        max_attempts = 5  # Increased attempts to handle duplicate detection
         for attempt in range(max_attempts):
             try:
                 logger.info(f"Generating exam, attempt {attempt+1}")
@@ -234,7 +269,36 @@ Required JSON format:
                     logger.warning(f"Question numbers are not sequential, retrying")
                     continue
                 
-                logger.info(f"Successfully generated exam with {len(exam.questions)} questions")
+                # Check for duplicate or very similar questions
+                normalized_questions = []
+                duplicates_found = False
+                duplicate_pairs = []
+                
+                for i, q in enumerate(exam.questions):
+                    normalized = self._normalize(q.question_text)
+                    
+                    # Check for exact duplicates
+                    if normalized in normalized_questions:
+                        duplicate_idx = normalized_questions.index(normalized)
+                        duplicate_pairs.append((duplicate_idx + 1, i + 1))
+                        logger.warning(f"Exact duplicate detected: Question {i+1} duplicates Question {duplicate_idx+1}")
+                        duplicates_found = True
+                    
+                    # Check for high similarity (questions that are too similar)
+                    for j, existing_norm in enumerate(normalized_questions):
+                        similarity = self._calculate_similarity(normalized, existing_norm)
+                        if similarity > 0.7:  # 70% similarity threshold
+                            duplicate_pairs.append((j + 1, i + 1))
+                            logger.warning(f"Highly similar questions detected: Question {i+1} is {similarity:.0%} similar to Question {j+1}")
+                            duplicates_found = True
+                    
+                    normalized_questions.append(normalized)
+                
+                if duplicates_found:
+                    logger.warning(f"Duplicate/similar questions found on attempt {attempt+1}: {duplicate_pairs}, retrying")
+                    continue
+                
+                logger.info(f"Successfully generated exam with {len(exam.questions)} unique questions")
                 return exam
                 
             except Exception as e:
