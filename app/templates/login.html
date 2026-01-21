@@ -61,16 +61,15 @@
             </div>
             {% endif %}
             
-            {% if success %}
-            <div class="success-message" style="color:green; margin-bottom: 10px;">
-                {% if success == "account_created" %}
-                    Account created successfully! Please log in with your email and password.
-                {% else %}
-                    {{ success }}
-                {% endif %}
-            </div>
-            {% endif %}
-            
+            {% if not username %}
+            <form method="get" action="/" class="login-form" id="usernameForm">
+                <div class="form-group">
+                    <label for="username">Enter Your Username:</label>
+                    <input type="text" id="username" name="username" required autofocus placeholder="Enter your username">
+                </div>
+                <button type="submit" class="btn btn-primary">Continue</button>
+            </form>
+            {% else %}
             <form method="post" action="/api/login" class="login-form">
                 <input type="hidden" name="username" value="{{ username }}">
                 <div class="form-group">
@@ -119,13 +118,14 @@
                     <label for="password">Password:</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Log in</button>
+                <button type="submit" class="btn btn-primary">Start Exam</button>
+                <a href="/" class="btn btn-secondary" style="margin-left: 10px;">Change Username</a>
             </form>
+            {% endif %}
             
-            <p style="text-align: center; margin-top: 20px;">
-                <a href="/teacher/login">Instructor Login</a><br>
-                Don't have an account? <a href="/signup">Create one here</a>
-            </p>
+            <div class="teacher-link">
+                <a href="/api/teacher/login">Teacher Login</a>
+            </div>
         </div>
     </div>
 </body>

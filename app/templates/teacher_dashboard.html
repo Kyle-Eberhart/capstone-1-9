@@ -2,308 +2,1049 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Teacher Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - AI Oral Exam Grader</title>
     <link rel="stylesheet" href="/static/styles.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
+        /* Dashboard layout overrides */
+        .container {
+            max-width: 1100px;
         }
 
         .dashboard-header {
             background: white;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 30px 40px;
             margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        .dashboard-header h1 {
-            margin: 0;
-            color: #333;
-        }
-
-        .logout-link {
-            color: #666;
-            text-decoration: none;
-            font-size: 0.9em;
-        }
-
-        .logout-link:hover {
-            color: #000;
-        }
-
-        .dashboard-sections {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .dashboard-section {
+        .exam-list {
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 30px 40px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
-
-        .dashboard-section h2 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #333;
-            font-size: 1.3em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
+        .exam-list-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
         }
-
-        .full-width {
-            grid-column: 1 / -1;
+        .exam-list-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
-
-        .course-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 15px 0;
+        .exam-search {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            min-width: 260px;
+            position: relative;
         }
-
-        .course-list li {
-            padding: 10px;
-            margin-bottom: 8px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
+        .exam-search input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #fafafa;
+            padding-right: 38px;
         }
-
-        .course-list li a {
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: 500;
+        .exam-search input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            background: white;
         }
-
-        .course-list li a:hover {
-            text-decoration: underline;
-        }
-
-        .no-courses {
-            color: #666;
-            font-style: italic;
-            margin: 15px 0;
-        }
-
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
+        .search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #6b7280;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 0.95em;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .search-clear:hover {
+            background: #f3f4f6;
+        }
+        .results-hint {
+            font-size: 0.85em;
+            color: #6b7280;
             margin-top: 10px;
         }
-
-        .btn-primary:hover {
-            background-color: #45a049;
+        .hint-pill {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #eaecf0;
+            background: #fafafa;
         }
 
-        .open-exams-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        /* Toast */
+        .toast {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 9999;
+            background: rgba(17, 24, 39, 0.92);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            max-width: 420px;
+            font-size: 14px;
         }
-
-        .exams-table {
-            width: 100%;
-            border-collapse: collapse;
+        .toast.show { display: flex; }
+        .toast .dot { width: 10px; height: 10px; border-radius: 999px; background: #22c55e; }
+        .toast.error .dot { background: #ef4444; }
+        .exam-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .exam-item {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid #eef0f3;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+        .exam-item:hover {
+            border-color: rgba(102, 126, 234, 0.35);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+        .exam-info h3 {
+            margin-bottom: 5px;
+            color: #333;
+            position: relative;
+            display: inline-block;
+            padding-right: 25px;
+            cursor: pointer;
+            line-height: 1.25;
+        }
+        .exam-info h3:hover {
+            color: #667eea;
+        }
+        .exam-info h3:hover::after {
+            content: "Edit";
+            position: absolute;
+            right: 0;
+            font-size: 0.75em;
+            color: #9aa3b2;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .exam-info p {
+            color: #666;
             font-size: 0.9em;
         }
-
-        .exams-table th {
-            background-color: #4CAF50;
+        .exam-title-edit {
+            display: none;
+        }
+        .exam-title-edit.active {
+            display: block;
+        }
+        .exam-title-display {
+            display: block;
+        }
+        .exam-title-display.hidden {
+            display: none;
+        }
+        .edit-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .edit-controls button {
+            padding: 4px 12px;
+            font-size: 0.85em;
+        }
+        .exam-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+            min-width: 170px;
+        }
+        .btn-danger {
+            background: #dc3545;
             color: white;
-            padding: 12px 8px;
-            text-align: left;
-            position: sticky;
-            top: 0;
-            z-index: 10;
         }
-
-        .exams-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #eee;
+        .btn-danger:hover {
+            background: #c82333;
         }
-
-        .exams-table tr:hover {
-            background-color: #f8f9fa;
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
         }
-
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
         .status-active {
-            color: #4CAF50;
-            font-weight: bold;
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-left: 10px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #28a745;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .status-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .quick-actions {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .qa-button {
+            width: 34px;
+            height: 30px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #374151;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .qa-button:hover {
+            background: #f3f4f6;
+        }
+        .qa-menu {
+            position: absolute;
+            top: 36px;
+            right: 0;
+            width: 220px;
+            background: white;
+            border: 1px solid #eaecf0;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            padding: 6px;
+            display: none;
+            z-index: 50;
+        }
+        .qa-menu.open { display: block; }
+        .qa-item, .qa-item-button {
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 10px;
+            color: #111827;
+            text-decoration: none;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .qa-item:hover, .qa-item-button:hover {
+            background: #f3f4f6;
+        }
+        .qa-sep {
+            height: 1px;
+            background: #eef0f3;
+            margin: 6px 4px;
+        }
+        .qa-danger { color: #b91c1c; }
+        .qa-danger:hover { background: #fef2f2; }
+        .exam-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .exam-title-wrapper {
+            flex: 1;
+            min-width: 0;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #f0f0f0;
+            font-size: 0.75em;
+            white-space: nowrap;
+        }
+        .status-indicator.active {
+            background: #e8f5e9;
+        }
+        .status-indicator.inactive {
+            background: #ffebee;
+        }
+        .status-indicator .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-indicator.active .status-dot {
+            background: #4caf50;
+        }
+        .status-indicator.inactive .status-dot {
+            background: #f44336;
+        }
+        .compact-toggle {
+            width: 36px;
+            height: 18px;
+        }
+        .compact-toggle .slider {
+            border-radius: 18px;
+        }
+        .compact-toggle .slider:before {
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+        }
+        .compact-toggle input:checked + .slider:before {
+            transform: translateX(18px);
         }
 
-        .status-completed {
-            color: #2196F3;
-            font-weight: bold;
+        .meta-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #374151;
+            background: #f3f4f6;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #eaecf0;
+        }
+        .chip strong {
+            font-weight: 700;
+            color: #111827;
+        }
+        .chip.muted {
+            background: #fafafa;
+            color: #6b7280;
         }
 
-        .status-not-started {
-            color: #ff9800;
-            font-weight: bold;
-        }
-
-        .status-terminated {
-            color: #dc3545;
-            font-weight: bold;
+        @media (max-width: 900px) {
+            .exam-grid {
+                grid-template-columns: 1fr;
+            }
+            .exam-list {
+                padding: 22px;
+            }
+            .dashboard-header {
+                padding: 22px;
+            }
+            .exam-actions {
+                min-width: 150px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
+    <div class="container">
         <div class="dashboard-header">
-            <h1>Welcome, {{ first_name }}</h1>
-            <a href="/" class="logout-link">Logout</a>
+            <div>
+                <h1>Teacher Dashboard</h1>
+                <p class="subtitle">Welcome, {{ teacher.username }}</p>
+            </div>
+            <div>
+                <a href="/api/teacher/logout" class="btn btn-secondary">Logout</a>
+            </div>
         </div>
-
-        <div class="dashboard-sections">
-            <!-- Courses Section -->
-            <div class="dashboard-section">
-                <h2>Courses</h2>
-                {% if courses %}
-                <ul class="course-list">
-                    {% for course in courses %}
-                    <li><a href="/teacher/course/{{ course.course_number }}/{{ course.section }}">{{ course.course_number }} - Section {{ course.section }}</a></li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="no-courses">You have no active courses</p>
-                {% endif %}
-                <a href="/teacher/register-course" class="btn-primary">Register New Course</a>
-            </div>
-
-            <!-- Create New Exam Section -->
-            <div class="dashboard-section">
-                <h2>Create New Exam</h2>
-                <p style="color: #666; margin-bottom: 15px;">Create and configure a new exam for your courses.</p>
-                <a href="/teacher/create-exam" class="btn-primary">Create New Exam</a>
-            </div>
-
-            <!-- Open Exams Section -->
-            <div class="dashboard-section full-width">
-                <h2>Open Exams</h2>
-                <div class="open-exams-container">
-                    {% if open_exams %}
-                    <table class="exams-table">
-                        <thead>
-                            <tr>
-                                <th>Exam ID</th>
-                                <th>Student ID</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Status</th>
-                                <th>Percent</th>
-                                <th>Grade</th>
-                                <th>Date/Time Started</th>
-                                <th>Date/Time Completed</th>
-                                <th>Date/Time Published</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for exam in open_exams %}
-                            <tr>
-                                <td><a href="/teacher/exam/{{ exam.exam_id }}" style="color: #4CAF50; text-decoration: none;">{{ exam.exam_id }}</a></td>
-                                <td>{{ exam.student_id or 'N/A' }}</td>
-                                <td>{{ exam.first_name or 'N/A' }}</td>
-                                <td>{{ exam.last_name or 'N/A' }}</td>
-                                <td>
-                                    {% if exam.status == 'active' %}
-                                        <span class="status-active">Active</span>
-                                    {% elif exam.status == 'completed' %}
-                                        <span class="status-completed">Completed</span>
-                                    {% else %}
-                                        <span class="status-not-started">Not Started</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
-                                <td>{{ exam.grade or 'N/A' }}</td>
-                                <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
-                                <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
-                                <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="no-courses" style="padding: 20px;">No open exams at this time</p>
-                    {% endif %}
+        
+        <div class="exam-list">
+            <div class="exam-list-topbar">
+                <div style="min-width: 180px;">
+                    <h2 style="margin-bottom: 4px;">My Exams</h2>
+                    <div style="font-size: 0.9em; color: #6b7280;">Create, edit, and manage access for your exams</div>
+                </div>
+                <div class="exam-search">
+                    <input id="exam-search" type="text" placeholder="Search exams by name or description..." autocomplete="off">
+                    <button id="search-clear" class="search-clear" type="button" aria-label="Clear search">×</button>
+                </div>
+                <div class="exam-list-actions">
+                    <a href="/api/teacher/students" class="btn btn-secondary">Manage Students</a>
+                    <a href="/api/teacher/exam/create" class="btn btn-primary">+ Create New Exam</a>
                 </div>
             </div>
-
-            <!-- Closed Exams Section -->
-            <div class="dashboard-section full-width">
-                <h2>Closed Exams</h2>
-                <div class="open-exams-container">
-                    {% if closed_exams %}
-                    <table class="exams-table">
-                        <thead>
-                            <tr>
-                                <th>Exam ID</th>
-                                <th>Student ID</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Status</th>
-                                <th>Percent</th>
-                                <th>Grade</th>
-                                <th>Date/Time Started</th>
-                                <th>Date/Time Completed</th>
-                                <th>Date/Time Published</th>
-                                <th>Date/Time Terminated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for exam in closed_exams %}
-                            <tr>
-                                <td><a href="/teacher/exam/{{ exam.exam_id }}">{{ exam.exam_id }}</a></td>
-                                <td>{{ exam.student_id or 'N/A' }}</td>
-                                <td>{{ exam.first_name or 'N/A' }}</td>
-                                <td>{{ exam.last_name or 'N/A' }}</td>
-                                <td>
-                                    {% if exam.status == 'terminated' %}
-                                        <span class="status-terminated">Terminated</span>
-                                    {% elif exam.status == 'completed' %}
-                                        <span class="status-completed">Completed</span>
-                                    {% else %}
-                                        <span class="status-not-started">{{ exam.status }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
-                                <td>{{ exam.grade or 'N/A' }}</td>
-                                <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
-                                <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
-                                <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
-                                <td>{{ exam.date_end_availability.strftime('%m/%d/%Y %I:%M %p') if exam.date_end_availability else 'N/A' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="no-courses" style="padding: 20px;">No closed exams at this time</p>
-                    {% endif %}
+            
+            {% if exam_templates %}
+                <div class="results-hint">
+                    <span class="hint-pill"><strong id="results-count">{{ exam_templates|length }}</strong> exams</span>
+                    <span class="hint-pill">Tip: click an exam title to edit • Enter to save • Esc to cancel</span>
                 </div>
-            </div>
+                <div class="exam-grid" id="exam-grid">
+                {% for exam_template in exam_templates %}
+                <div class="exam-item" data-title="{{ exam_template.title|lower }}" data-description="{{ (exam_template.description or '')|lower }}">
+                    <div class="exam-info" style="flex: 1; min-width: 0;">
+                        <div class="exam-header-row">
+                            <div class="exam-title-wrapper">
+                                <div class="exam-title-display" id="title-display-{{ exam_template.id }}">
+                                    <h3 class="editable-title" 
+                                        data-exam-id="{{ exam_template.id }}"
+                                        data-title="{{ exam_template.title }}"
+                                        data-description="{{ exam_template.description or '' }}"
+                                        title="Click to edit name & settings">
+                                        {{ exam_template.title }}
+                                    </h3>
+                                </div>
+                            </div>
+                            <div class="status-control">
+                                <div class="status-indicator {% if exam_template.is_active %}active{% else %}inactive{% endif %}" id="status-indicator-{{ exam_template.id }}">
+                                    <span class="status-dot"></span>
+                                    <span id="status-text-{{ exam_template.id }}" style="font-size: 0.75em; font-weight: 500;">
+                                        {% if exam_template.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </div>
+                                <label class="toggle-switch compact-toggle">
+                                    <input type="checkbox" 
+                                           class="status-toggle"
+                                           data-exam-id="{{ exam_template.id }}"
+                                           {% if exam_template.is_active %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="quick-actions">
+                                    <button type="button" class="qa-button" aria-label="Quick actions" aria-expanded="false" data-qa-btn="{{ exam_template.id }}">⋯</button>
+                                    <div class="qa-menu" id="qa-menu-{{ exam_template.id }}">
+                                        <button type="button" class="qa-item-button" onclick="startEditTitle('{{ exam_template.id }}', '{{ exam_template.title|e }}', '{{ (exam_template.description or '')|e }}')">
+                                            Edit exam
+                                        </button>
+                                        <a class="qa-item" href="/api/teacher/exam/{{ exam_template.id }}/questions">Manage questions</a>
+                                        <a class="qa-item" href="/api/teacher/exam/{{ exam_template.id }}/access">Manage access</a>
+                                        <div class="qa-sep"></div>
+                                        <form method="post" action="/api/teacher/exam/{{ exam_template.id }}/delete" onsubmit="return confirm('Are you sure you want to delete this exam? This action cannot be undone.');">
+                                            <button type="submit" class="qa-item-button qa-danger">Delete exam</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="exam-title-edit" id="title-edit-{{ exam_template.id }}">
+                            <form method="post" action="/api/teacher/exam/edit" class="edit-form" data-exam-id="{{ exam_template.id }}" onsubmit="return prepareEditForm({{ exam_template.id }})">
+                                <input type="hidden" name="exam_template_id" value="{{ exam_template.id }}">
+                                <input type="text" name="title" id="edit-title-{{ exam_template.id }}" value="{{ exam_template.title }}" required style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 6px; font-size: 1.1em; font-weight: 600;">
+                                <textarea name="description" id="edit-description-{{ exam_template.id }}" placeholder="Description (optional)" style="width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 6px; margin-top: 8px; font-size: 0.9em; min-height: 60px;">{{ exam_template.description or '' }}</textarea>
+                                
+                                <div style="margin-top: 12px;">
+                                    <label for="edit-time-limit-type-{{ exam_template.id }}" style="display: block; margin-bottom: 5px; font-weight: 500;">Time Limit:</label>
+                                    <select name="time_limit_type" id="edit-time-limit-type-{{ exam_template.id }}" onchange="toggleEditTimeLimit({{ exam_template.id }})" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;">
+                                        <option value="none" {% if not exam_template.time_limit_type or exam_template.time_limit_type == 'none' %}selected{% endif %}>No Time Limit</option>
+                                        <option value="per_question" {% if exam_template.time_limit_type == 'per_question' %}selected{% endif %}>Per Question</option>
+                                        <option value="total" {% if exam_template.time_limit_type == 'total' %}selected{% endif %}>Total Time for Exam</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="edit-time-limit-input-{{ exam_template.id }}" style="margin-top: 8px; {% if not exam_template.time_limit_type or exam_template.time_limit_type == 'none' %}display: none;{% endif %}">
+                                    <label for="edit-time-limit-minutes-{{ exam_template.id }}" style="display: block; margin-bottom: 5px; font-weight: 500;">Time Limit (minutes):</label>
+                                    <input type="number" name="time_limit_minutes" id="edit-time-limit-minutes-{{ exam_template.id }}" value="{{ exam_template.time_limit_minutes or '' }}" min="1" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;">
+                                </div>
+                                
+                                <div style="margin-top: 12px;">
+                                    <label for="edit-grading-type-{{ exam_template.id }}" style="display: block; margin-bottom: 5px; font-weight: 500;">Grading Type:</label>
+                                    <select name="grading_type" id="edit-grading-type-{{ exam_template.id }}" onchange="toggleEditGradingOptions({{ exam_template.id }})" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;">
+                                        <option value="per_question" {% if not exam_template.grading_type or exam_template.grading_type == 'per_question' %}selected{% endif %}>Grade Each Question Individually</option>
+                                        <option value="overall" {% if exam_template.grading_type == 'overall' %}selected{% endif %}>Grade Entire Exam Overall</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="edit-exam-rubric-section-{{ exam_template.id }}" style="margin-top: 12px; {% if not exam_template.grading_type or exam_template.grading_type == 'per_question' %}display: none;{% endif %}">
+                                    <label for="edit-exam-rubric-type-{{ exam_template.id }}" style="display: block; margin-bottom: 5px; font-weight: 500;">Exam Grading Scale Type:</label>
+                                    <select name="exam_rubric_type" id="edit-exam-rubric-type-{{ exam_template.id }}" onchange="toggleEditExamRubricInput({{ exam_template.id }})" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 6px;">
+                                        <option value="">-- Select --</option>
+                                        <option value="percentage" {% if exam_template.exam_rubric_type == 'percentage' %}selected{% endif %}>Percentage Scale</option>
+                                        <option value="letter" {% if exam_template.exam_rubric_type == 'letter' %}selected{% endif %}>Letter Grade Scale</option>
+                                    </select>
+                                    
+                                    <div id="edit-exam-percentage-rubric-{{ exam_template.id }}" style="margin-top: 10px; {% if exam_template.exam_rubric_type != 'percentage' %}display: none;{% endif %}">
+                                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Exam Grading Criteria (Percentage-based):</label>
+                                        <div id="edit-exam-percentage-criteria-{{ exam_template.id }}">
+                                            {% if exam_template.exam_rubric_type == 'percentage' and exam_template.exam_rubric %}
+                                                {% set rubric_data = exam_template.exam_rubric|from_json %}
+                                                {% for criterion in rubric_data.criteria %}
+                                                <div class="criterion-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                                    <input type="text" placeholder="Criterion" value="{{ criterion.name }}" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                                                    <input type="number" placeholder="Points" value="{{ criterion.points }}" min="0" max="100" style="flex: 1; padding: 8px;" class="exam-criterion-points" required>
+                                                    <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                                                </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="criterion-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                                    <input type="text" placeholder="Criterion" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                                                    <input type="number" placeholder="Points" min="0" max="100" style="flex: 1; padding: 8px;" class="exam-criterion-points" required>
+                                                    <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <button type="button" onclick="addEditExamCriterion({{ exam_template.id }}, 'percentage')" class="btn btn-secondary btn-small" style="margin-top: 10px;">+ Add Criterion</button>
+                                        <input type="hidden" id="edit-exam-rubric-percentage-{{ exam_template.id }}" name="exam_rubric_percentage" value="">
+                                    </div>
+                                    
+                                    <div id="edit-exam-letter-rubric-{{ exam_template.id }}" style="margin-top: 10px; {% if exam_template.exam_rubric_type != 'letter' %}display: none;{% endif %}">
+                                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Exam Grading Criteria (Letter Grade-based):</label>
+                                        <div id="edit-exam-letter-criteria-{{ exam_template.id }}">
+                                            {% if exam_template.exam_rubric_type == 'letter' and exam_template.exam_rubric %}
+                                                {% set rubric_data = exam_template.exam_rubric|from_json %}
+                                                {% for criterion in rubric_data.criteria %}
+                                                <div class="criterion-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                                    <input type="text" placeholder="Criterion" value="{{ criterion.name }}" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                                                    <select style="flex: 1; padding: 8px;" class="exam-criterion-grade" required>
+                                                        <option value="A+" {% if criterion.grade == 'A+' %}selected{% endif %}>A+</option>
+                                                        <option value="A" {% if criterion.grade == 'A' %}selected{% endif %}>A</option>
+                                                        <option value="A-" {% if criterion.grade == 'A-' %}selected{% endif %}>A-</option>
+                                                        <option value="B+" {% if criterion.grade == 'B+' %}selected{% endif %}>B+</option>
+                                                        <option value="B" {% if criterion.grade == 'B' %}selected{% endif %}>B</option>
+                                                        <option value="B-" {% if criterion.grade == 'B-' %}selected{% endif %}>B-</option>
+                                                        <option value="C+" {% if criterion.grade == 'C+' %}selected{% endif %}>C+</option>
+                                                        <option value="C" {% if criterion.grade == 'C' %}selected{% endif %}>C</option>
+                                                        <option value="C-" {% if criterion.grade == 'C-' %}selected{% endif %}>C-</option>
+                                                        <option value="D" {% if criterion.grade == 'D' %}selected{% endif %}>D</option>
+                                                        <option value="F" {% if criterion.grade == 'F' %}selected{% endif %}>F</option>
+                                                    </select>
+                                                    <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                                                </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="criterion-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                                    <input type="text" placeholder="Criterion" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                                                    <select style="flex: 1; padding: 8px;" class="exam-criterion-grade" required>
+                                                        <option value="A+">A+</option>
+                                                        <option value="A">A</option>
+                                                        <option value="A-">A-</option>
+                                                        <option value="B+">B+</option>
+                                                        <option value="B">B</option>
+                                                        <option value="B-">B-</option>
+                                                        <option value="C+">C+</option>
+                                                        <option value="C">C</option>
+                                                        <option value="C-">C-</option>
+                                                        <option value="D">D</option>
+                                                        <option value="F">F</option>
+                                                    </select>
+                                                    <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <button type="button" onclick="addEditExamCriterion({{ exam_template.id }}, 'letter')" class="btn btn-secondary btn-small" style="margin-top: 10px;">+ Add Criterion</button>
+                                        <input type="hidden" id="edit-exam-rubric-letter-{{ exam_template.id }}" name="exam_rubric_letter" value="">
+                                    </div>
+                                </div>
+                                
+                                <div class="edit-controls" style="margin-top: 15px;">
+                                    <button type="submit" class="btn btn-primary btn-small">Save</button>
+                                    <button type="button" class="btn btn-secondary btn-small cancel-edit-btn" data-exam-id="{{ exam_template.id }}">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        <p id="description-display-{{ exam_template.id }}" style="margin-top: 6px;">{{ exam_template.description or "No description" }}</p>
+                        <div class="meta-row">
+                            <span class="chip">
+                                <strong>Time:</strong>
+                                {% if exam_template.time_limit_type == 'per_question' and exam_template.time_limit_minutes %}
+                                    {{ exam_template.time_limit_minutes }} min / question
+                                {% elif exam_template.time_limit_type == 'total' and exam_template.time_limit_minutes %}
+                                    {{ exam_template.time_limit_minutes }} min total
+                                {% else %}
+                                    None
+                                {% endif %}
+                            </span>
+                            <span class="chip">
+                                <strong>Grading:</strong>
+                                {% if exam_template.grading_type == 'overall' %}
+                                    Overall {% if exam_template.exam_rubric_type %}({{ exam_template.exam_rubric_type }}){% endif %}
+                                {% else %}
+                                    Per-question
+                                {% endif %}
+                            </span>
+                            <span class="chip muted">
+                                <strong>Created:</strong>
+                                {{ exam_template.created_at.strftime('%b %d, %Y') if exam_template.created_at else 'N/A' }}
+                            </span>
+                        </div>
+                        <p style="font-size: 0.85em; color: #999; margin-top: 5px;">
+                            Created: {{ exam_template.created_at.strftime('%Y-%m-%d %H:%M') if exam_template.created_at else 'N/A' }}
+                        </p>
+                    </div>
+                    <!-- Actions moved into the quick actions menu -->
+                </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>No exams created yet.</p>
+                    <a href="/api/teacher/exam/create" class="btn btn-primary" style="margin-top: 20px;">Create Your First Exam</a>
+                </div>
+            {% endif %}
         </div>
     </div>
 
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <span class="dot"></span>
+        <span id="toast-text">Saved</span>
+    </div>
+    
+    <script>
+        // Handle title editing
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search/filter
+            const searchEl = document.getElementById('exam-search');
+            const clearBtn = document.getElementById('search-clear');
+            const resultsCountEl = document.getElementById('results-count');
+            if (searchEl) {
+                const applyFilter = () => {
+                    const q = (searchEl.value || '').toLowerCase().trim();
+                    let shown = 0;
+                    document.querySelectorAll('.exam-item').forEach(card => {
+                        const title = card.getAttribute('data-title') || '';
+                        const desc = card.getAttribute('data-description') || '';
+                        const match = !q || title.includes(q) || desc.includes(q);
+                        card.style.display = match ? '' : 'none';
+                        if (match) shown += 1;
+                    });
+                    if (clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
+                    if (resultsCountEl) resultsCountEl.textContent = String(shown);
+                };
+                searchEl.addEventListener('input', applyFilter);
+                searchEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        searchEl.value = '';
+                        applyFilter();
+                        searchEl.blur();
+                    }
+                });
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        searchEl.value = '';
+                        applyFilter();
+                        searchEl.focus();
+                    });
+                }
+            }
+
+            // Title click to edit
+            document.querySelectorAll('.editable-title').forEach(function(element) {
+                element.addEventListener('click', function() {
+                    const examId = this.getAttribute('data-exam-id');
+                    const currentTitle = this.getAttribute('data-title');
+                    const currentDescription = this.getAttribute('data-description');
+                    startEditTitle(examId, currentTitle, currentDescription);
+                });
+            });
+            
+            // Cancel edit buttons
+            document.querySelectorAll('.cancel-edit-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const examId = this.getAttribute('data-exam-id');
+                    const titleElement = document.querySelector(`.editable-title[data-exam-id="${examId}"]`);
+                    const originalTitle = titleElement.getAttribute('data-title');
+                    const originalDescription = titleElement.getAttribute('data-description');
+                    cancelEditTitle(examId, originalTitle, originalDescription);
+                });
+            });
+            
+            // Form submission
+            document.querySelectorAll('.edit-form').forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const examId = this.getAttribute('data-exam-id');
+                    saveExamTitle(examId, event);
+                });
+            });
+            
+            // Status toggle
+            document.querySelectorAll('.status-toggle').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    const examId = this.getAttribute('data-exam-id');
+                    const isActive = this.checked;
+                    toggleExamStatus(examId, isActive);
+                });
+            });
+
+            // Quick actions menu
+            function closeAllMenus() {
+                document.querySelectorAll('.qa-menu.open').forEach(m => m.classList.remove('open'));
+                document.querySelectorAll('.qa-button[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+            }
+            document.querySelectorAll('[data-qa-btn]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-qa-btn');
+                    const menu = document.getElementById('qa-menu-' + id);
+                    const isOpen = menu && menu.classList.contains('open');
+                    closeAllMenus();
+                    if (menu && !isOpen) {
+                        menu.classList.add('open');
+                        btn.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+            document.addEventListener('click', closeAllMenus);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeAllMenus();
+            });
+        });
+        
+        function startEditTitle(examId, currentTitle, currentDescription) {
+            // Hide display, show edit form
+            document.getElementById('title-display-' + examId).classList.add('hidden');
+            document.getElementById('title-edit-' + examId).classList.add('active');
+            
+            // Set values
+            document.getElementById('edit-title-' + examId).value = currentTitle;
+            document.getElementById('edit-description-' + examId).value = currentDescription || '';
+            
+            // Focus on title input
+            document.getElementById('edit-title-' + examId).focus();
+            document.getElementById('edit-title-' + examId).select();
+
+            // Keyboard shortcuts: Enter to save, Escape to cancel
+            const titleInput = document.getElementById('edit-title-' + examId);
+            const descInput = document.getElementById('edit-description-' + examId);
+            const form = document.querySelector(`form.edit-form[data-exam-id="${examId}"]`);
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    const titleElement = document.querySelector(`.editable-title[data-exam-id="${examId}"]`);
+                    cancelEditTitle(examId, titleElement.getAttribute('data-title'), titleElement.getAttribute('data-description'));
+                }
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    if (form) form.requestSubmit();
+                }
+            };
+            if (titleInput) titleInput.onkeydown = onKey;
+            if (descInput) descInput.onkeydown = onKey;
+        }
+        
+        function cancelEditTitle(examId, originalTitle, originalDescription) {
+            // Show display, hide edit form
+            document.getElementById('title-display-' + examId).classList.remove('hidden');
+            document.getElementById('title-edit-' + examId).classList.remove('active');
+            
+            // Reset values
+            document.getElementById('edit-title-' + examId).value = originalTitle;
+            document.getElementById('edit-description-' + examId).value = originalDescription || '';
+        }
+        
+        function toggleEditTimeLimit(examId) {
+            const type = document.getElementById('edit-time-limit-type-' + examId).value;
+            const inputDiv = document.getElementById('edit-time-limit-input-' + examId);
+            const minutesInput = document.getElementById('edit-time-limit-minutes-' + examId);
+            
+            if (type === 'none') {
+                inputDiv.style.display = 'none';
+                minutesInput.removeAttribute('required');
+            } else {
+                inputDiv.style.display = 'block';
+                minutesInput.setAttribute('required', 'required');
+            }
+        }
+        
+        function toggleEditGradingOptions(examId) {
+            const gradingType = document.getElementById('edit-grading-type-' + examId).value;
+            const rubricSection = document.getElementById('edit-exam-rubric-section-' + examId);
+            
+            if (gradingType === 'overall') {
+                rubricSection.style.display = 'block';
+            } else {
+                rubricSection.style.display = 'none';
+            }
+        }
+        
+        function toggleEditExamRubricInput(examId) {
+            const type = document.getElementById('edit-exam-rubric-type-' + examId).value;
+            document.getElementById('edit-exam-percentage-rubric-' + examId).style.display = type === 'percentage' ? 'block' : 'none';
+            document.getElementById('edit-exam-letter-rubric-' + examId).style.display = type === 'letter' ? 'block' : 'none';
+        }
+        
+        function addEditExamCriterion(examId, type) {
+            const container = document.getElementById('edit-exam-' + (type === 'percentage' ? 'percentage' : 'letter') + '-criteria-' + examId);
+            const div = document.createElement('div');
+            div.className = 'criterion-row';
+            div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+            
+            if (type === 'percentage') {
+                div.innerHTML = `
+                    <input type="text" placeholder="Criterion" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                    <input type="number" placeholder="Points" min="0" max="100" style="flex: 1; padding: 8px;" class="exam-criterion-points" required>
+                    <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                `;
+            } else {
+                div.innerHTML = `
+                    <input type="text" placeholder="Criterion" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                    <select style="flex: 1; padding: 8px;" class="exam-criterion-grade" required>
+                        <option value="A+">A+</option>
+                        <option value="A">A</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B">B</option>
+                        <option value="B-">B-</option>
+                        <option value="C+">C+</option>
+                        <option value="C">C</option>
+                        <option value="C-">C-</option>
+                        <option value="D">D</option>
+                        <option value="F">F</option>
+                    </select>
+                    <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                `;
+            }
+            container.appendChild(div);
+        }
+        
+        function removeExamCriterion(btn) {
+            btn.parentElement.remove();
+        }
+        
+        function prepareEditForm(examId) {
+            const form = document.querySelector(`form[data-exam-id="${examId}"]`);
+            const gradingType = document.getElementById('edit-grading-type-' + examId).value;
+            
+            // If overall grading, prepare exam rubric
+            if (gradingType === 'overall') {
+                const rubricType = document.getElementById('edit-exam-rubric-type-' + examId).value;
+                if (!rubricType) {
+                    alert('Please select an exam grading scale type.');
+                    return false;
+                }
+                
+                let rubricData = {
+                    type: rubricType,
+                    criteria: []
+                };
+                
+                if (rubricType === 'percentage') {
+                    const rows = document.querySelectorAll('#edit-exam-percentage-criteria-' + examId + ' .criterion-row');
+                    if (rows.length === 0) {
+                        alert('Please add at least one exam grading criterion.');
+                        return false;
+                    }
+                    rows.forEach(row => {
+                        const name = row.querySelector('.exam-criterion-name').value.trim();
+                        const points = row.querySelector('.exam-criterion-points').value.trim();
+                        if (name && points) {
+                            rubricData.criteria.push({name: name, points: parseInt(points)});
+                        }
+                    });
+                    if (rubricData.criteria.length === 0) {
+                        alert('Please fill in all exam criterion fields.');
+                        return false;
+                    }
+                    document.getElementById('edit-exam-rubric-percentage-' + examId).value = JSON.stringify(rubricData);
+                } else {
+                    const rows = document.querySelectorAll('#edit-exam-letter-criteria-' + examId + ' .criterion-row');
+                    if (rows.length === 0) {
+                        alert('Please add at least one exam grading criterion.');
+                        return false;
+                    }
+                    rows.forEach(row => {
+                        const name = row.querySelector('.exam-criterion-name').value.trim();
+                        const grade = row.querySelector('.exam-criterion-grade').value;
+                        if (name && grade) {
+                            rubricData.criteria.push({name: name, grade: grade});
+                        }
+                    });
+                    if (rubricData.criteria.length === 0) {
+                        alert('Please fill in all exam criterion fields.');
+                        return false;
+                    }
+                    document.getElementById('edit-exam-rubric-letter-' + examId).value = JSON.stringify(rubricData);
+                }
+            }
+            
+            // Validate time limit if set
+            const timeLimitType = document.getElementById('edit-time-limit-type-' + examId).value;
+            if (timeLimitType !== 'none') {
+                const minutes = document.getElementById('edit-time-limit-minutes-' + examId).value;
+                if (!minutes || parseInt(minutes) <= 0) {
+                    alert('Please enter a valid time limit in minutes.');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        function saveExamTitle(examId, event) {
+            event.preventDefault();
+            
+            if (!prepareEditForm(examId)) {
+                return false;
+            }
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.error) {
+                    showToast('Could not save changes. Please try again.', true);
+                } else {
+                    showToast('Saved changes');
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while saving.', true);
+            });
+            
+            return false;
+        }
+        
+        function toggleExamStatus(examId, isActive) {
+            const formData = new FormData();
+            formData.append('exam_template_id', examId);
+            formData.append('is_active', isActive ? 'true' : 'false');
+
+            // Disable toggle while saving (prevents double-click confusion)
+            const checkbox = document.querySelector(`.status-toggle[data-exam-id="${examId}"]`);
+            if (checkbox) checkbox.disabled = true;
+            
+            fetch('/api/teacher/exam/toggle-status', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to update');
+                }
+            })
+            .then(data => {
+                // Update status text and indicator
+                const statusText = document.getElementById('status-text-' + examId);
+                const statusIndicator = document.getElementById('status-indicator-' + examId);
+                if (statusText) {
+                    statusText.textContent = isActive ? 'Active' : 'Inactive';
+                }
+                if (statusIndicator) {
+                    statusIndicator.className = 'status-indicator ' + (isActive ? 'active' : 'inactive');
+                }
+                showToast(isActive ? 'Exam is now visible to students' : 'Exam is hidden from students');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Revert toggle on error
+                if (checkbox) {
+                    checkbox.checked = !isActive;
+                    checkbox.disabled = false;
+                }
+                showToast('Could not update exam visibility.', true);
+                return;
+            });
+
+            if (checkbox) {
+                // re-enable after request settles
+                setTimeout(() => { checkbox.disabled = false; }, 600);
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const el = document.getElementById('toast');
+            const textEl = document.getElementById('toast-text');
+            if (!el || !textEl) return;
+            textEl.textContent = message;
+            el.className = 'toast' + (isError ? ' error show' : ' show');
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                el.className = 'toast' + (isError ? ' error' : '');
+            }, 2400);
+        }
+    </script>
 </body>
 </html>

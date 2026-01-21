@@ -3,51 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Oral Exam Grader - Teacher Login</title>
+    <title>Teacher Login - AI Oral Exam Grader</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
         <div class="login-card">
-            <h1>AI Oral Exam Grader</h1>
-            <p class="subtitle">Teacher Portal - Enter your email and password</p>
+            <h1>Teacher Portal</h1>
+            <p class="subtitle">Enter your username to access the teacher dashboard</p>
             
             {% if error %}
-            <div class="error-message" style="color:red; margin-bottom: 10px;">
-                {% if error == "invalid_login" %}
-                    Invalid login
+            <div class="error-message">
+                {% if error == "username_required" %}
+                Please enter a username.
                 {% else %}
-                    {{ error }}
+                {{ error }}
                 {% endif %}
             </div>
             {% endif %}
             
-            {% if success %}
-            <div class="success-message" style="color:green; margin-bottom: 10px;">
-                {% if success == "account_created" %}
-                    Account created successfully! Please log in with your email and password.
-                {% else %}
-                    {{ success }}
-                {% endif %}
-            </div>
-            {% endif %}
-            
-            <form method="post" action="/api/login" class="login-form">
+            <form method="post" action="/api/teacher/login" class="login-form">
                 <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required autofocus>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="username">Teacher Username:</label>
+                    <input type="text" id="username" name="username" required autofocus>
                 </div>
                 <button type="submit" class="btn btn-primary">Login</button>
             </form>
             
-            <p style="text-align: center; margin-top: 20px;">
-                <a href="/">Student Login</a> | 
-                <a href="/signup">Create Account</a>
-            </p>
+            <div style="margin-top: 20px; text-align: center;">
+                <a href="/" style="color: #667eea; text-decoration: none;">← Back to Student Login</a>
+            </div>
         </div>
     </div>
 </body>
