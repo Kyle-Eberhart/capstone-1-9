@@ -74,6 +74,17 @@
             <div class="progress-bar">
                 <div class="progress-fill" style="width: {{ (question_number / total_questions * 100) }}%"></div>
             </div>
+            {% if time_limit_type and time_limit_type != 'none' and time_limit_minutes %}
+            <div id="timer-container" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <div id="timer-display" style="font-size: 1.2em; font-weight: bold; color: #667eea;">
+                    {% if time_limit_type == 'per_question' %}
+                        Time remaining for this question: <span id="timer">--:--</span>
+                    {% else %}
+                        Time remaining for exam: <span id="timer">--:--</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
         
         <div class="question-card">
@@ -92,11 +103,26 @@
             {% if question.rubric %}
             <div class="rubric-box">
                 <h3>Grading Rubric</h3>
+                {% if rubric_parsed %}
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        {% for criterion in rubric_parsed.criteria %}
+                            <li>
+                                <strong>{{ criterion.name }}:</strong>
+                                {% if rubric_parsed.type == 'percentage' %}
+                                    {{ criterion.points }} points
+                                {% else %}
+                                    {{ criterion.grade }}
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
                 <p>{{ question.rubric }}</p>
+                {% endif %}
             </div>
             {% endif %}
             
-            <form method="post" action="/api/exam/{{ exam_id }}/answer" class="answer-form">
+            <form method="post" action="/api/exam/{{ exam_id }}/answer" class="answer-form" onsubmit="return onSubmitAnswer()">
                 <input type="hidden" name="question_id" value="{{ question.id }}">
                 
                 <div class="form-group">
@@ -109,7 +135,8 @@
                         placeholder="Type your answer here..."></textarea>
                 </div>
                 
-                <div class="form-actions">
+                <div class="form-actions" style="display: flex; justify-content: space-between; align-items: center;">
+                    <a href="/api/exam/{{ exam_id }}/exit" class="btn btn-secondary" id="exit-btn" onclick="return confirmExit()">Exit Test</a>
                     <button type="submit" class="btn btn-primary">Submit Answer</button>
                 </div>
             </form>

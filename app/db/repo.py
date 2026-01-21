@@ -23,9 +23,9 @@ class ExamRepository:
     """Repository for exam operations."""
     
     @staticmethod
-    def create(db: Session, student_id: int) -> Exam:
+    def create(db: Session, student_id: int, exam_template_id: Optional[int] = None) -> Exam:
         """Create a new exam session."""
-        exam = Exam(student_id=student_id)
+        exam = Exam(student_id=student_id, exam_template_id=exam_template_id)
         db.add(exam)
         db.commit()
         db.refresh(exam)

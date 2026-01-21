@@ -1723,7 +1723,7 @@ async def terminate_exam(
         return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Error terminating exam: {str(e)}", status_code=302)
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
+async def root(request: Request, db: Session = Depends(get_db)):
     """Root page - login form."""
     error = request.query_params.get("error", "")
     success = request.query_params.get("success", "")

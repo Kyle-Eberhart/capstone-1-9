@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Access - {{ exam_template.title }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .access-list {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .access-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .access-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 40px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .access-actions {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link" style="background: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+            <a href="/api/teacher/dashboard">← Back to Dashboard</a>
+            <span style="float: right; color: #667eea; font-weight: 600;">Exam: {{ exam_template.title }}</span>
+        </div>
+        
+        <div class="access-list">
+            <h2>Access Control: {{ exam_template.title }}</h2>
+            <p class="subtitle">Manage which students can access this exam</p>
+            
+            {% if accesses %}
+                {% for access in accesses %}
+                <div class="access-item">
+                    <div class="access-info">
+                        <strong>{{ access.student_username }}</strong>
+                        <span class="status-badge {% if access.is_active %}status-active{% else %}status-inactive{% endif %}">
+                            {% if access.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                        <span style="color: #999; font-size: 0.9em;">
+                            Added: {{ access.created_at.strftime('%Y-%m-%d') if access.created_at else 'N/A' }}
+                        </span>
+                    </div>
+                    <div class="access-actions">
+                        <form method="post" action="/api/teacher/exam/{{ exam_template.id }}/access/{{ access.id }}/toggle" style="display: inline;">
+                            <button type="submit" class="btn btn-secondary btn-small">
+                                {% if access.is_active %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                        <form method="post" action="/api/teacher/exam/{{ exam_template.id }}/access/{{ access.id }}/delete" style="display: inline;">
+                            <button type="submit" class="btn btn-secondary btn-small" onclick="return confirm('Are you sure you want to remove access for {{ access.student_username }}?')">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No students have access yet. Add a student below.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-section">
+            <h2>Add Student Access</h2>
+            <form method="post" action="/api/teacher/exam/{{ exam_template.id }}/access/add">
+                <div class="form-group">
+                    <label for="student_username">Student Username *</label>
+                    <input type="text" id="student_username" name="student_username" required placeholder="Enter student username">
+                    <small style="color: #666; display: block; margin-top: 5px;">The username the student will use to login</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Access</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

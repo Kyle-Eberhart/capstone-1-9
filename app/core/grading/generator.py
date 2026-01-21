@@ -49,7 +49,7 @@ Important: Respond only in JSON format exactly like this:
 Do not add anything else outside the JSON object."""
     
     async def generate_question(self, topic: str = "Computer Science", difficulty: str = "Intermediate", 
-                               question_number: int | None = None) -> GeneratedQuestion:
+                               question_number: Optional[int] = None) -> GeneratedQuestion:
         """Generate a question using the LLM."""
         if question_number is None:
             self._question_counter += 1

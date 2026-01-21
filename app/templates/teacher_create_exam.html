@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Exam - Teacher Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-card">
+            <div class="back-link">
+                <a href="/api/teacher/dashboard">← Back to Dashboard</a>
+            </div>
+            
+            <h1>Create New Exam</h1>
+            <p class="subtitle">Set up a new exam template for your students</p>
+            
+            <form method="post" action="/api/teacher/exam/create" class="login-form">
+                <div class="form-group">
+                    <label for="title">Exam Title *</label>
+                    <input type="text" id="title" name="title" required placeholder="e.g., Midterm Exam - Data Structures">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description (Optional)</label>
+                    <textarea id="description" name="description" placeholder="Brief description of the exam..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="time_limit_type">Time Limit</label>
+                    <select id="time_limit_type" name="time_limit_type" onchange="toggleTimeLimitInput()">
+                        <option value="none">No Time Limit</option>
+                        <option value="per_question">Per Question</option>
+                        <option value="total">Total Time for Exam</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="time_limit_input" style="display: none;">
+                    <label for="time_limit_minutes">Time Limit (minutes) *</label>
+                    <input type="number" id="time_limit_minutes" name="time_limit_minutes" min="1" placeholder="Enter time in minutes">
+                </div>
+                
+                <div class="form-group">
+                    <label for="grading_type">Grading Type *</label>
+                    <select id="grading_type" name="grading_type" onchange="toggleGradingOptions()">
+                        <option value="per_question">Grade Each Question Individually</option>
+                        <option value="overall">Grade Entire Exam Overall</option>
+                    </select>
+                </div>
+                
+                <div id="exam_rubric_section" style="display: none;">
+                    <div class="form-group">
+                        <label for="exam_rubric_type">Exam Grading Scale Type *</label>
+                        <select id="exam_rubric_type" name="exam_rubric_type" onchange="toggleExamRubricInput()">
+                            <option value="">-- Select --</option>
+                            <option value="percentage">Percentage Scale</option>
+                            <option value="letter">Letter Grade Scale</option>
+                        </select>
+                    </div>
+                    
+                    <div id="exam_percentage_rubric" class="rubric-input-section" style="display: none;">
+                        <label>Exam Grading Criteria (Percentage-based) *</label>
+                        <div id="exam_percentage_criteria">
+                            <div class="criterion-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                <input type="text" placeholder="Criterion (e.g., Overall Understanding)" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                                <input type="number" placeholder="Points" min="0" max="100" style="flex: 1; padding: 8px;" class="exam-criterion-points" required>
+                                <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addExamCriterion('percentage')" class="btn btn-secondary btn-small" style="margin-top: 10px;">+ Add Criterion</button>
+                        <input type="hidden" id="exam_rubric_percentage" name="exam_rubric_percentage" value="">
+                    </div>
+                    
+                    <div id="exam_letter_rubric" class="rubric-input-section" style="display: none;">
+                        <label>Exam Grading Criteria (Letter Grade-based) *</label>
+                        <div id="exam_letter_criteria">
+                            <div class="criterion-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                <input type="text" placeholder="Criterion (e.g., Overall Understanding)" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                                <select style="flex: 1; padding: 8px;" class="exam-criterion-grade" required>
+                                    <option value="A+">A+</option>
+                                    <option value="A">A</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B">B</option>
+                                    <option value="B-">B-</option>
+                                    <option value="C+">C+</option>
+                                    <option value="C">C</option>
+                                    <option value="C-">C-</option>
+                                    <option value="D">D</option>
+                                    <option value="F">F</option>
+                                </select>
+                                <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addExamCriterion('letter')" class="btn btn-secondary btn-small" style="margin-top: 10px;">+ Add Criterion</button>
+                        <input type="hidden" id="exam_rubric_letter" name="exam_rubric_letter" value="">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="/api/teacher/dashboard" class="btn btn-secondary">Cancel</a>
+                    <button type="button" onclick="prepareExamForm()" class="btn btn-primary">Create Exam</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function toggleTimeLimitInput() {
+            const type = document.getElementById('time_limit_type').value;
+            const inputDiv = document.getElementById('time_limit_input');
+            const minutesInput = document.getElementById('time_limit_minutes');
+            
+            if (type === 'none') {
+                inputDiv.style.display = 'none';
+                minutesInput.removeAttribute('required');
+            } else {
+                inputDiv.style.display = 'block';
+                minutesInput.setAttribute('required', 'required');
+            }
+        }
+        
+        function toggleGradingOptions() {
+            const gradingType = document.getElementById('grading_type').value;
+            const rubricSection = document.getElementById('exam_rubric_section');
+            
+            if (gradingType === 'overall') {
+                rubricSection.style.display = 'block';
+            } else {
+                rubricSection.style.display = 'none';
+                // Clear rubric inputs
+                document.getElementById('exam_rubric_percentage').value = '';
+                document.getElementById('exam_rubric_letter').value = '';
+            }
+        }
+        
+        function toggleExamRubricInput() {
+            const type = document.getElementById('exam_rubric_type').value;
+            document.getElementById('exam_percentage_rubric').style.display = type === 'percentage' ? 'block' : 'none';
+            document.getElementById('exam_letter_rubric').style.display = type === 'letter' ? 'block' : 'none';
+        }
+        
+        function addExamCriterion(type) {
+            const container = document.getElementById(type === 'percentage' ? 'exam_percentage_criteria' : 'exam_letter_criteria');
+            const div = document.createElement('div');
+            div.className = 'criterion-row';
+            div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+            
+            if (type === 'percentage') {
+                div.innerHTML = `
+                    <input type="text" placeholder="Criterion" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                    <input type="number" placeholder="Points" min="0" max="100" style="flex: 1; padding: 8px;" class="exam-criterion-points" required>
+                    <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                `;
+            } else {
+                div.innerHTML = `
+                    <input type="text" placeholder="Criterion" style="flex: 2; padding: 8px;" class="exam-criterion-name" required>
+                    <select style="flex: 1; padding: 8px;" class="exam-criterion-grade" required>
+                        <option value="A+">A+</option>
+                        <option value="A">A</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B">B</option>
+                        <option value="B-">B-</option>
+                        <option value="C+">C+</option>
+                        <option value="C">C</option>
+                        <option value="C-">C-</option>
+                        <option value="D">D</option>
+                        <option value="F">F</option>
+                    </select>
+                    <button type="button" onclick="removeExamCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                `;
+            }
+            container.appendChild(div);
+        }
+        
+        function removeExamCriterion(btn) {
+            btn.parentElement.remove();
+        }
+        
+        function prepareExamForm() {
+            const form = document.querySelector('form');
+            const gradingType = document.getElementById('grading_type').value;
+            
+            // If overall grading, prepare exam rubric
+            if (gradingType === 'overall') {
+                const rubricType = document.getElementById('exam_rubric_type').value;
+                if (!rubricType) {
+                    alert('Please select an exam grading scale type.');
+                    return;
+                }
+                
+                let rubricData = {
+                    type: rubricType,
+                    criteria: []
+                };
+                
+                if (rubricType === 'percentage') {
+                    const rows = document.querySelectorAll('#exam_percentage_criteria .criterion-row');
+                    if (rows.length === 0) {
+                        alert('Please add at least one exam grading criterion.');
+                        return;
+                    }
+                    rows.forEach(row => {
+                        const name = row.querySelector('.exam-criterion-name').value.trim();
+                        const points = row.querySelector('.exam-criterion-points').value.trim();
+                        if (name && points) {
+                            rubricData.criteria.push({name: name, points: parseInt(points)});
+                        }
+                    });
+                    if (rubricData.criteria.length === 0) {
+                        alert('Please fill in all exam criterion fields.');
+                        return;
+                    }
+                    document.getElementById('exam_rubric_percentage').value = JSON.stringify(rubricData);
+                } else {
+                    const rows = document.querySelectorAll('#exam_letter_criteria .criterion-row');
+                    if (rows.length === 0) {
+                        alert('Please add at least one exam grading criterion.');
+                        return;
+                    }
+                    rows.forEach(row => {
+                        const name = row.querySelector('.exam-criterion-name').value.trim();
+                        const grade = row.querySelector('.exam-criterion-grade').value;
+                        if (name && grade) {
+                            rubricData.criteria.push({name: name, grade: grade});
+                        }
+                    });
+                    if (rubricData.criteria.length === 0) {
+                        alert('Please fill in all exam criterion fields.');
+                        return;
+                    }
+                    document.getElementById('exam_rubric_letter').value = JSON.stringify(rubricData);
+                }
+            }
+            
+            // Validate time limit if set
+            const timeLimitType = document.getElementById('time_limit_type').value;
+            if (timeLimitType !== 'none') {
+                const minutes = document.getElementById('time_limit_minutes').value;
+                if (!minutes || parseInt(minutes) <= 0) {
+                    alert('Please enter a valid time limit in minutes.');
+                    return;
+                }
+            }
+            
+            form.submit();
+        }
+    </script>
+</body>
+</html>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

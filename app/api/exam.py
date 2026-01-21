@@ -102,6 +102,21 @@ async def submit_answer(
     return RedirectResponse(url=f"/api/exam/{exam_id}", status_code=302)
 
 
+@router.get("/exam/{exam_id}/exit")
+async def exit_exam(request: Request, exam_id: int, db: Session = Depends(get_db)):
+    """Exit exam early - mark as incomplete and return to home."""
+    exam = ExamRepository.get(db, exam_id)
+    if exam and exam.status == "in_progress":
+        # Mark exam as incomplete (don't calculate final grade)
+        ExamRepository.update_status(db, exam_id, "incomplete", None, "Exam exited early by student")
+    
+    # Clear cookies and redirect to home
+    response = RedirectResponse(url="/", status_code=302)
+    response.delete_cookie(key="exam_id")
+    response.delete_cookie(key="username")
+    return response
+
+
 @router.get("/exam/{exam_id}/complete", response_class=HTMLResponse)
 async def exam_complete(request: Request, exam_id: int, db: Session = Depends(get_db)):
     """Show exam completion page with final grade."""

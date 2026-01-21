@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Questions - {{ exam_template.title }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .back-link {
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .questions-list {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .question-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .question-header h4 {
+            color: #333;
+            margin: 0;
+        }
+        .question-content {
+            margin: 10px 0;
+            color: #555;
+        }
+        .question-actions {
+            margin-top: 10px;
+        }
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 40px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .rubric-input-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .criterion-row {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link" style="background: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+            <a href="/api/teacher/dashboard">← Back to Dashboard</a>
+            <span style="float: right; color: #667eea; font-weight: 600;">Exam: {{ exam_template.title }}</span>
+        </div>
+        
+        <div class="questions-list">
+            <h2>Questions for: {{ exam_template.title }}</h2>
+            
+            {% if request.query_params.get('error') %}
+            <div class="error-message" style="margin-bottom: 20px;">
+                {% set error = request.query_params.get('error') %}
+                {% if error == 'saving_failed' %}
+                Error saving question. Please try again.
+                {% elif 'Rubric is required' in error %}
+                {{ error.replace('_', ' ') }}
+                {% else %}
+                Error: {{ error.replace('_', ' ') }}
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% if questions %}
+                {% for question in questions %}
+                <div class="question-item">
+                    <div class="question-header">
+                        <h4>Question #{{ question.question_number }}</h4>
+                        <form method="post" action="/api/teacher/exam/{{ exam_template.id }}/questions/{{ question.id }}/delete" style="display: inline;">
+                            <button type="submit" class="btn btn-secondary btn-small" onclick="return confirm('Are you sure you want to delete this question?')">Delete</button>
+                        </form>
+                    </div>
+                    <div class="question-content">
+                        <p><strong>Question:</strong> {{ question.question_text }}</p>
+                        {% if question.context %}
+                        <p><strong>Context:</strong> {{ question.context }}</p>
+                        {% endif %}
+                        <p><strong>Rubric:</strong></p>
+                        <div style="margin: 10px 0;">
+                            {% set parsed = parsed_questions[loop.index0].rubric_parsed if parsed_questions[loop.index0].rubric_parsed else None %}
+                            {% if parsed %}
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    {% for criterion in parsed.criteria %}
+                                        <li>
+                                            <strong>{{ criterion.name }}:</strong>
+                                            {% if parsed.type == 'percentage' %}
+                                                {{ criterion.points }} points
+                                            {% else %}
+                                                {{ criterion.grade }}
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>{{ question.rubric }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>No questions added yet. Add your first question below.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Add/Edit Question</h2>
+                <a href="/api/teacher/dashboard" class="btn btn-secondary btn-small">View All Exams</a>
+            </div>
+            <form method="post" action="/api/teacher/exam/{{ exam_template.id }}/questions/add" id="questionForm">
+                <div class="form-group">
+                    <label for="question_number">Question Number *</label>
+                    <input type="number" id="question_number" name="question_number" required min="1" value="{% if questions %}{{ questions|length + 1 }}{% else %}1{% endif %}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="question_text">Question Text *</label>
+                    <textarea id="question_text" name="question_text" required placeholder="Enter the question text..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="context">Context (Optional)</label>
+                    <textarea id="context" name="context" placeholder="Provide background context or information..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rubric_type">Grading Scale Type *</label>
+                    <select id="rubric_type" name="rubric_type" required onchange="toggleRubricInput()">
+                        <option value="percentage">Percentage Scale</option>
+                        <option value="letter">Letter Grade Scale</option>
+                    </select>
+                </div>
+                
+                <div id="percentage_rubric" class="rubric-input-section">
+                    <label>Grading Criteria (Percentage-based) *</label>
+                    <div id="percentage_criteria">
+                        <div class="criterion-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                            <input type="text" placeholder="Criterion (e.g., Understanding)" style="flex: 2; padding: 8px;" class="criterion-name" required>
+                            <input type="number" placeholder="Points" min="0" max="100" style="flex: 1; padding: 8px;" class="criterion-points" required>
+                            <button type="button" onclick="removeCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addCriterion('percentage')" class="btn btn-secondary btn-small" style="margin-top: 10px;">+ Add Criterion</button>
+                    <input type="hidden" id="rubric_percentage" name="rubric_percentage" value="">
+                </div>
+                
+                <div id="letter_rubric" class="rubric-input-section" style="display: none;">
+                    <label>Grading Criteria (Letter Grade-based) *</label>
+                    <div id="letter_criteria">
+                        <div class="criterion-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                            <input type="text" placeholder="Criterion (e.g., Understanding)" style="flex: 2; padding: 8px;" class="criterion-name" required>
+                            <select style="flex: 1; padding: 8px;" class="criterion-grade" required>
+                                <option value="A+">A+</option>
+                                <option value="A">A</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B">B</option>
+                                <option value="B-">B-</option>
+                                <option value="C+">C+</option>
+                                <option value="C">C</option>
+                                <option value="C-">C-</option>
+                                <option value="D">D</option>
+                                <option value="F">F</option>
+                            </select>
+                            <button type="button" onclick="removeCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addCriterion('letter')" class="btn btn-secondary btn-small" style="margin-top: 10px;">+ Add Criterion</button>
+                    <input type="hidden" id="rubric_letter" name="rubric_letter" value="">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" onclick="prepareRubricAndSubmit()">Save Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function toggleRubricInput() {
+            const type = document.getElementById('rubric_type').value;
+            document.getElementById('percentage_rubric').style.display = type === 'percentage' ? 'block' : 'none';
+            document.getElementById('letter_rubric').style.display = type === 'letter' ? 'block' : 'none';
+        }
+        
+        function addCriterion(type) {
+            const container = document.getElementById(type === 'percentage' ? 'percentage_criteria' : 'letter_criteria');
+            const div = document.createElement('div');
+            div.className = 'criterion-row';
+            div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+            
+            if (type === 'percentage') {
+                div.innerHTML = `
+                    <input type="text" placeholder="Criterion (e.g., Understanding)" style="flex: 2; padding: 8px;" class="criterion-name" required>
+                    <input type="number" placeholder="Points" min="0" max="100" style="flex: 1; padding: 8px;" class="criterion-points" required>
+                    <button type="button" onclick="removeCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                `;
+            } else {
+                div.innerHTML = `
+                    <input type="text" placeholder="Criterion (e.g., Understanding)" style="flex: 2; padding: 8px;" class="criterion-name" required>
+                    <select style="flex: 1; padding: 8px;" class="criterion-grade" required>
+                        <option value="A+">A+</option>
+                        <option value="A">A</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B">B</option>
+                        <option value="B-">B-</option>
+                        <option value="C+">C+</option>
+                        <option value="C">C</option>
+                        <option value="C-">C-</option>
+                        <option value="D">D</option>
+                        <option value="F">F</option>
+                    </select>
+                    <button type="button" onclick="removeCriterion(this)" class="btn btn-secondary btn-small" style="padding: 8px 12px;">Remove</button>
+                `;
+            }
+            container.appendChild(div);
+        }
+        
+        function removeCriterion(btn) {
+            btn.parentElement.remove();
+        }
+        
+        function prepareRubricAndSubmit() {
+            try {
+                const type = document.getElementById('rubric_type').value;
+                let rubricData = {
+                    type: type,
+                    criteria: []
+                };
+                
+                // Clear previous values
+                const rubricPercentageInput = document.getElementById('rubric_percentage');
+                const rubricLetterInput = document.getElementById('rubric_letter');
+                
+                if (rubricPercentageInput) rubricPercentageInput.value = '';
+                if (rubricLetterInput) rubricLetterInput.value = '';
+                
+                if (type === 'percentage') {
+                    const rows = document.querySelectorAll('#percentage_criteria .criterion-row');
+                    if (rows.length === 0) {
+                        alert('Please add at least one grading criterion.');
+                        return;
+                    }
+                    rows.forEach(row => {
+                        const nameInput = row.querySelector('.criterion-name');
+                        const pointsInput = row.querySelector('.criterion-points');
+                        if (nameInput && pointsInput) {
+                            const name = nameInput.value.trim();
+                            const points = pointsInput.value.trim();
+                            if (name && points) {
+                                rubricData.criteria.push({name: name, points: parseInt(points)});
+                            }
+                        }
+                    });
+                    if (rubricData.criteria.length === 0) {
+                        alert('Please fill in all criterion fields.');
+                        return;
+                    }
+                    if (rubricPercentageInput) {
+                        rubricPercentageInput.value = JSON.stringify(rubricData);
+                    }
+                } else {
+                    const rows = document.querySelectorAll('#letter_criteria .criterion-row');
+                    if (rows.length === 0) {
+                        alert('Please add at least one grading criterion.');
+                        return;
+                    }
+                    rows.forEach(row => {
+                        const nameInput = row.querySelector('.criterion-name');
+                        const gradeSelect = row.querySelector('.criterion-grade');
+                        if (nameInput && gradeSelect) {
+                            const name = nameInput.value.trim();
+                            const grade = gradeSelect.value;
+                            if (name && grade) {
+                                rubricData.criteria.push({name: name, grade: grade});
+                            }
+                        }
+                    });
+                    if (rubricData.criteria.length === 0) {
+                        alert('Please fill in all criterion fields.');
+                        return;
+                    }
+                    if (rubricLetterInput) {
+                        rubricLetterInput.value = JSON.stringify(rubricData);
+                    }
+                }
+                
+                // Validate required fields
+                const questionText = document.getElementById('question_text');
+                if (!questionText || !questionText.value.trim()) {
+                    alert('Please enter question text.');
+                    return;
+                }
+                
+                // Submit the form
+                const form = document.getElementById('questionForm');
+                if (!form) {
+                    alert('Error: Could not find form to submit.');
+                    return;
+                }
+                
+                // Debug: Log what we're submitting
+                console.log('Submitting form with rubric:', type === 'percentage' ? rubricPercentageInput.value : rubricLetterInput.value);
+                
+                // Submit the form
+                form.submit();
+            } catch (error) {
+                console.error('Error preparing rubric:', error);
+                alert('An error occurred: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
