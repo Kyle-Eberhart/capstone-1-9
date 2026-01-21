@@ -56,12 +56,12 @@
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>{{ question.rubric }}</p>
+                <p>{{ question.rubric }}</p>
                 {% endif %}
             </div>
             {% endif %}
             
-            <form method="post" action="/api/exam/{{ exam_id }}/answer" class="answer-form">
+            <form method="post" action="/api/exam/{{ exam_id }}/answer" class="answer-form" onsubmit="return onSubmitAnswer()">
                 <input type="hidden" name="question_id" value="{{ question.id }}">
                 
                 <div class="form-group">
@@ -85,6 +85,8 @@
     <script>
         {% if time_limit_type and time_limit_type != 'none' and time_limit_minutes %}
         // Time limit functionality
+        const examId = {{ exam_id }};
+        const questionNumber = {{ question_number }};
         let timeRemaining = {{ time_limit_minutes }} * 60; // Convert to seconds
         let timerInterval = null;
         let examStartTime = null;
@@ -96,8 +98,8 @@
         function initTimer() {
             // Get start time from sessionStorage or set it
             const storageKey = isPerQuestion ? 
-                `question_start_${exam_id}_${question_number}` : 
-                `exam_start_${exam_id}`;
+                `question_start_${examId}_${questionNumber}` : 
+                `exam_start_${examId}`;
             
             const storedStart = sessionStorage.getItem(storageKey);
             if (storedStart) {
@@ -138,17 +140,50 @@
         }
         
         function handleTimeUp() {
-            document.getElementById('timer').textContent = '00:00';
-            document.getElementById('timer').style.color = '#dc3545';
-            
-            alert('Time is up! Your answer will be submitted automatically.');
-            
+            const timerEl = document.getElementById('timer');
+            if (timerEl) {
+                timerEl.textContent = '00:00';
+                timerEl.style.color = '#dc3545';
+            }
+
+            // Build a lightweight overlay instead of a blocking alert
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed; inset: 0; z-index: 9999;
+                background: rgba(17, 24, 39, 0.55);
+                display: flex; align-items: center; justify-content: center;
+                padding: 20px;
+            `;
+            overlay.innerHTML = `
+                <div style="
+                    width: 100%; max-width: 520px;
+                    background: white; border-radius: 14px;
+                    padding: 20px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+                    border: 1px solid #eef0f3;
+                ">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                        <div style="width:10px; height:10px; border-radius:999px; background:#dc3545;"></div>
+                        <div style="font-weight:800; font-size:16px; color:#111827;">Time is up</div>
+                    </div>
+                    <div style="color:#374151; font-size:14px; line-height:1.5;">
+                        Your answer is being submitted automatically.
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Disable inputs to avoid confusion while submitting
+            const answerInput = document.getElementById('answer');
+            if (answerInput) answerInput.setAttribute('disabled', 'disabled');
+            const submitBtn = document.querySelector('.answer-form button[type="submit"]');
+            if (submitBtn) submitBtn.setAttribute('disabled', 'disabled');
+
             // Auto-submit the form
             const form = document.querySelector('.answer-form');
             if (form) {
-                const answerInput = document.getElementById('answer');
-                if (!answerInput.value.trim()) {
+                if (answerInput && !answerInput.value.trim()) {
                     answerInput.value = '[No answer provided - time expired]';
+                    answerInput.removeAttribute('disabled'); // allow value to be posted
                 }
                 form.submit();
             }
@@ -167,8 +202,36 @@
         });
         {% endif %}
         
+        function clearTimerKeys() {
+            // Clear all timer keys for this exam (both total and per-question)
+            try {
+                const examKey = `exam_start_${examId}`;
+                sessionStorage.removeItem(examKey);
+                // Remove any per-question keys for this exam
+                const prefix = `question_start_${examId}_`;
+                for (let i = sessionStorage.length - 1; i >= 0; i--) {
+                    const k = sessionStorage.key(i);
+                    if (k && k.startsWith(prefix)) sessionStorage.removeItem(k);
+                }
+            } catch (e) {}
+        }
+
+        function onSubmitAnswer() {
+            // For per-question timers, clear this question's key on submit so next question starts fresh
+            {% if time_limit_type and time_limit_type == 'per_question' and time_limit_minutes %}
+            try {
+                sessionStorage.removeItem(`question_start_${examId}_${questionNumber}`);
+            } catch (e) {}
+            {% endif %}
+            return true;
+        }
+
         function confirmExit() {
             if (confirm('Are you sure you want to exit the test? This will end the test and you will be returned to the home page.')) {
+                // Clear timer keys so a new attempt doesn't reuse stale time
+                {% if time_limit_type and time_limit_type != 'none' and time_limit_minutes %}
+                clearTimerKeys();
+                {% endif %}
                 return true;
             }
             return false;

@@ -46,8 +46,27 @@ def get_current_teacher(request: Request, db: Session) -> Optional[Teacher]:
 @router.get("/teacher/login", response_class=HTMLResponse)
 async def teacher_login_page(request: Request):
     """Teacher login page."""
-    error = request.query_params.get("error", "")
-    return render_template("teacher_login.html", {"request": request, "error": error})
+    try:
+        error = request.query_params.get("error", "")
+        return render_template("teacher_login.html", {"request": request, "error": error})
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error rendering teacher login page: {e}", exc_info=True)
+        return HTMLResponse(
+            content=f"""
+            <html>
+            <head><title>Error</title></head>
+            <body style="font-family: Arial; padding: 40px; text-align: center;">
+                <h1>Application Error</h1>
+                <p>An error occurred while loading the teacher login page.</p>
+                <p style="color: #666; font-size: 0.9em;">Error: {str(e)}</p>
+                <p><a href="/api/teacher/login">Try Again</a></p>
+            </body>
+            </html>
+            """,
+            status_code=500
+        )
 
 
 @router.post("/teacher/login")

@@ -53,40 +53,60 @@ async def student_dashboard(request: Request):
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request, db: Session = Depends(get_db)):
     """Root page - login form."""
-    error = request.query_params.get("error", "")
-    username = request.query_params.get("username", "")
-    
-    available_exams = []
-    if username:
-        # Get exams this student has access to
-        from app.db.models import ExamTemplate, ExamAccess
-        try:
-            # Get all active exam templates that this student has access to
-            accesses = db.query(ExamAccess).filter(
-                ExamAccess.student_username == username,
-                ExamAccess.is_active == True
-            ).all()
-            
-            exam_template_ids = [access.exam_template_id for access in accesses]
-            
-            if exam_template_ids:
-                # Only show active exams that the student has access to
-                available_exams = db.query(ExamTemplate).filter(
-                    ExamTemplate.id.in_(exam_template_ids),
-                    ExamTemplate.is_active == True
+    try:
+        error = request.query_params.get("error", "")
+        username = request.query_params.get("username", "")
+        
+        available_exams = []
+        if username:
+            # Get exams this student has access to
+            from app.db.models import ExamTemplate, ExamAccess
+            try:
+                # Get all active exam templates that this student has access to
+                accesses = db.query(ExamAccess).filter(
+                    ExamAccess.student_username == username,
+                    ExamAccess.is_active == True
                 ).all()
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Error loading accessible exams: {e}")
-            available_exams = []
-    
-    return render_template("login.html", {
-        "request": request, 
-        "error": error,
-        "available_exams": available_exams,
-        "username": username
-    })
+                
+                exam_template_ids = [access.exam_template_id for access in accesses]
+                
+                if exam_template_ids:
+                    # Only show active exams that the student has access to
+                    available_exams = db.query(ExamTemplate).filter(
+                        ExamTemplate.id.in_(exam_template_ids),
+                        ExamTemplate.is_active == True
+                    ).all()
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Error loading accessible exams: {e}")
+                available_exams = []
+        
+        return render_template("login.html", {
+            "request": request, 
+            "error": error,
+            "available_exams": available_exams,
+            "username": username
+        })
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error rendering root page: {e}", exc_info=True)
+        # Return a simple error page instead of white screen
+        return HTMLResponse(
+            content=f"""
+            <html>
+            <head><title>Error</title></head>
+            <body style="font-family: Arial; padding: 40px; text-align: center;">
+                <h1>Application Error</h1>
+                <p>An error occurred while loading the page.</p>
+                <p style="color: #666; font-size: 0.9em;">Error: {str(e)}</p>
+                <p><a href="/">Try Again</a></p>
+            </body>
+            </html>
+            """,
+            status_code=500
+        )
 
 
 @app.get("/question/{question_id}", response_class=HTMLResponse)

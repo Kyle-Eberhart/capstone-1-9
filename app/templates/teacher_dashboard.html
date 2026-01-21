@@ -6,6 +6,11 @@
     <title>Teacher Dashboard - AI Oral Exam Grader</title>
     <link rel="stylesheet" href="/static/styles.css">
     <style>
+        /* Dashboard layout overrides */
+        .container {
+            max-width: 1100px;
+        }
+
         .dashboard-header {
             background: white;
             border-radius: 12px;
@@ -22,18 +27,117 @@
             padding: 30px 40px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
-        .exam-item {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
+        .exam-list-topbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .exam-list-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .exam-search {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            min-width: 260px;
+            position: relative;
+        }
+        .exam-search input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #fafafa;
+            padding-right: 38px;
+        }
+        .exam-search input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            background: white;
+        }
+        .search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #6b7280;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .search-clear:hover {
+            background: #f3f4f6;
+        }
+        .results-hint {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+        .hint-pill {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #eaecf0;
+            background: #fafafa;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 9999;
+            background: rgba(17, 24, 39, 0.92);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            max-width: 420px;
+            font-size: 14px;
+        }
+        .toast.show { display: flex; }
+        .toast .dot { width: 10px; height: 10px; border-radius: 999px; background: #22c55e; }
+        .toast.error .dot { background: #ef4444; }
+        .exam-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .exam-item {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid #eef0f3;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
         }
         .exam-item:hover {
-            background: #e9ecef;
+            border-color: rgba(102, 126, 234, 0.35);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
         }
         .exam-info h3 {
             margin-bottom: 5px;
@@ -42,15 +146,19 @@
             display: inline-block;
             padding-right: 25px;
             cursor: pointer;
+            line-height: 1.25;
         }
         .exam-info h3:hover {
             color: #667eea;
         }
         .exam-info h3:hover::after {
-            content: "✏️";
+            content: "Edit";
             position: absolute;
             right: 0;
-            font-size: 0.8em;
+            font-size: 0.75em;
+            color: #9aa3b2;
+            font-weight: 700;
+            letter-spacing: 0.02em;
         }
         .exam-info p {
             color: #666;
@@ -79,7 +187,17 @@
         }
         .exam-actions {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+            min-width: 170px;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
         }
         .btn-small {
             padding: 8px 16px;
@@ -151,6 +269,68 @@
             align-items: center;
             gap: 6px;
         }
+        .quick-actions {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .qa-button {
+            width: 34px;
+            height: 30px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #374151;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .qa-button:hover {
+            background: #f3f4f6;
+        }
+        .qa-menu {
+            position: absolute;
+            top: 36px;
+            right: 0;
+            width: 220px;
+            background: white;
+            border: 1px solid #eaecf0;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            padding: 6px;
+            display: none;
+            z-index: 50;
+        }
+        .qa-menu.open { display: block; }
+        .qa-item, .qa-item-button {
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 10px;
+            color: #111827;
+            text-decoration: none;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .qa-item:hover, .qa-item-button:hover {
+            background: #f3f4f6;
+        }
+        .qa-sep {
+            height: 1px;
+            background: #eef0f3;
+            margin: 6px 4px;
+        }
+        .qa-danger { color: #b91c1c; }
+        .qa-danger:hover { background: #fef2f2; }
         .exam-header-row {
             display: flex;
             justify-content: space-between;
@@ -205,6 +385,47 @@
         .compact-toggle input:checked + .slider:before {
             transform: translateX(18px);
         }
+
+        .meta-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #374151;
+            background: #f3f4f6;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #eaecf0;
+        }
+        .chip strong {
+            font-weight: 700;
+            color: #111827;
+        }
+        .chip.muted {
+            background: #fafafa;
+            color: #6b7280;
+        }
+
+        @media (max-width: 900px) {
+            .exam-grid {
+                grid-template-columns: 1fr;
+            }
+            .exam-list {
+                padding: 22px;
+            }
+            .dashboard-header {
+                padding: 22px;
+            }
+            .exam-actions {
+                min-width: 150px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -220,17 +441,29 @@
         </div>
         
         <div class="exam-list">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>My Exams</h2>
-                <div style="display: flex; gap: 10px;">
+            <div class="exam-list-topbar">
+                <div style="min-width: 180px;">
+                    <h2 style="margin-bottom: 4px;">My Exams</h2>
+                    <div style="font-size: 0.9em; color: #6b7280;">Create, edit, and manage access for your exams</div>
+                </div>
+                <div class="exam-search">
+                    <input id="exam-search" type="text" placeholder="Search exams by name or description..." autocomplete="off">
+                    <button id="search-clear" class="search-clear" type="button" aria-label="Clear search">×</button>
+                </div>
+                <div class="exam-list-actions">
                     <a href="/api/teacher/students" class="btn btn-secondary">Manage Students</a>
                     <a href="/api/teacher/exam/create" class="btn btn-primary">+ Create New Exam</a>
                 </div>
             </div>
             
             {% if exam_templates %}
+                <div class="results-hint">
+                    <span class="hint-pill"><strong id="results-count">{{ exam_templates|length }}</strong> exams</span>
+                    <span class="hint-pill">Tip: click an exam title to edit • Enter to save • Esc to cancel</span>
+                </div>
+                <div class="exam-grid" id="exam-grid">
                 {% for exam_template in exam_templates %}
-                <div class="exam-item">
+                <div class="exam-item" data-title="{{ exam_template.title|lower }}" data-description="{{ (exam_template.description or '')|lower }}">
                     <div class="exam-info" style="flex: 1; min-width: 0;">
                         <div class="exam-header-row">
                             <div class="exam-title-wrapper">
@@ -238,7 +471,8 @@
                                     <h3 class="editable-title" 
                                         data-exam-id="{{ exam_template.id }}"
                                         data-title="{{ exam_template.title }}"
-                                        data-description="{{ exam_template.description or '' }}">
+                                        data-description="{{ exam_template.description or '' }}"
+                                        title="Click to edit name & settings">
                                         {{ exam_template.title }}
                                     </h3>
                                 </div>
@@ -257,6 +491,20 @@
                                            {% if exam_template.is_active %}checked{% endif %}>
                                     <span class="slider"></span>
                                 </label>
+                                <div class="quick-actions">
+                                    <button type="button" class="qa-button" aria-label="Quick actions" aria-expanded="false" data-qa-btn="{{ exam_template.id }}">⋯</button>
+                                    <div class="qa-menu" id="qa-menu-{{ exam_template.id }}">
+                                        <button type="button" class="qa-item-button" onclick="startEditTitle('{{ exam_template.id }}', '{{ exam_template.title|e }}', '{{ (exam_template.description or '')|e }}')">
+                                            Edit exam
+                                        </button>
+                                        <a class="qa-item" href="/api/teacher/exam/{{ exam_template.id }}/questions">Manage questions</a>
+                                        <a class="qa-item" href="/api/teacher/exam/{{ exam_template.id }}/access">Manage access</a>
+                                        <div class="qa-sep"></div>
+                                        <form method="post" action="/api/teacher/exam/{{ exam_template.id }}/delete" onsubmit="return confirm('Are you sure you want to delete this exam? This action cannot be undone.');">
+                                            <button type="submit" class="qa-item-button qa-danger">Delete exam</button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="exam-title-edit" id="title-edit-{{ exam_template.id }}">
@@ -374,20 +622,39 @@
                                 </div>
                             </form>
                         </div>
-                        <p id="description-display-{{ exam_template.id }}">{{ exam_template.description or "No description" }}</p>
+                        <p id="description-display-{{ exam_template.id }}" style="margin-top: 6px;">{{ exam_template.description or "No description" }}</p>
+                        <div class="meta-row">
+                            <span class="chip">
+                                <strong>Time:</strong>
+                                {% if exam_template.time_limit_type == 'per_question' and exam_template.time_limit_minutes %}
+                                    {{ exam_template.time_limit_minutes }} min / question
+                                {% elif exam_template.time_limit_type == 'total' and exam_template.time_limit_minutes %}
+                                    {{ exam_template.time_limit_minutes }} min total
+                                {% else %}
+                                    None
+                                {% endif %}
+                            </span>
+                            <span class="chip">
+                                <strong>Grading:</strong>
+                                {% if exam_template.grading_type == 'overall' %}
+                                    Overall {% if exam_template.exam_rubric_type %}({{ exam_template.exam_rubric_type }}){% endif %}
+                                {% else %}
+                                    Per-question
+                                {% endif %}
+                            </span>
+                            <span class="chip muted">
+                                <strong>Created:</strong>
+                                {{ exam_template.created_at.strftime('%b %d, %Y') if exam_template.created_at else 'N/A' }}
+                            </span>
+                        </div>
                         <p style="font-size: 0.85em; color: #999; margin-top: 5px;">
                             Created: {{ exam_template.created_at.strftime('%Y-%m-%d %H:%M') if exam_template.created_at else 'N/A' }}
                         </p>
                     </div>
-                    <div class="exam-actions">
-                        <a href="/api/teacher/exam/{{ exam_template.id }}/questions" class="btn btn-primary btn-small">Manage Questions</a>
-                        <a href="/api/teacher/exam/{{ exam_template.id }}/access" class="btn btn-secondary btn-small">Manage Access</a>
-                        <form method="post" action="/api/teacher/exam/{{ exam_template.id }}/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this exam? This action cannot be undone.');">
-                            <button type="submit" class="btn btn-secondary btn-small" style="background: #dc3545;">Delete</button>
-                        </form>
-                    </div>
+                    <!-- Actions moved into the quick actions menu -->
                 </div>
                 {% endfor %}
+                </div>
             {% else %}
                 <div class="empty-state">
                     <p>No exams created yet.</p>
@@ -396,10 +663,50 @@
             {% endif %}
         </div>
     </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite">
+        <span class="dot"></span>
+        <span id="toast-text">Saved</span>
+    </div>
     
     <script>
         // Handle title editing
         document.addEventListener('DOMContentLoaded', function() {
+            // Search/filter
+            const searchEl = document.getElementById('exam-search');
+            const clearBtn = document.getElementById('search-clear');
+            const resultsCountEl = document.getElementById('results-count');
+            if (searchEl) {
+                const applyFilter = () => {
+                    const q = (searchEl.value || '').toLowerCase().trim();
+                    let shown = 0;
+                    document.querySelectorAll('.exam-item').forEach(card => {
+                        const title = card.getAttribute('data-title') || '';
+                        const desc = card.getAttribute('data-description') || '';
+                        const match = !q || title.includes(q) || desc.includes(q);
+                        card.style.display = match ? '' : 'none';
+                        if (match) shown += 1;
+                    });
+                    if (clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
+                    if (resultsCountEl) resultsCountEl.textContent = String(shown);
+                };
+                searchEl.addEventListener('input', applyFilter);
+                searchEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        searchEl.value = '';
+                        applyFilter();
+                        searchEl.blur();
+                    }
+                });
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        searchEl.value = '';
+                        applyFilter();
+                        searchEl.focus();
+                    });
+                }
+            }
+
             // Title click to edit
             document.querySelectorAll('.editable-title').forEach(function(element) {
                 element.addEventListener('click', function() {
@@ -438,6 +745,29 @@
                     toggleExamStatus(examId, isActive);
                 });
             });
+
+            // Quick actions menu
+            function closeAllMenus() {
+                document.querySelectorAll('.qa-menu.open').forEach(m => m.classList.remove('open'));
+                document.querySelectorAll('.qa-button[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+            }
+            document.querySelectorAll('[data-qa-btn]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-qa-btn');
+                    const menu = document.getElementById('qa-menu-' + id);
+                    const isOpen = menu && menu.classList.contains('open');
+                    closeAllMenus();
+                    if (menu && !isOpen) {
+                        menu.classList.add('open');
+                        btn.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+            document.addEventListener('click', closeAllMenus);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeAllMenus();
+            });
         });
         
         function startEditTitle(examId, currentTitle, currentDescription) {
@@ -452,6 +782,22 @@
             // Focus on title input
             document.getElementById('edit-title-' + examId).focus();
             document.getElementById('edit-title-' + examId).select();
+
+            // Keyboard shortcuts: Enter to save, Escape to cancel
+            const titleInput = document.getElementById('edit-title-' + examId);
+            const descInput = document.getElementById('edit-description-' + examId);
+            const form = document.querySelector(`form.edit-form[data-exam-id="${examId}"]`);
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    const titleElement = document.querySelector(`.editable-title[data-exam-id="${examId}"]`);
+                    cancelEditTitle(examId, titleElement.getAttribute('data-title'), titleElement.getAttribute('data-description'));
+                }
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    if (form) form.requestSubmit();
+                }
+            };
+            if (titleInput) titleInput.onkeydown = onKey;
+            if (descInput) descInput.onkeydown = onKey;
         }
         
         function cancelEditTitle(examId, originalTitle, originalDescription) {
@@ -625,15 +971,15 @@
             })
             .then(data => {
                 if (data && data.error) {
-                    alert('Error: ' + data.error);
+                    showToast('Could not save changes. Please try again.', true);
                 } else {
-                    // Reload page to show updated title
+                    showToast('Saved changes');
                     window.location.reload();
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while saving. Please try again.');
+                showToast('An error occurred while saving.', true);
             });
             
             return false;
@@ -643,6 +989,10 @@
             const formData = new FormData();
             formData.append('exam_template_id', examId);
             formData.append('is_active', isActive ? 'true' : 'false');
+
+            // Disable toggle while saving (prevents double-click confusion)
+            const checkbox = document.querySelector(`.status-toggle[data-exam-id="${examId}"]`);
+            if (checkbox) checkbox.disabled = true;
             
             fetch('/api/teacher/exam/toggle-status', {
                 method: 'POST',
@@ -665,16 +1015,35 @@
                 if (statusIndicator) {
                     statusIndicator.className = 'status-indicator ' + (isActive ? 'active' : 'inactive');
                 }
+                showToast(isActive ? 'Exam is now visible to students' : 'Exam is hidden from students');
             })
             .catch(error => {
                 console.error('Error:', error);
                 // Revert toggle on error
-                const checkbox = document.querySelector(`.status-toggle[data-exam-id="${examId}"]`);
                 if (checkbox) {
                     checkbox.checked = !isActive;
+                    checkbox.disabled = false;
                 }
-                alert('An error occurred while updating exam status. Please try again.');
+                showToast('Could not update exam visibility.', true);
+                return;
             });
+
+            if (checkbox) {
+                // re-enable after request settles
+                setTimeout(() => { checkbox.disabled = false; }, 600);
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const el = document.getElementById('toast');
+            const textEl = document.getElementById('toast-text');
+            if (!el || !textEl) return;
+            textEl.textContent = message;
+            el.className = 'toast' + (isError ? ' error show' : ' show');
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                el.className = 'toast' + (isError ? ' error' : '');
+            }, 2400);
         }
     </script>
 </body>
