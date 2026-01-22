@@ -60,7 +60,7 @@
     </style>
 </head>
 <body>
-    {% if is_timed and exam_end_time %}
+    {% if is_timed and duration_hours is not none and duration_minutes is not none %}
     <div class="timer-container" id="timerContainer">
         <div class="timer-label">Time Remaining</div>
         <div class="timer-display" id="timerDisplay">--:--:--</div>
@@ -116,10 +116,16 @@
         </div>
     </div>
     
-    {% if is_timed and exam_end_time %}
+    {% if is_timed and duration_hours is not none and duration_minutes is not none %}
     <script>
         (function() {
-            const examEndTime = new Date('{{ exam_end_time }}').getTime();
+            // Simple approach: calculate end time from duration when page loads
+            const durationHours = {{ duration_hours }};
+            const durationMinutes = {{ duration_minutes }};
+            const durationMs = (durationHours * 60 * 60 * 1000) + (durationMinutes * 60 * 1000);
+            const startTime = new Date().getTime();
+            const examEndTime = startTime + durationMs;
+            
             const timerDisplay = document.getElementById('timerDisplay');
             const timerContainer = document.getElementById('timerContainer');
             const timerWarning = document.getElementById('timerWarning');

@@ -558,36 +558,11 @@ async def student_start_exam(
         if student_exam.status == "completed":
             return RedirectResponse(url=f"/student/exam/{exam_id}?error=You have already completed this exam", status_code=302)
         
-        # Ensure date_end is set correctly for timed exams (fix for existing exams that might have wrong date_end)
-        if exam.is_timed and exam.duration_hours is not None and exam.duration_minutes is not None:
-            # If date_end is missing or seems incorrect, recalculate it
-            if not student_exam.date_end or not student_exam.student_exam_start_time:
-                # Recalculate based on when student actually started (or now if never started)
-                start_time = student_exam.student_exam_start_time or now
-                duration = timedelta(hours=exam.duration_hours, minutes=exam.duration_minutes)
-                student_exam.date_end = start_time + duration
-                student_exam.student_exam_start_time = start_time
-                logger.info(f"Recalculated exam end time for existing exam: start={start_time}, duration={duration} (hours={exam.duration_hours}, minutes={exam.duration_minutes}), end={student_exam.date_end}")
-                db.commit()
-            else:
-                # Verify date_end is reasonable - recalculate if off by more than 30 minutes
-                start_time = student_exam.student_exam_start_time
-                expected_duration = timedelta(hours=exam.duration_hours, minutes=exam.duration_minutes)
-                expected_end = start_time + expected_duration
-                # If date_end is way off (more than 30 minutes difference), recalculate
-                time_diff_seconds = abs((student_exam.date_end - expected_end).total_seconds())
-                time_diff_hours = time_diff_seconds / 3600
-                
-                logger.info(f"Checking existing exam timing: start_time={start_time}, date_end={student_exam.date_end}, expected_end={expected_end}, template_duration={expected_duration} (hours={exam.duration_hours}, minutes={exam.duration_minutes}), time_diff={time_diff_hours:.2f} hours")
-                
-                if time_diff_seconds > 1800:  # More than 30 minutes off
-                    duration = timedelta(hours=exam.duration_hours, minutes=exam.duration_minutes)
-                    old_end = student_exam.date_end
-                    student_exam.date_end = start_time + duration
-                    logger.warning(f"Fixed incorrect exam end time: old_end={old_end}, new_end={student_exam.date_end}, duration={duration} (hours={exam.duration_hours}, minutes={exam.duration_minutes}), time_diff={time_diff_hours:.2f} hours")
-                    db.commit()
-                else:
-                    logger.info(f"Exam end time is correct: {time_diff_hours:.2f} hours difference (within tolerance)")
+        # Ensure duration values are copied from template (in case they're missing)
+        if exam.is_timed and (student_exam.duration_hours is None or student_exam.duration_minutes is None):
+            student_exam.duration_hours = exam.duration_hours
+            student_exam.duration_minutes = exam.duration_minutes
+            db.commit()
         
         # Check if student exam has questions, if not generate them (safety check for incomplete generation)
         student_questions = QuestionRepository.get_by_exam(db, student_exam.id)
@@ -644,6 +619,7 @@ async def student_start_exam(
         new_exam_id = f"{exam.exam_id}-student-{student_record.id}-{int(now.timestamp())}"
         
         # Create new exam session based on the template exam
+        # Simply copy the duration values - timer will calculate end time in JavaScript
         new_student_exam = Exam(
             exam_id=new_exam_id,
             course_number=exam.course_number,
@@ -656,21 +632,12 @@ async def student_start_exam(
             status="in_progress",
             date_published=exam.date_published,
             is_timed=exam.is_timed,
-            duration_hours=exam.duration_hours,
-            duration_minutes=exam.duration_minutes,
-            student_exam_start_time=now if exam.is_timed else None,
+            duration_hours=exam.duration_hours,  # Simply copy from template
+            duration_minutes=exam.duration_minutes,  # Simply copy from template
             final_explanation=exam.final_explanation  # Copy LLM prompt
         )
         
-        # Calculate end time if timed
-        if exam.is_timed and exam.duration_hours is not None and exam.duration_minutes is not None:
-            # Use the template exam's duration values
-            duration_hours = exam.duration_hours
-            duration_minutes = exam.duration_minutes
-            duration = timedelta(hours=duration_hours, minutes=duration_minutes)
-            new_student_exam.date_end = now + duration
-            logger.info(f"Creating new student exam - Template exam: duration_hours={exam.duration_hours}, duration_minutes={exam.duration_minutes}, is_timed={exam.is_timed}")
-            logger.info(f"Setting exam end time: start={now}, duration={duration} (hours={duration_hours}, minutes={duration_minutes}), end={new_student_exam.date_end}")
+        # Note: We don't calculate date_end here anymore - timer uses duration_hours/minutes directly
         
         try:
             db.add(new_student_exam)
