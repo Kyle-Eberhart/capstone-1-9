@@ -1,4 +1,5 @@
 """Exam routes."""
+import logging
 from fastapi import APIRouter, Depends, Request, HTTPException, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
@@ -7,6 +8,8 @@ from app.db.session import get_db
 from app.db.repo import ExamRepository, QuestionRepository
 from app.services.exam_service import ExamService
 from app.core.schemas.api_models import AnswerSubmission
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
