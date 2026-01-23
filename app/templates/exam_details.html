@@ -149,6 +149,22 @@
 </head>
 <body>
     <div class="exam-container">
+        {% if exam.status == "disputed" %}
+        <div class="dispute-notice" style="background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="margin-top: 0; color: #856404; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.5em;">⚠️</span>
+                <span>Grade Disputed</span>
+            </h2>
+            <p style="color: #856404; margin-bottom: 10px;"><strong>This exam grade has been disputed by the student.</strong></p>
+            {% if exam.dispute_reason %}
+            <div style="background-color: white; padding: 15px; border-radius: 4px; margin-top: 10px;">
+                <strong style="color: #856404;">Student's Reason:</strong>
+                <p style="color: #333; margin-top: 8px; white-space: pre-wrap;">{{ exam.dispute_reason }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
         <div class="exam-header">
             <h1>{{ exam.exam_name }} - Exam Details{% if is_student_exam and student %} - {{ student.username }}{% endif %}</h1>
             <a href="/teacher/dashboard" class="back-link">← Back to Dashboard</a>
@@ -194,6 +210,8 @@
                             <span class="status-badge status-active">Active</span>
                         {% elif exam.status == 'completed' %}
                             <span class="status-badge status-completed">Completed</span>
+                        {% elif exam.status == 'disputed' %}
+                            <span class="status-badge" style="background-color: #ff9800; color: white;">Disputed</span>
                         {% elif exam.status == 'not_started' %}
                             <span class="status-badge status-not-started">Not Started</span>
                         {% else %}

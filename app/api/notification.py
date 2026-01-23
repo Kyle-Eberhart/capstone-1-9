@@ -17,6 +17,8 @@ async def mark_notification_read(
     db: Session = Depends(get_db)
 ):
     """Mark a notification as read."""
+    from app.db.models import Exam
+    
     # Get user from cookie
     email = request.cookies.get("username")
     if not email:
@@ -27,12 +29,30 @@ async def mark_notification_read(
         return RedirectResponse(url="/?error=login_required", status_code=302)
     
     notification_service = NotificationService()
-    success = notification_service.mark_as_read(db, notification_id, user.id)
     
-    if not success:
-        # Notification not found or doesn't belong to user
+    # Get notification to check its type and related exam
+    notification = db.query(Notification).filter(
+        Notification.id == notification_id,
+        Notification.user_id == user.id
+    ).first()
+    
+    if not notification:
         return RedirectResponse(url=f"{redirect}?error=Notification not found", status_code=302)
     
+    # Mark as read
+    notification_service.mark_as_read(db, notification_id, user.id)
+    
+    # If it's a grade dispute notification and has a related exam, redirect to exam details
+    if notification.notification_type == "grade_disputed" and notification.related_exam_id:
+        exam = db.query(Exam).filter(Exam.id == notification.related_exam_id).first()
+        if exam:
+            # Redirect to exam details page using exam_id string
+            if user.role == "teacher":
+                return RedirectResponse(url=f"/teacher/exam/{exam.exam_id}", status_code=302)
+            else:
+                return RedirectResponse(url=f"/student/exam/{exam.exam_id}", status_code=302)
+    
+    # Default redirect
     return RedirectResponse(url=redirect, status_code=302)
 
 
