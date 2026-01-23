@@ -1,6 +1,6 @@
 # Email Configuration Guide
 
-The application can send email notifications for grade disputes. To enable email functionality, you need to configure SMTP settings.
+The application can send email notifications for grade disputes. **The instructor's email address is automatically retrieved from their User account** (created during signup), so you only need to configure SMTP server settings to enable email sending.
 
 ## Configuration
 
@@ -50,9 +50,18 @@ SMTP_PORT=587
 SMTP_USE_TLS=true
 ```
 
+## How It Works
+
+The email system automatically uses the instructor's email address from their User account:
+- When a user signs up, their email address is stored in the `User` model
+- When a grade dispute occurs, the system automatically retrieves the instructor's email from their account
+- The email is sent to that address using the SMTP server you configure
+
+**No need to manually specify recipient emails** - the system uses the email addresses from user accounts automatically.
+
 ## Testing
 
-When a student disputes a grade, an email will be automatically sent to the instructor's email address (from the User model) with:
+When a student disputes a grade, an email will be automatically sent to the instructor's email address (retrieved from their User account) with:
 - Subject: "<Student name> <course name> <exam name> GRADE DISPUTED"
 - Content: Full exam details including questions, answers, grades, and dispute reason
 

@@ -175,11 +175,12 @@ async def submit_dispute(
         )
         
         # Send email notification to instructor
+        # Note: Instructor email is automatically retrieved from their User account (created via signup)
         from app.services.email_service import EmailService
         from app.db.models import Student, User as UserModel
         from app.db.repo import QuestionRepository
         
-        # Get instructor email
+        # Get instructor email from their User account (email is stored during signup)
         instructor = db.query(UserModel).filter(UserModel.id == exam.instructor_id).first()
         if instructor and instructor.email:
             # Get student name
