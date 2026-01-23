@@ -206,7 +206,7 @@ async def submit_dispute(
                 dispute_reason=dispute_reason
             )
             
-            # Send email
+            # Send email and verify it was sent successfully
             email_sent = email_service.send_dispute_notification(
                 to_email=instructor.email,
                 student_name=student_name,
@@ -214,11 +214,38 @@ async def submit_dispute(
                 exam_name=exam.exam_name,
                 exam_details_html=exam_details_html
             )
-            if not email_sent:
+            
+            if email_sent:
+                # Email sent successfully - show confirmation
+                return RedirectResponse(
+                    url=f"/api/exam/{exam_id}/complete?success=Dispute submitted successfully. A confirmation email has been sent to your instructor at {instructor.email}.",
+                    status_code=302
+                )
+            else:
+                # Email failed - show error but dispute was still recorded
                 logger.warning(
                     f"Failed to send dispute email to instructor {instructor.email} for exam {exam.exam_id}. "
                     f"Check email configuration in .env file. In-app notification was still created."
                 )
+                return RedirectResponse(
+                    url=f"/api/exam/{exam_id}/complete?error=Dispute submitted, but failed to send email notification to instructor. Please contact your instructor directly at {instructor.email}. Check application logs for email configuration issues.",
+                    status_code=302
+                )
+        else:
+            # No instructor email found
+            logger.warning(f"No email address found for instructor (user_id: {exam.instructor_id})")
+            return RedirectResponse(
+                url=f"/api/exam/{exam_id}/complete?error=Dispute submitted, but instructor email address not found. Please contact your instructor directly.",
+                status_code=302
+            )
+    else:
+        # No instructor_id on exam
+        logger.warning(f"No instructor_id found for exam {exam_id}")
+        return RedirectResponse(
+            url=f"/api/exam/{exam_id}/complete?error=Dispute submitted, but instructor information not found. Please contact your instructor directly.",
+            status_code=302
+        )
     
+    # Fallback (shouldn't reach here, but just in case)
     return RedirectResponse(url=f"/api/exam/{exam_id}/complete?success=Dispute submitted successfully", status_code=302)
 
