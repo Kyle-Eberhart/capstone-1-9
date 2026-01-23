@@ -120,30 +120,34 @@ class ExamService:
                 scores.append(q.grade)
                 feedbacks.append(q.feedback or "")
         
-        # Calculate final grade
-        try:
-            final_result = await self.final_grade_calculator.calculate_final_grade(
-                scores,
-                feedbacks
-            )
+        # Calculate final grade as simple average of question scores
+        # Question grades are stored as 0-100, so we calculate average and store as decimal (0.0-1.0)
+        # to match the template display format (final_grade * 100)
+        if scores:
+            avg_grade_percent = sum(scores) / len(scores)  # Average as percentage (0-100)
+            final_grade_decimal = avg_grade_percent / 100.0  # Convert to decimal (0.0-1.0) for storage
+            
+            # Generate explanation
+            explanation = f"Final grade calculated as average of {len(scores)} question(s): {avg_grade_percent:.1f}%"
+            if len(scores) > 1:
+                score_list = ", ".join([f"{s:.1f}%" for s in scores])
+                explanation += f" (Individual scores: {score_list})"
             
             ExamRepository.update_status(
                 db,
                 exam_id,
                 "completed",
-                final_result.final_grade,
-                final_result.explanation
+                final_grade_decimal,
+                explanation
             )
-        except Exception as e:
-            logger.error(f"Error calculating final grade: {e}")
-            # Fallback: simple average
-            avg_grade = sum(scores) / len(scores) if scores else 0.0
+        else:
+            # No scores available
             ExamRepository.update_status(
                 db,
                 exam_id,
                 "completed",
-                avg_grade,
-                f"Final grade calculated as average: {avg_grade:.1f}"
+                0.0,
+                "No question scores available for final grade calculation."
             )
         
         exam = ExamRepository.get(db, exam_id)

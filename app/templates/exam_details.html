@@ -222,7 +222,7 @@
                 
                 <div class="detail-item">
                     <div class="detail-label">Final Grade</div>
-                    <div class="detail-value">{{ "%.1f"|format(exam.final_grade) if exam.final_grade else 'N/A' }}{% if exam.final_grade %}%{% endif %}</div>
+                    <div class="detail-value">{{ "%.1f"|format(exam.final_grade * 100) if exam.final_grade else 'N/A' }}{% if exam.final_grade %}%{% endif %}</div>
                 </div>
                 
                 {% if is_student_exam and student %}
