@@ -149,6 +149,18 @@
 </head>
 <body>
     <div class="exam-container">
+        {% if request.query_params.get("success") %}
+        <div class="success-message" style="background-color: #d4edda; color: #155724; padding: 12px 20px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+            {{ request.query_params.get("success") }}
+        </div>
+        {% endif %}
+        
+        {% if request.query_params.get("error") %}
+        <div class="error-message" style="background-color: #f8d7da; color: #721c24; padding: 12px 20px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+            {{ request.query_params.get("error") }}
+        </div>
+        {% endif %}
+        
         {% if exam.status == "disputed" %}
         <div class="dispute-notice" style="background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <h2 style="margin-top: 0; color: #856404; display: flex; align-items: center; gap: 10px;">
@@ -222,7 +234,21 @@
                 
                 <div class="detail-item">
                     <div class="detail-label">Final Grade</div>
+                    {% if exam.status == "disputed" %}
+                    <div class="detail-value">
+                        <input type="number" 
+                               name="final_grade" 
+                               form="grade-alteration-form"
+                               value="{{ exam.final_grade * 100 if exam.final_grade else '' }}" 
+                               min="0" 
+                               max="100" 
+                               step="0.1"
+                               style="width: 100px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;"
+                               placeholder="0-100">%
+                    </div>
+                    {% else %}
                     <div class="detail-value">{{ "%.1f"|format(exam.final_grade * 100) if exam.final_grade else 'N/A' }}{% if exam.final_grade %}%{% endif %}</div>
+                    {% endif %}
                 </div>
                 
                 {% if is_student_exam and student %}
@@ -297,18 +323,35 @@
         {% if is_student_exam and questions %}
         <div class="details-section">
             <h2>Questions and Answers</h2>
+            {% if exam.status == "disputed" %}
+            <form id="grade-alteration-form" method="post" action="/teacher/exam/{{ exam.exam_id }}/alter-grades" style="margin-bottom: 20px;">
+            {% endif %}
             {% for question in questions %}
             <div style="margin-bottom: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #4CAF50;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0; color: #333;">Question {{ question.question_number }}</h3>
+                    {% if exam.status == "disputed" %}
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label style="font-weight: 600; color: #666;">Grade (%):</label>
+                        <input type="number" 
+                               name="question_grade_{{ question.id }}" 
+                               value="{{ question.grade * 100 if question.grade is not none else '' }}" 
+                               min="0" 
+                               max="100" 
+                               step="0.1"
+                               style="width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;"
+                               placeholder="0-100">
+                    </div>
+                    {% else %}
                     {% if question.grade is not none %}
                     <div style="font-size: 1.2em; font-weight: 600; color: #4CAF50;">
-                        Grade: {{ "%.1f"|format(question.grade) }}%
+                        Grade: {{ "%.1f"|format(question.grade * 100) }}%
                     </div>
                     {% else %}
                     <div style="font-size: 1em; color: #999; font-style: italic;">
                         Not graded yet
                     </div>
+                    {% endif %}
                     {% endif %}
                 </div>
                 
@@ -363,6 +406,26 @@
                 {% endif %}
             </div>
             {% endfor %}
+            {% if exam.status == "disputed" %}
+            </form>
+            <div class="details-section" style="margin-top: 20px;">
+                <h2>Dispute Actions</h2>
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <form method="post" action="/teacher/exam/{{ exam.exam_id }}/alter-grades" style="display: inline;">
+                        <button type="submit" class="btn-terminate" style="background-color: #4CAF50; padding: 12px 24px; border: none; border-radius: 4px; color: white; font-size: 1em; cursor: pointer;">
+                            Alter Exam
+                        </button>
+                    </form>
+                    <form method="post" action="/teacher/exam/{{ exam.exam_id }}/reopen" 
+                          onsubmit="return confirm('Are you sure you want to reopen this exam? The student will be able to retake it.');"
+                          style="display: inline;">
+                        <button type="submit" style="background-color: #2196F3; padding: 12px 24px; border: none; border-radius: 4px; color: white; font-size: 1em; cursor: pointer;">
+                            Reopen Exam
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
     </div>

@@ -1733,7 +1733,199 @@ async def terminate_exam(
         return RedirectResponse(url=f"/teacher/dashboard?success=Exam terminated successfully", status_code=302)
     except Exception as e:
         db.rollback()
-        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Error terminating exam: {str(e)}", status_code=302)
+        logger.error(f"Error terminating exam: {e}")
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Failed to terminate exam", status_code=302)
+
+
+@app.post("/teacher/exam/{exam_id}/alter-grades")
+async def alter_grades(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Submit grade alterations for disputed exam - shows confirmation page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Only allow for disputed exams
+    if exam.status != "disputed":
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Can only alter grades for disputed exams", status_code=302)
+    
+    # Get form data
+    form_data = await request.form()
+    
+    # Get all questions for this exam
+    questions = QuestionRepository.get_by_exam(db, exam.id)
+    questions = sorted(questions, key=lambda q: q.question_number)
+    
+    # Store original and new grades for confirmation
+    grade_changes = []
+    original_final_grade = exam.final_grade * 100 if exam.final_grade else None
+    
+    # Check for question grade changes
+    for question in questions:
+        grade_key = f"question_grade_{question.id}"
+        new_grade_str = form_data.get(grade_key, "").strip()
+        
+        original_grade = question.grade * 100 if question.grade is not None else None
+        
+        if new_grade_str:
+            try:
+                new_grade = float(new_grade_str)
+                if new_grade != original_grade:
+                    grade_changes.append({
+                        "question": question,
+                        "original_grade": original_grade,
+                        "new_grade": new_grade
+                    })
+            except ValueError:
+                pass
+    
+    # Check for final grade change
+    final_grade_str = form_data.get("final_grade", "").strip()
+    new_final_grade = None
+    if final_grade_str:
+        try:
+            new_final_grade = float(final_grade_str)
+        except ValueError:
+            pass
+    
+    # Store form data for confirmation page (convert to dict for template)
+    form_data_dict = dict(form_data)
+    
+    return render_template("confirm_alter_grades.html", {
+        "request": request,
+        "exam": exam,
+        "questions": questions,
+        "grade_changes": grade_changes,
+        "original_final_grade": original_final_grade,
+        "new_final_grade": new_final_grade,
+        "form_data": form_data_dict
+    })
+
+
+@app.post("/teacher/exam/{exam_id}/confirm-alter")
+async def confirm_alter_grades(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Apply confirmed grade alterations."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Only allow for disputed exams
+    if exam.status != "disputed":
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Can only alter grades for disputed exams", status_code=302)
+    
+    # Get form data
+    form_data = await request.form()
+    
+    # Update question grades
+    questions = QuestionRepository.get_by_exam(db, exam.id)
+    for question in questions:
+        grade_key = f"question_grade_{question.id}"
+        new_grade_str = form_data.get(grade_key, "").strip()
+        
+        if new_grade_str:
+            try:
+                new_grade_percent = float(new_grade_str)
+                new_grade_decimal = new_grade_percent / 100.0  # Convert to 0.0-1.0
+                
+                # Update question grade (keep existing feedback)
+                question.grade = new_grade_decimal
+            except ValueError:
+                pass
+    
+    # Update final grade
+    final_grade_str = form_data.get("final_grade", "").strip()
+    if final_grade_str:
+        try:
+            new_final_grade_percent = float(final_grade_str)
+            exam.final_grade = new_final_grade_percent / 100.0  # Convert to 0.0-1.0
+        except ValueError:
+            pass
+    else:
+        # Recalculate final grade from question grades
+        grades = [q.grade for q in questions if q.grade is not None]
+        if grades:
+            avg_grade = sum(grades) / len(grades)
+            exam.final_grade = avg_grade  # Already in 0.0-1.0 format
+    
+    # Change status from disputed back to completed
+    exam.status = "completed"
+    
+    try:
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?success=Grades updated successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating grades: {e}")
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Failed to update grades", status_code=302)
+
+
+@app.post("/teacher/exam/{exam_id}/reopen")
+async def reopen_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Reopen a disputed exam for the student to retake."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Only allow for disputed exams
+    if exam.status != "disputed":
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Can only reopen disputed exams", status_code=302)
+    
+    # Change status from disputed to active (open)
+    exam.status = "active"
+    # Clear dispute reason
+    exam.dispute_reason = None
+    
+    try:
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?success=Exam reopened successfully. Student can now retake the exam.", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error reopening exam: {e}")
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Failed to reopen exam", status_code=302)
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):

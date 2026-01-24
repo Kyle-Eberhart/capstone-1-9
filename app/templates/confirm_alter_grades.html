@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirm Grade Alterations - {{ exam.exam_name }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ff9800;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .changes-section {
+            margin: 20px 0;
+        }
+        .change-item {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .grade-comparison {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        .old-grade {
+            color: #666;
+            text-decoration: line-through;
+        }
+        .new-grade {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        .arrow {
+            color: #666;
+            font-size: 1.2em;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .btn-confirm {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .btn-cancel {
+            background-color: #666;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-confirm:hover {
+            background-color: #45a049;
+        }
+        .btn-cancel:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Confirm Grade Alterations</h1>
+        
+        <div class="warning-box">
+            <h2 style="margin-top: 0; color: #856404;">⚠️ Confirm Grade Changes</h2>
+            <p style="color: #856404; margin-bottom: 0;">
+                Please review the grade changes below. Once confirmed, these changes will be permanent.
+            </p>
+        </div>
+        
+        <div class="changes-section">
+            <h2>Grade Changes</h2>
+            
+            {% if grade_changes %}
+            <h3>Question Grade Changes:</h3>
+            {% for change in grade_changes %}
+            <div class="change-item">
+                <strong>Question {{ change.question.question_number }}:</strong>
+                <div class="grade-comparison">
+                    <span class="old-grade">{{ "%.1f"|format(change.original_grade) if change.original_grade else 'N/A' }}%</span>
+                    <span class="arrow">→</span>
+                    <span class="new-grade">{{ "%.1f"|format(change.new_grade) }}%</span>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+            {% if new_final_grade is not none and new_final_grade != original_final_grade %}
+            <div class="change-item">
+                <strong>Final Grade:</strong>
+                <div class="grade-comparison">
+                    <span class="old-grade">{{ "%.1f"|format(original_final_grade) if original_final_grade else 'N/A' }}%</span>
+                    <span class="arrow">→</span>
+                    <span class="new-grade">{{ "%.1f"|format(new_final_grade) }}%</span>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if not grade_changes and (new_final_grade is none or new_final_grade == original_final_grade) %}
+            <p style="color: #666; font-style: italic;">No grade changes detected.</p>
+            {% endif %}
+        </div>
+        
+        {% if grade_changes or (new_final_grade is not none and new_final_grade != original_final_grade) %}
+        <form method="post" action="/teacher/exam/{{ exam.exam_id }}/confirm-alter">
+            {% for question in questions %}
+            {% set grade_key = 'question_grade_' ~ question.id %}
+            <input type="hidden" name="question_grade_{{ question.id }}" value="{{ form_data.get(grade_key, '') }}">
+            {% endfor %}
+            <input type="hidden" name="final_grade" value="{{ form_data.get('final_grade', '') }}">
+            
+            <div class="button-group">
+                <button type="submit" class="btn-confirm">Confirm Changes</button>
+                <a href="/teacher/exam/{{ exam.exam_id }}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+        {% else %}
+        <div class="button-group">
+            <a href="/teacher/exam/{{ exam.exam_id }}" class="btn-cancel">Back to Exam Details</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
