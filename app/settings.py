@@ -24,13 +24,12 @@ class Settings(BaseSettings):
     exam_question_count: int = 3
     exam_time_limit_minutes: int = 60
     
-    # Email Configuration
-    smtp_host: str = "smtp.gmail.com"
-    smtp_port: int = 587
-    smtp_username: str = ""
-    smtp_password: str = ""
-    smtp_from_email: str = ""
-    smtp_use_tls: bool = True
+    # Email Configuration (SendGrid API - simple no-reply email system)
+    # Get free API key from: https://sendgrid.com/free/
+    # Free tier: 100 emails/day for 60 days, then pay-as-you-go
+    sendgrid_api_key: str = ""
+    email_from_address: str = "noreply@examgrader.com"  # System no-reply address
+    email_from_name: str = "AI Exam Grader"  # Display name for sender
     
     class Config:
         # Use absolute path to .env file relative to this file's location

@@ -1,20 +1,41 @@
-"""Email service for sending notifications."""
-import smtplib
+"""Email service for sending notifications using SendGrid API."""
 import html
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Optional
 import logging
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
+# Try to import SendGrid, but handle gracefully if not installed
+try:
+    from sendgrid import SendGridAPIClient
+    from sendgrid.helpers.mail import Mail, Email, Content
+    SENDGRID_AVAILABLE = True
+except ImportError:
+    SENDGRID_AVAILABLE = False
+    logger.warning("SendGrid library not installed. Run: pip install sendgrid")
+
 
 class EmailService:
-    """Service for sending emails."""
+    """Service for sending emails via SendGrid API."""
     
     def __init__(self):
         self.settings = get_settings()
+        self._client = None
+    
+    def _get_client(self):
+        """Get or create SendGrid client."""
+        if not SENDGRID_AVAILABLE:
+            return None
+        
+        if self._client is None and self.settings.sendgrid_api_key:
+            try:
+                self._client = SendGridAPIClient(self.settings.sendgrid_api_key)
+            except Exception as e:
+                logger.error(f"Failed to initialize SendGrid client: {e}")
+                return None
+        
+        return self._client
     
     def send_email(
         self,
@@ -23,65 +44,79 @@ class EmailService:
         html_body: str,
         text_body: Optional[str] = None
     ) -> bool:
-        """Send an email.
+        """Send an email using SendGrid API.
         
         Args:
-            to_email: Recipient email address
+            to_email: Recipient email address (any email provider)
             subject: Email subject
             html_body: HTML email body
-            text_body: Plain text email body (optional, defaults to HTML stripped)
+            text_body: Plain text email body (optional)
         
         Returns:
             True if email sent successfully, False otherwise
         """
-        # Check if email is configured
-        if not self.settings.smtp_username or not self.settings.smtp_password or not self.settings.smtp_from_email:
+        # Check if SendGrid is configured
+        if not self.settings.sendgrid_api_key:
             logger.warning(
-                f"Email not configured - SMTP credentials missing. "
-                f"Add SMTP_USERNAME, SMTP_PASSWORD, and SMTP_FROM_EMAIL to your .env file. "
+                f"Email not configured - SendGrid API key missing. "
+                f"Add SENDGRID_API_KEY to your .env file. "
                 f"Skipping email send to {to_email}."
             )
             return False
         
-        try:
-            # Create message
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = self.settings.smtp_from_email
-            msg['To'] = to_email
-            
-            # Add text and HTML parts
-            if text_body:
-                text_part = MIMEText(text_body, 'plain')
-                msg.attach(text_part)
-            
-            html_part = MIMEText(html_body, 'html')
-            msg.attach(html_part)
-            
-            # Send email
-            with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port) as server:
-                if self.settings.smtp_use_tls:
-                    server.starttls()
-                server.login(self.settings.smtp_username, self.settings.smtp_password)
-                server.send_message(msg)
-            
-            logger.info(f"Email sent successfully to {to_email}: {subject}")
-            return True
-            
-        except smtplib.SMTPAuthenticationError as e:
+        if not SENDGRID_AVAILABLE:
             logger.error(
-                f"SMTP Authentication failed. Check your SMTP_USERNAME and SMTP_PASSWORD in .env file. "
-                f"Error: {e}"
+                "SendGrid library not installed. Install with: pip install sendgrid"
             )
             return False
-        except smtplib.SMTPException as e:
-            logger.error(f"SMTP error sending email to {to_email}: {e}")
+        
+        client = self._get_client()
+        if not client:
+            logger.error("Failed to initialize SendGrid client")
             return False
+        
+        try:
+            # Create email message
+            from_email = Email(
+                self.settings.email_from_address,
+                self.settings.email_from_name
+            )
+            to_email_obj = Email(to_email)
+            
+            # Create content
+            html_content = Content("text/html", html_body)
+            
+            # Create mail message
+            message = Mail(
+                from_email=from_email,
+                to_emails=to_email_obj,
+                subject=subject,
+                html_content=html_content
+            )
+            
+            # Add text content if provided (SendGrid handles multipart automatically)
+            if text_body:
+                text_content = Content("text/plain", text_body)
+                message.add_content(text_content)
+            
+            # Send email
+            response = client.send(message)
+            
+            # Check response status
+            if response.status_code in [200, 201, 202]:
+                logger.info(f"Email sent successfully to {to_email}: {subject}")
+                return True
+            else:
+                logger.error(
+                    f"SendGrid API returned status {response.status_code} when sending to {to_email}. "
+                    f"Response: {response.body}"
+                )
+                return False
+                
         except Exception as e:
             logger.error(
-                f"Error sending email to {to_email}: {e}. "
-                f"Check SMTP settings: host={self.settings.smtp_host}, port={self.settings.smtp_port}, "
-                f"use_tls={self.settings.smtp_use_tls}",
+                f"Error sending email to {to_email} via SendGrid: {e}. "
+                f"Check your SENDGRID_API_KEY in .env file.",
                 exc_info=True
             )
             return False
@@ -97,7 +132,7 @@ class EmailService:
         """Send grade dispute notification email to instructor.
         
         Args:
-            to_email: Instructor email address
+            to_email: Instructor email address (any email provider)
             student_name: Student's name
             course_number: Course number
             exam_name: Exam name
