@@ -1759,9 +1759,9 @@ async def alter_grades(
     if not exam or exam.instructor_id != user.id:
         return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
     
-    # Only allow for disputed exams
-    if exam.status != "disputed":
-        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Can only alter grades for disputed exams", status_code=302)
+    # Only allow for disputed or completed exams
+    if exam.status not in ["disputed", "completed"]:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Can only alter grades for disputed or completed exams", status_code=302)
     
     # Get form data
     form_data = await request.form()
@@ -1802,6 +1802,9 @@ async def alter_grades(
         except ValueError:
             pass
     
+    # Get grade change reason
+    grade_change_reason = form_data.get("grade_change_reason", "").strip()
+    
     # Store form data for confirmation page (convert to dict for template)
     form_data_dict = dict(form_data)
     
@@ -1812,6 +1815,7 @@ async def alter_grades(
         "grade_changes": grade_changes,
         "original_final_grade": original_final_grade,
         "new_final_grade": new_final_grade,
+        "grade_change_reason": grade_change_reason,
         "form_data": form_data_dict
     })
 
@@ -1838,12 +1842,15 @@ async def confirm_alter_grades(
     if not exam or exam.instructor_id != user.id:
         return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
     
-    # Only allow for disputed exams
-    if exam.status != "disputed":
-        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Can only alter grades for disputed exams", status_code=302)
+    # Only allow for disputed or completed exams
+    if exam.status not in ["disputed", "completed"]:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Can only alter grades for disputed or completed exams", status_code=302)
     
     # Get form data
     form_data = await request.form()
+    
+    # Store original final grade for notification
+    original_final_grade = exam.final_grade
     
     # Update question grades
     questions = QuestionRepository.get_by_exam(db, exam.id)
@@ -1876,12 +1883,47 @@ async def confirm_alter_grades(
             avg_grade = sum(grades) / len(grades)
             exam.final_grade = avg_grade  # Already in 0.0-1.0 format
     
-    # Change status from disputed back to completed
-    exam.status = "completed"
+    # Store grade change reason and instructor
+    grade_change_reason = form_data.get("grade_change_reason", "").strip()
+    if grade_change_reason:
+        exam.grade_change_reason = grade_change_reason
+    exam.grade_changed_by = user.id
+    
+    # Change status from disputed back to completed (if it was disputed)
+    if exam.status == "disputed":
+        exam.status = "completed"
+    
+    # Notify student if this is a student exam
+    if exam.student_id:
+        student = db.query(Student).filter(Student.id == exam.student_id).first()
+        if student:
+            # Find the student's User account
+            student_user = db.query(User).filter(User.email == student.username).first()
+            if student_user:
+                from app.services.notification_service import NotificationService
+                notification_service = NotificationService()
+                
+                # Build notification message
+                old_grade_str = f"{original_final_grade * 100:.1f}%" if original_final_grade else "N/A"
+                new_grade_str = f"{exam.final_grade * 100:.1f}%" if exam.final_grade else "N/A"
+                instructor_name = user.first_name + " " + user.last_name if (user.first_name or user.last_name) else user.email
+                
+                message = f"Your grade for {exam.exam_name} ({exam.course_number}-{exam.section}) has been changed from {old_grade_str} to {new_grade_str} by {instructor_name}."
+                if grade_change_reason:
+                    message += f"\n\nReason: {grade_change_reason}"
+                
+                notification_service.create_notification(
+                    db=db,
+                    user_id=student_user.id,
+                    notification_type="grade_changed",
+                    title=f"Grade Changed: {exam.exam_name}",
+                    message=message,
+                    related_exam_id=exam.id
+                )
     
     try:
         db.commit()
-        return RedirectResponse(url=f"/teacher/exam/{exam_id}?success=Grades updated successfully", status_code=302)
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?success=Grades updated successfully. Student has been notified.", status_code=302)
     except Exception as e:
         db.rollback()
         logger.error(f"Error updating grades: {e}")

@@ -64,6 +64,8 @@ class Exam(Base):
     student_id = Column(Integer, ForeignKey("students.id"), nullable=True)  # Nullable for teacher-created exams
     status = Column(String(50), default="in_progress")  # in_progress, completed, active, not_started, disputed
     dispute_reason = Column(Text, nullable=True)  # Student's reason for disputing grade
+    grade_change_reason = Column(Text, nullable=True)  # Instructor's reason for changing grade
+    grade_changed_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Instructor who changed the grade
     final_grade = Column(Float, nullable=True)
     final_explanation = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

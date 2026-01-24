@@ -136,12 +136,25 @@
         </div>
         
         {% if grade_changes or (new_final_grade is not none and new_final_grade != original_final_grade) %}
+        <div class="changes-section" style="margin-top: 20px;">
+            <h2>Change Reason</h2>
+            {% if form_data.get('grade_change_reason') %}
+            <div class="change-item">
+                <strong>Reason:</strong>
+                <p style="margin-top: 8px; white-space: pre-wrap;">{{ form_data.get('grade_change_reason') }}</p>
+            </div>
+            {% else %}
+            <p style="color: #666; font-style: italic;">No reason provided.</p>
+            {% endif %}
+        </div>
+        
         <form method="post" action="/teacher/exam/{{ exam.exam_id }}/confirm-alter">
             {% for question in questions %}
             {% set grade_key = 'question_grade_' ~ question.id %}
             <input type="hidden" name="question_grade_{{ question.id }}" value="{{ form_data.get(grade_key, '') }}">
             {% endfor %}
             <input type="hidden" name="final_grade" value="{{ form_data.get('final_grade', '') }}">
+            <input type="hidden" name="grade_change_reason" value="{{ form_data.get('grade_change_reason', '') }}">
             
             <div class="button-group">
                 <button type="submit" class="btn-confirm">Confirm Changes</button>
