@@ -28,7 +28,7 @@ setup_logging()
 Base.metadata.create_all(bind=engine)
 
 # Seed users if they don’t already exist
-seed_users()
+#seed_users()
 
 # Create FastAPI app
 app = FastAPI(

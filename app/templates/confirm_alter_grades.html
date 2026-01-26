@@ -111,7 +111,7 @@
             <div class="change-item">
                 <strong>Question {{ change.question.question_number }}:</strong>
                 <div class="grade-comparison">
-                    <span class="old-grade">{{ "%.1f"|format(change.original_grade) if change.original_grade else 'N/A' }}%</span>
+                    <span class="old-grade">{{ "%.1f"|format(change.original_grade / 100) if change.original_grade is not none else 'N/A' }}%</span>
                     <span class="arrow">→</span>
                     <span class="new-grade">{{ "%.1f"|format(change.new_grade) }}%</span>
                 </div>

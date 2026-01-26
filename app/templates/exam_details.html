@@ -239,8 +239,7 @@
                         <input type="number" 
                                name="final_grade" 
                                form="grade-alteration-form"
-                               value="{{ exam.final_grade * 100 if exam.final_grade else '' }}" 
-                               min="0" 
+                               value="{{ '%.1f' % (exam.final_grade * 100) if exam.final_grade is not none else '' }}"
                                max="100" 
                                step="0.1"
                                style="width: 100px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;"
@@ -335,7 +334,7 @@
                         <label style="font-weight: 600; color: #666;">Grade (%):</label>
                         <input type="number" 
                                name="question_grade_{{ question.id }}" 
-                               value="{{ question.grade * 100 if question.grade is not none else '' }}" 
+                               value="{{ '%.1f' % question.grade if question.grade is not none else '' }}"
                                min="0" 
                                max="100" 
                                step="0.1"
@@ -422,11 +421,12 @@
             <div class="details-section" style="margin-top: 20px;">
                 <h2>{% if exam.status == "disputed" %}Dispute Actions{% else %}Grade Actions{% endif %}</h2>
                 <div style="display: flex; gap: 15px; margin-top: 15px;">
-                    <form method="post" action="/teacher/exam/{{ exam.exam_id }}/alter-grades" style="display: inline;">
-                        <button type="submit" class="btn-terminate" style="background-color: #4CAF50; padding: 12px 24px; border: none; border-radius: 4px; color: white; font-size: 1em; cursor: pointer;">
-                            Alter Exam
-                        </button>
-                    </form>
+                    <button type="submit"
+                            form="grade-alteration-form"
+                            class="btn-terminate"
+                            style="background-color: #4CAF50; padding: 12px 24px; border: none; border-radius: 4px; color: white; font-size: 1em; cursor: pointer;">
+                        Alter Exam
+                    </button>
                     {% if exam.status == "disputed" %}
                     <form method="post" action="/teacher/exam/{{ exam.exam_id }}/reopen" 
                           onsubmit="return confirm('Are you sure you want to reopen this exam? The student will be able to retake it.');"
