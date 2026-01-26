@@ -1,6 +1,7 @@
 """Question generation logic."""
 import json
 import logging
+from typing import Optional
 from app.core.llm.client import LLMClient
 from app.core.llm.prompts import load_prompt, format_prompt
 from app.core.llm.guardrails import validate_response
@@ -49,7 +50,7 @@ Important: Respond only in JSON format exactly like this:
 Do not add anything else outside the JSON object."""
     
     async def generate_question(self, topic: str = "Computer Science", difficulty: str = "Intermediate", 
-                               question_number: int | None = None) -> GeneratedQuestion:
+                               question_number: Optional[int] = None) -> GeneratedQuestion:
         """Generate a question using the LLM."""
         if question_number is None:
             self._question_counter += 1
