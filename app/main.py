@@ -7,12 +7,13 @@ from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_, and_
+from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone, timedelta
 from app.api.router import api_router
 from app.db.base import Base, engine
 from app.db.session import get_db
-from app.db.models import User, Course, Exam, Student, Enrollment, Question
-from app.db.repo import QuestionRepository
+from app.db.models import User, Course, Exam, Student, Enrollment, Question, Notification
+from app.db.repo import QuestionRepository, StudentRepository
 from app.core.grading.generator import QuestionGenerator
 from app.logging_config import setup_logging
 
@@ -1220,7 +1221,9 @@ async def create_exam(
                 # Timed exam fields
                 is_timed=is_timed,
                 duration_hours=duration_hours if is_timed else None,
-                duration_minutes=duration_minutes if is_timed else None
+                duration_minutes=duration_minutes if is_timed else None,
+                # student_id is None for teacher-created exam templates (students will be assigned when they start)
+                student_id=None
             )
             
             try:
@@ -1969,9 +1972,130 @@ async def reopen_exam(
         logger.error(f"Error reopening exam: {e}")
         return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Failed to reopen exam", status_code=302)
 
+@app.get("/teacher/manage-students", response_class=HTMLResponse)
+async def manage_students_page(request: Request, db: Session = Depends(get_db)):
+    """Display the manage students page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get all courses for this instructor with enrollments loaded
+    courses = db.query(Course).options(joinedload(Course.enrollments).joinedload(Enrollment.student)).filter(Course.instructor_id == user.id).all()
+    
+    # Get all users for name lookup
+    all_users = db.query(User).all()
+    
+    return render_template("manage_students.html", {
+        "request": request,
+        "courses": courses,
+        "all_users": all_users
+    })
+
+@app.post("/teacher/manage-students/add-to-course")
+async def add_student_to_course(
+    request: Request,
+    db: Session = Depends(get_db),
+    student_email: str = Form(...),
+    course_id: int = Form(...)
+):
+    """Add a student to a course."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Verify course belongs to instructor
+    course = db.query(Course).filter(Course.id == course_id, Course.instructor_id == user.id).first()
+    if not course:
+        return RedirectResponse(url="/teacher/manage-students?error=Course not found or access denied", status_code=302)
+    
+    # Verify student user exists
+    student_user = db.query(User).filter(User.email == student_email, User.role == "student").first()
+    if not student_user:
+        return RedirectResponse(url=f"/teacher/manage-students?error=Student with email {student_email} not found", status_code=302)
+    
+    # Get or create Student record
+    student_record = StudentRepository.get_or_create(db, student_email)
+    
+    # Check if enrollment already exists
+    existing_enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == student_record.id,
+        Enrollment.course_id == course_id
+    ).first()
+    
+    if existing_enrollment:
+        return RedirectResponse(url=f"/teacher/manage-students?error=Student is already enrolled in this course", status_code=302)
+    
+    # Create enrollment
+    try:
+        enrollment = Enrollment(
+            student_id=student_record.id,
+            course_id=course_id
+        )
+        db.add(enrollment)
+        db.commit()
+        return RedirectResponse(url=f"/teacher/manage-students?success=Student {student_email} added to {course.course_number} - Section {course.section}", status_code=302)
+    except IntegrityError as e:
+        db.rollback()
+        logger.error(f"Error adding student to course: {e}")
+        return RedirectResponse(url=f"/teacher/manage-students?error=Failed to add student to course", status_code=302)
+
+@app.post("/teacher/manage-students/remove-from-course")
+async def remove_student_from_course(
+    request: Request,
+    db: Session = Depends(get_db),
+    enrollment_id: int = Form(...)
+):
+    """Remove a student from a course."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get enrollment and verify course belongs to instructor
+    enrollment = db.query(Enrollment).join(Course).filter(
+        Enrollment.id == enrollment_id,
+        Course.instructor_id == user.id
+    ).first()
+    
+    if not enrollment:
+        return RedirectResponse(url="/teacher/manage-students?error=Enrollment not found or access denied", status_code=302)
+    
+    try:
+        student_email = enrollment.student.username
+        course_info = f"{enrollment.course.course_number} - Section {enrollment.course.section}"
+        db.delete(enrollment)
+        db.commit()
+        return RedirectResponse(url=f"/teacher/manage-students?success=Student {student_email} removed from {course_info}", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error removing student from course: {e}")
+        return RedirectResponse(url=f"/teacher/manage-students?error=Failed to remove student from course", status_code=302)
+
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    """Root page - login form."""
+    """Root page - role selection."""
+    return render_template("login_selection.html", {"request": request})
+
+@app.get("/student/login", response_class=HTMLResponse)
+async def student_login_page(request: Request):
+    """Student login page."""
     error = request.query_params.get("error", "")
     success = request.query_params.get("success", "")
     return render_template("login.html", {"request": request, "error": error, "success": success})
@@ -1989,6 +2113,143 @@ async def teacher_login_page(request: Request):
     success = request.query_params.get("success", "")
     return render_template("teacher_login.html", {"request": request, "error": error, "success": success})
 
+
+@app.get("/teacher/exams", response_class=HTMLResponse)
+async def teacher_exams_page(request: Request, db: Session = Depends(get_db)):
+    """Display all exams page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get filter parameter
+    filter_type = request.query_params.get("filter", "all")
+    
+    # Query exams for this instructor
+    exams_query = db.query(Exam).filter(Exam.instructor_id == user.id)
+    
+    if filter_type == "open":
+        exams_query = exams_query.filter(
+            Exam.date_published.isnot(None),
+            Exam.status != "terminated",
+            Exam.status != "completed"
+        )
+    elif filter_type == "closed":
+        exams_query = exams_query.filter(
+            or_(Exam.status == "terminated", Exam.status == "completed")
+        )
+    
+    exams = exams_query.order_by(Exam.created_at.desc()).all()
+    
+    # Build exam data
+    exam_list = []
+    for exam in exams:
+        student = None
+        if exam.student_id:
+            student = db.query(Student).filter(Student.id == exam.student_id).first()
+        
+        exam_list.append({
+            "exam_id": exam.exam_id,
+            "exam_name": exam.exam_name,
+            "course_number": exam.course_number,
+            "section": exam.section,
+            "quarter_year": exam.quarter_year,
+            "status": exam.status,
+            "date_published": exam.date_published,
+            "date_start": exam.date_start,
+            "date_end": exam.date_end,
+            "final_grade": exam.final_grade,
+            "student": student.username if student else None
+        })
+    
+    return render_template("teacher_exams.html", {
+        "request": request,
+        "exams": exam_list,
+        "filter_type": filter_type
+    })
+
+@app.get("/teacher/analytics", response_class=HTMLResponse)
+async def teacher_analytics_page(request: Request, db: Session = Depends(get_db)):
+    """Display analytics page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get statistics
+    total_exams = db.query(Exam).filter(Exam.instructor_id == user.id).count()
+    total_courses = db.query(Course).filter(Course.instructor_id == user.id).count()
+    total_students = db.query(Enrollment).join(Course).filter(Course.instructor_id == user.id).distinct(Enrollment.student_id).count()
+    
+    completed_exams = db.query(Exam).filter(
+        Exam.instructor_id == user.id,
+        Exam.status == "completed"
+    ).count()
+    
+    return render_template("teacher_analytics.html", {
+        "request": request,
+        "total_exams": total_exams,
+        "total_courses": total_courses,
+        "total_students": total_students,
+        "completed_exams": completed_exams
+    })
+
+@app.get("/teacher/settings", response_class=HTMLResponse)
+async def teacher_settings_page(request: Request, db: Session = Depends(get_db)):
+    """Display settings page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    return render_template("teacher_settings.html", {
+        "request": request,
+        "user": user
+    })
+
+@app.get("/teacher/notifications", response_class=HTMLResponse)
+async def teacher_notifications_page(request: Request, db: Session = Depends(get_db)):
+    """Display all notifications page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get all notifications
+    notifications = db.query(Notification).filter(
+        Notification.user_id == user.id
+    ).order_by(Notification.created_at.desc()).all()
+    
+    unread_count = db.query(Notification).filter(
+        Notification.user_id == user.id,
+        Notification.is_read == False
+    ).count()
+    
+    return render_template("teacher_notifications.html", {
+        "request": request,
+        "notifications": notifications,
+        "unread_count": unread_count
+    })
 
 @app.get("/question/{question_id}", response_class=HTMLResponse)
 async def question_page(request: Request, question_id: int):

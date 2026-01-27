@@ -3,100 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register New Course — DePaul BlueVox</title>
+    <title>Register New Course - DePaul BlueVox</title>
+    <link rel="icon" type="image/png" href="/static/assets/depaul-shield.png">
     
     <!-- UI font -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        .register-card {
-            max-width: 600px;
+      :root {
+        --page-text: rgba(255, 255, 255, 0.9);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: rgba(120, 190, 255, 0.75);
+        --accent-soft: rgba(90, 160, 255, 0.22);
+        --panel-bg: rgba(2, 10, 28, 0.65);
+        --panel-border: rgba(120, 175, 255, 0.3);
+        --field-bg: rgba(2, 10, 28, 0.38);
+        --field-border: rgba(120, 175, 255, 0.55);
+        --field-border-focus: rgba(150, 210, 255, 0.85);
+        --btn-primary: rgba(70, 150, 255, 0.92);
+        --btn-primary-hover: rgba(90, 170, 255, 0.95);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Global input/select/textarea styling to prevent white backgrounds */
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      input[type="number"],
+      input[type="search"],
+      select,
+      textarea {
+        background: var(--field-bg) !important;
+        border: 1px solid var(--field-border) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+
+      input[type="text"]:focus,
+      input[type="email"]:focus,
+      input[type="password"]:focus,
+      input[type="number"]:focus,
+      input[type="search"]:focus,
+      select:focus,
+      textarea:focus {
+        outline: none !important;
+        border-color: var(--field-border-focus) !important;
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15) !important;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+      }
+
+      select option {
+        background: rgba(2, 10, 28, 0.95) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+
+      select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
+
+      body.bluevox-form {
+        margin: 0;
+        padding: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--page-text);
+        overflow-x: hidden;
+        min-height: 100vh;
+        background:
+          radial-gradient(1100px 760px at 88% 55%, rgba(40, 165, 255, 0.34), rgba(0, 0, 0, 0) 62%),
+          radial-gradient(900px 650px at 92% 60%, rgba(20, 120, 255, 0.20), rgba(0, 0, 0, 0) 62%),
+          linear-gradient(90deg, #02040b, #031531 55%, #062f67);
+        position: relative;
+      }
+
+      body.bluevox-form::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.75) 50%, transparent 52%),
+          radial-gradient(1px 1px at 18% 62%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 28% 78%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 33% 35%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 46% 22%, rgba(255, 255, 255, 0.5) 50%, transparent 52%),
+          radial-gradient(1px 1px at 52% 66%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 63% 44%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 71% 77%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 79% 16%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 86% 58%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
+          radial-gradient(1px 1px at 92% 32%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 6% 82%, rgba(255, 255, 255, 0.5) 50%, transparent 52%);
+        opacity: 0.55;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 40px 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .form-card {
+        width: 100%;
+        max-width: 600px;
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(120, 175, 255, 0.15);
+        border-radius: 12px;
+        padding: 40px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+
+      .form-header {
+        margin-bottom: 32px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .form-header h1 {
+        font-size: 28px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+      }
+
+      .back-link {
+        color: rgba(170, 220, 255, 0.8);
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.2s;
+      }
+
+      .back-link:hover {
+        color: rgba(220, 245, 255, 0.95);
+      }
+
+      .form-group {
+        margin-bottom: 24px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--field-bg);
+        border: 1px solid var(--field-border);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+        font-family: Inter, sans-serif;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--field-border-focus);
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15);
+      }
+
+      .form-group input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .form-group input[type="text"] {
+        text-transform: uppercase;
+      }
+
+      .info-text {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+
+      .sections-container {
+        margin-bottom: 12px;
+      }
+
+      .section-input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+
+      .section-input-group input {
+        flex: 1;
+        text-transform: none;
+      }
+
+      .btn-remove-section {
+        padding: 10px 16px;
+        background: rgba(220, 38, 38, 0.2);
+        border: 1px solid rgba(220, 38, 38, 0.4);
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .btn-remove-section:hover {
+        background: rgba(220, 38, 38, 0.3);
+        border-color: rgba(220, 38, 38, 0.6);
+      }
+
+      .btn-add-section {
+        padding: 10px 16px;
+        background: rgba(70, 150, 255, 0.2);
+        border: 1px solid rgba(70, 150, 255, 0.4);
+        color: rgba(255, 255, 255, 0.9);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 15px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-add-section:hover {
+        background: rgba(70, 150, 255, 0.3);
+        border-color: rgba(70, 150, 255, 0.6);
+      }
+
+      .quarter-year-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(180deg, var(--btn-primary), rgba(35, 105, 245, 0.88));
+        border: 1px solid rgba(170, 220, 255, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        flex: 1;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(180deg, var(--btn-primary-hover), rgba(45, 115, 255, 0.92));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        flex: 1;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .error-message {
+        background: rgba(220, 38, 38, 0.2);
+        border: 1px solid rgba(220, 38, 38, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      @media (max-width: 640px) {
+        .form-card {
+          padding: 30px 24px;
         }
-        
-        .register-card h1 {
-            margin-top: 0;
-            color: rgba(255, 255, 255, 0.95);
-            border-bottom: 2px solid rgba(120, 175, 255, 0.3);
-            padding-bottom: 10px;
-        }
-        
-        .form-group input {
-            text-transform: uppercase;
-        }
-        
-        .sections-container {
-            margin-bottom: 15px;
-        }
-        
-        .section-input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-        
-        .section-input-group input {
-            flex: 1;
-            text-transform: none;
-        }
-        
-        .btn-remove-section {
-            padding: 8px 15px;
-            background: rgba(220, 38, 38, 0.8);
-            color: white;
-            border: 1px solid rgba(220, 38, 38, 0.6);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-remove-section:hover {
-            background: rgba(220, 38, 38, 0.95);
-            border-color: rgba(220, 38, 38, 0.8);
-        }
-        
-        .btn-add-section {
-            padding: 8px 15px;
-            background: rgba(70, 150, 255, 0.8);
-            color: white;
-            border: 1px solid rgba(70, 150, 255, 0.6);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-bottom: 15px;
-            transition: all 0.2s ease;
-        }
-        
-        .btn-add-section:hover {
-            background: rgba(70, 150, 255, 0.95);
-            border-color: rgba(70, 150, 255, 0.8);
-        }
-        
+
         .quarter-year-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+          grid-template-columns: 1fr;
         }
-        
-        .info-text {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9em;
-            margin-top: 5px;
+
+        .button-group {
+          flex-direction: column;
         }
+      }
     </style>
 </head>
-<body class="bluevox">
-    <div class="bluevox-container">
-        <div class="bluevox-card register-card">
-            <h1>Register New Course</h1>
+<body class="bluevox-form">
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <h1>Register New Course</h1>
+            </div>
             
             {% if error %}
             <div class="bluevox-message bluevox-message-error">
@@ -105,8 +354,8 @@
             {% endif %}
             
             <form method="post" action="/teacher/register-course" id="register-course-form">
-                <div class="bluevox-form-group">
-                    <label for="course_number" class="bluevox-form-group label">Course Number:</label>
+                <div class="form-group">
+                    <label for="course_number">Course Number</label>
                     <input 
                         type="text" 
                         id="course_number" 
@@ -121,8 +370,8 @@
                     <p class="info-text">Enter the course code (will be converted to uppercase automatically)</p>
                 </div>
                 
-                <div class="bluevox-form-group">
-                    <label class="bluevox-form-group label">Sections:</label>
+                <div class="form-group">
+                    <label>Sections</label>
                     <div class="sections-container" id="sections-container">
                         <div class="section-input-group">
                             <input 
@@ -139,12 +388,12 @@
                     <button type="button" class="btn-add-section" id="add-section-btn">Add Another Section</button>
                 </div>
                 
-                <div class="bluevox-form-group">
-                    <label class="bluevox-form-group label">Quarter / Year:</label>
+                <div class="form-group">
+                    <label>Quarter / Year</label>
                     <div class="quarter-year-group">
                         <div>
-                            <label for="quarter" class="bluevox-form-group label" style="margin-bottom: 8px;">Quarter:</label>
-                            <select id="quarter" name="quarter" class="bluevox-select" required>
+                            <label for="quarter" style="margin-bottom: 8px; display: block;">Quarter</label>
+                            <select id="quarter" name="quarter" required>
                                 <option value="">Select Quarter</option>
                                 <option value="Fall">Fall</option>
                                 <option value="Winter">Winter</option>
@@ -153,19 +402,21 @@
                             </select>
                         </div>
                         <div>
-                            <label for="year" class="bluevox-form-group label" style="margin-bottom: 8px;">Year:</label>
-                                <select id="year" name="year" class="bluevox-select" required>
-                                    <option value="">Select Year</option>
-                                    {% for year in year_options %}
-                                    <option value="{{ year }}">{{ year }}</option>
-                                    {% endfor %}
-                                </select>
+                            <label for="year" style="margin-bottom: 8px; display: block;">Year</label>
+                            <select id="year" name="year" required>
+                                <option value="">Select Year</option>
+                                {% for year in year_options %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
                 </div>
                 
-                <button type="submit" class="bluevox-btn" style="width: 100%;">Register Course</button>
-                <a href="/teacher/dashboard" class="bluevox-btn bluevox-btn-secondary" style="width: 100%; margin-top: 10px; text-align: center; display: block; box-sizing: border-box;">Cancel</a>
+                <div class="button-group">
+                    <a href="/teacher/dashboard" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary">Register Course</button>
+                </div>
             </form>
         </div>
     </div>

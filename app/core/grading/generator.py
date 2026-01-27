@@ -56,6 +56,21 @@ Do not add anything else outside the JSON object."""
             self._question_counter += 1
             question_number = self._question_counter
 
+        # Check if API key is available before attempting LLM generation
+        try:
+            # Try to get the client to check if API key is set
+            _ = self.llm_client._get_api_key()
+            api_key_available = bool(_)
+        except Exception:
+            api_key_available = False
+        
+        if not api_key_available:
+            logger.info(f"API key not available, using fallback question for question #{question_number}")
+            fallback = self._get_fallback_question(question_number)
+            normalized = self._normalize(fallback.question_text)
+            self.generated_questions.add(normalized)
+            return fallback
+        
         max_attempts = 5  # Retry LLM generation if duplicate
         for attempt in range(max_attempts):
             logger.info(f"Generating question #{question_number}, attempt {attempt+1}")
@@ -103,6 +118,16 @@ Required JSON format:
                 self.generated_questions.add(normalized)
                 return question
                 
+            except RuntimeError as e:
+                # Check if it's an API key error
+                if "TOGETHER_API_KEY" in str(e) or "API key" in str(e).lower():
+                    logger.info(f"API key not available, using fallback question for question #{question_number}")
+                    fallback = self._get_fallback_question(question_number)
+                    normalized = self._normalize(fallback.question_text)
+                    self.generated_questions.add(normalized)
+                    return fallback
+                logger.warning(f"Error generating question #{question_number}: {e}")
+                continue  # Try again
             except Exception as e:
                 logger.warning(f"Error generating question #{question_number}: {e}")
                 continue  # Try again
@@ -204,6 +229,27 @@ Required JSON format:
     async def generate_exam(self, topic: str, num_questions: int, additional_details: str = "") -> GeneratedExam:
         """Generate multiple exam questions at once using the LLM."""
         logger.info(f"Generating exam with {num_questions} questions on topic: {topic}")
+        
+        # Check if API key is available before attempting LLM generation
+        try:
+            api_key = self.llm_client._get_api_key()
+            api_key_available = bool(api_key)
+        except Exception:
+            api_key_available = False
+        
+        if not api_key_available:
+            logger.info(f"API key not available, using fallback questions for exam with {num_questions} questions")
+            # Generate fallback questions
+            fallback_questions = []
+            for i in range(1, num_questions + 1):
+                fallback_q = self._get_fallback_question(i)
+                fallback_questions.append(GeneratedQuestionWithNumber(
+                    question_number=i,
+                    question_text=fallback_q.question_text,
+                    context=fallback_q.context,
+                    rubric=fallback_q.rubric
+                ))
+            return GeneratedExam(questions=fallback_questions)
         
         # Load exam generation template
         try:
@@ -370,19 +416,41 @@ Required JSON format:
                 return exam
                 
             except RuntimeError as e:
-                # LLM API call failed
+                # Check if it's an API key error
+                if "TOGETHER_API_KEY" in str(e) or "API key" in str(e).lower() or "not set" in str(e).lower():
+                    logger.info(f"API key not available, using fallback questions for exam with {num_questions} questions")
+                    # Generate fallback questions
+                    fallback_questions = []
+                    for i in range(1, num_questions + 1):
+                        fallback_q = self._get_fallback_question(i)
+                        fallback_questions.append(GeneratedQuestionWithNumber(
+                            question_number=i,
+                            question_text=fallback_q.question_text,
+                            context=fallback_q.context,
+                            rubric=fallback_q.rubric
+                        ))
+                    return GeneratedExam(questions=fallback_questions)
+                
+                # LLM API call failed for other reasons
                 error_msg = f"LLM API call failed: {str(e)}"
                 logger.error(f"{error_msg} on attempt {attempt+1}")
                 failure_reasons.append(f"Attempt {attempt+1}: {error_msg}")
                 if attempt == max_attempts - 1:
-                    # Last attempt failed
+                    # Last attempt failed - use fallback questions instead of raising error
+                    logger.warning(f"LLM API call failed after {max_attempts} attempts. Using fallback questions.")
                     all_failures = "\n".join(failure_reasons)
-                    logger.error(f"LLM API call failed after {max_attempts} attempts. All failures:\n{all_failures}")
-                    raise RuntimeError(
-                        f"Unable to connect to AI service after {max_attempts} attempts. "
-                        f"Please check your API key, model configuration, and network connection. "
-                        f"Error details: {str(e)}"
-                    ) from e
+                    logger.error(f"All failures:\n{all_failures}")
+                    # Generate fallback questions instead of raising error
+                    fallback_questions = []
+                    for i in range(1, num_questions + 1):
+                        fallback_q = self._get_fallback_question(i)
+                        fallback_questions.append(GeneratedQuestionWithNumber(
+                            question_number=i,
+                            question_text=fallback_q.question_text,
+                            context=fallback_q.context,
+                            rubric=fallback_q.rubric
+                        ))
+                    return GeneratedExam(questions=fallback_questions)
                 continue
             except json.JSONDecodeError as e:
                 # JSON parsing failed
@@ -390,13 +458,20 @@ Required JSON format:
                 logger.error(f"{error_msg} on attempt {attempt+1}")
                 failure_reasons.append(f"Attempt {attempt+1}: {error_msg}")
                 if attempt == max_attempts - 1:
+                    # Use fallback questions instead of raising error
+                    logger.warning(f"JSON parsing failed after {max_attempts} attempts. Using fallback questions.")
                     all_failures = "\n".join(failure_reasons)
-                    logger.error(f"JSON parsing failed after {max_attempts} attempts. All failures:\n{all_failures}")
-                    raise RuntimeError(
-                        f"AI service returned invalid response format after {max_attempts} attempts. "
-                        f"The AI model may not be following instructions correctly. "
-                        f"Please try again or adjust your exam parameters. Error: {str(e)}"
-                    ) from e
+                    logger.error(f"All failures:\n{all_failures}")
+                    fallback_questions = []
+                    for i in range(1, num_questions + 1):
+                        fallback_q = self._get_fallback_question(i)
+                        fallback_questions.append(GeneratedQuestionWithNumber(
+                            question_number=i,
+                            question_text=fallback_q.question_text,
+                            context=fallback_q.context,
+                            rubric=fallback_q.rubric
+                        ))
+                    return GeneratedExam(questions=fallback_questions)
                 continue
             except Exception as e:
                 # Other unexpected errors
@@ -407,24 +482,37 @@ Required JSON format:
                 logger.error(f"Traceback: {traceback.format_exc()}")
                 failure_reasons.append(f"Attempt {attempt+1}: {error_msg}")
                 if attempt == max_attempts - 1:
+                    # Use fallback questions instead of raising error
+                    logger.warning(f"Unexpected error after {max_attempts} attempts. Using fallback questions.")
                     all_failures = "\n".join(failure_reasons)
-                    logger.error(f"Unexpected error after {max_attempts} attempts. All failures:\n{all_failures}")
+                    logger.error(f"All failures:\n{all_failures}")
                     logger.error(f"Error type: {error_type}, Error message: {str(e)}")
-                    raise RuntimeError(
-                        f"An unexpected error occurred while generating the exam after {max_attempts} attempts. "
-                        f"Please try again. If the problem persists, check the server logs for details. "
-                        f"Error: {error_type}: {str(e)}"
-                    ) from e
+                    fallback_questions = []
+                    for i in range(1, num_questions + 1):
+                        fallback_q = self._get_fallback_question(i)
+                        fallback_questions.append(GeneratedQuestionWithNumber(
+                            question_number=i,
+                            question_text=fallback_q.question_text,
+                            context=fallback_q.context,
+                            rubric=fallback_q.rubric
+                        ))
+                    return GeneratedExam(questions=fallback_questions)
                 continue
         
-        # Should not reach here, but raise error if we do
+        # Should not reach here, but use fallback questions if we do
+        logger.warning(f"Exam generation loop completed without success. Using fallback questions.")
         all_failures = "\n".join(failure_reasons) if failure_reasons else "Unknown error - no attempts completed"
-        logger.error(f"Exam generation failed after {max_attempts} attempts. All failures:\n{all_failures}")
-        raise RuntimeError(
-            f"Failed to generate exam after {max_attempts} attempts. "
-            f"Common issues: duplicate questions detected, invalid response format, or API connection problems. "
-            f"Please try again with different parameters or check your configuration."
-        )
+        logger.error(f"All failures:\n{all_failures}")
+        fallback_questions = []
+        for i in range(1, num_questions + 1):
+            fallback_q = self._get_fallback_question(i)
+            fallback_questions.append(GeneratedQuestionWithNumber(
+                question_number=i,
+                question_text=fallback_q.question_text,
+                context=fallback_q.context,
+                rubric=fallback_q.rubric
+            ))
+        return GeneratedExam(questions=fallback_questions)
     
     def _get_default_exam_template(self) -> str:
         """Default exam generation template if file not found."""

@@ -3,144 +3,597 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exam Details - {{ exam.exam_name }} — DePaul BlueVox</title>
+    <title>Exam Details - {{ exam.exam_name }} - DePaul BlueVox</title>
+    <link rel="icon" type="image/png" href="/static/assets/depaul-shield.png">
     
     <!-- UI font -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="/static/bluevox.css">
     <style>
+      :root {
+        --page-text: rgba(255, 255, 255, 0.9);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: rgba(120, 190, 255, 0.75);
+        --accent-soft: rgba(90, 160, 255, 0.22);
+        --panel-bg: rgba(2, 10, 28, 0.65);
+        --panel-border: rgba(120, 175, 255, 0.3);
+        --field-bg: rgba(2, 10, 28, 0.38);
+        --field-border: rgba(120, 175, 255, 0.55);
+        --field-border-focus: rgba(150, 210, 255, 0.85);
+        --btn-primary: rgba(70, 150, 255, 0.92);
+        --btn-primary-hover: rgba(90, 170, 255, 0.95);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Global input/select/textarea styling to prevent white backgrounds */
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      input[type="number"],
+      input[type="search"],
+      select,
+      textarea {
+        background: var(--field-bg) !important;
+        border: 1px solid var(--field-border) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+
+      input[type="text"]:focus,
+      input[type="email"]:focus,
+      input[type="password"]:focus,
+      input[type="number"]:focus,
+      input[type="search"]:focus,
+      select:focus,
+      textarea:focus {
+        outline: none !important;
+        border-color: var(--field-border-focus) !important;
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15) !important;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+      }
+
+      select option {
+        background: rgba(2, 10, 28, 0.95) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+
+      select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
+
+      body.bluevox-details {
+        margin: 0;
+        padding: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--page-text);
+        overflow-x: hidden;
+        min-height: 100vh;
+        background:
+          radial-gradient(1100px 760px at 88% 55%, rgba(40, 165, 255, 0.34), rgba(0, 0, 0, 0) 62%),
+          radial-gradient(900px 650px at 92% 60%, rgba(20, 120, 255, 0.20), rgba(0, 0, 0, 0) 62%),
+          linear-gradient(90deg, #02040b, #031531 55%, #062f67);
+        position: relative;
+      }
+
+      body.bluevox-details::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.75) 50%, transparent 52%),
+          radial-gradient(1px 1px at 18% 62%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 28% 78%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 33% 35%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 46% 22%, rgba(255, 255, 255, 0.5) 50%, transparent 52%),
+          radial-gradient(1px 1px at 52% 66%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 63% 44%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 71% 77%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 79% 16%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 86% 58%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
+          radial-gradient(1px 1px at 92% 32%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 6% 82%, rgba(255, 255, 255, 0.5) 50%, transparent 52%);
+        opacity: 0.55;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .details-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .page-header {
+        margin-bottom: 32px;
+      }
+
+      .page-title {
+        font-size: 32px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+      }
+
+      .back-link {
+        color: rgba(170, 220, 255, 0.8);
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.2s;
+        margin-bottom: 12px;
+      }
+
+      .back-link:hover {
+        color: rgba(220, 245, 255, 0.95);
+      }
+
+      .alert {
+        padding: 14px 18px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid;
+        font-size: 14px;
+      }
+
+      .alert-success {
+        background: rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .alert-error {
+        background: rgba(220, 38, 38, 0.2);
+        border-color: rgba(220, 38, 38, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .alert-warning {
+        background: rgba(255, 193, 7, 0.2);
+        border-color: rgba(255, 193, 7, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+        border-left: 4px solid rgba(255, 193, 7, 0.6);
+      }
+
+      .panel {
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(120, 175, 255, 0.15);
+        border-radius: 10px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .panel-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        letter-spacing: -0.2px;
+      }
+
+      .details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+
+      .detail-item {
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+
+      .detail-label {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+
+      .detail-value {
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .status-active .status-dot {
+        background: #4CAF50;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+      }
+
+      .status-completed .status-dot {
+        background: #2196F3;
+        box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
+      }
+
+      .status-disputed .status-dot {
+        background: #ff9800;
+        box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
+      }
+
+      .status-not-started .status-dot {
+        background: #ff9800;
+        box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
+      }
+
+      .status-draft .status-dot {
+        background: #9e9e9e;
+      }
+
+      .status-active {
+        color: #86efac;
+      }
+
+      .status-completed {
+        color: #93c5fd;
+      }
+
+      .status-disputed {
+        color: #fbbf24;
+      }
+
+      .status-not-started {
+        color: #fbbf24;
+      }
+
+      .status-draft {
+        color: #d1d5db;
+      }
+
+      .llm-prompt-box {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 16px;
+        border-radius: 8px;
+        border-left: 3px solid var(--accent);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .question-card {
+        margin-bottom: 24px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid var(--accent);
+      }
+
+      .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .question-number {
+        font-size: 16px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .question-section {
+        margin-bottom: 16px;
+      }
+
+      .question-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .question-label {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .question-content {
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .answer-content {
+        padding: 12px;
+        background: rgba(70, 150, 255, 0.15);
+        border: 1px solid rgba(70, 150, 255, 0.3);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .no-answer {
+        padding: 12px;
+        background: rgba(255, 193, 7, 0.15);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.8);
+        font-style: italic;
+        font-size: 14px;
+      }
+
+      .feedback-content {
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .grade-input-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .grade-input {
+        width: 90px;
+        padding: 6px 10px;
+        background: var(--field-bg);
+        border: 1px solid var(--field-border);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+        font-family: Inter, sans-serif;
+      }
+
+      .grade-input:focus {
+        outline: none;
+        border-color: var(--field-border-focus);
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15);
+      }
+
+      .grade-display {
+        font-size: 16px;
+        font-weight: 600;
+        color: rgba(170, 220, 255, 0.9);
+      }
+
+      .grade-not-graded {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border: none;
+      }
+
+      .btn-primary {
+        background: linear-gradient(180deg, var(--btn-primary), rgba(35, 105, 245, 0.88));
+        border: 1px solid rgba(170, 220, 255, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(180deg, var(--btn-primary-hover), rgba(45, 115, 255, 0.92));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-success {
+        background: linear-gradient(180deg, rgba(34, 197, 94, 0.92), rgba(22, 163, 74, 0.88));
+        border: 1px solid rgba(134, 239, 172, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-success:hover {
+        background: linear-gradient(180deg, rgba(34, 197, 94, 0.95), rgba(22, 163, 74, 0.92));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-danger {
+        background: linear-gradient(180deg, rgba(220, 38, 38, 0.92), rgba(185, 28, 28, 0.88));
+        border: 1px solid rgba(248, 113, 113, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-danger:hover {
+        background: linear-gradient(180deg, rgba(220, 38, 38, 0.95), rgba(185, 28, 28, 0.92));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-info {
+        background: linear-gradient(180deg, rgba(59, 130, 246, 0.92), rgba(37, 99, 235, 0.88));
+        border: 1px solid rgba(147, 197, 253, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-info:hover {
+        background: linear-gradient(180deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.92));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .form-group textarea {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--field-bg);
+        border: 1px solid var(--field-border);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+        font-family: Inter, sans-serif;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+        min-height: 100px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--field-border-focus);
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15);
+      }
+
+      .form-group textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      @media (max-width: 768px) {
         .details-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+          grid-template-columns: 1fr;
         }
 
-        .detail-item {
-            padding: 15px;
-            background: rgba(2, 10, 28, 0.4);
-            border: 1px solid rgba(120, 175, 255, 0.2);
-            border-radius: 8px;
+        .question-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
         }
 
-        .detail-label {
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9em;
-            margin-bottom: 5px;
+        .button-group {
+          flex-direction: column;
         }
 
-        .detail-value {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 1em;
+        .btn {
+          width: 100%;
         }
-
-        .detail-value.N/A {
-            color: rgba(255, 255, 255, 0.5);
-            font-style: italic;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: rgba(86, 239, 172, 0.3);
-            color: rgba(86, 239, 172, 0.95);
-            border: 1px solid rgba(86, 239, 172, 0.4);
-        }
-
-        .status-completed {
-            background: rgba(70, 150, 255, 0.3);
-            color: rgba(140, 195, 255, 0.95);
-            border: 1px solid rgba(70, 150, 255, 0.4);
-        }
-
-        .status-not-started {
-            background: rgba(251, 191, 36, 0.3);
-            color: rgba(251, 191, 36, 0.95);
-            border: 1px solid rgba(251, 191, 36, 0.4);
-        }
-
-        .status-draft {
-            background: rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .llm-prompt-box {
-            background: rgba(2, 10, 28, 0.4);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid rgba(70, 170, 255, 0.6);
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: rgba(255, 255, 255, 0.85);
-        }
-
-        .btn-terminate {
-            background: rgba(220, 38, 38, 0.8);
-            color: white;
-            border: 1px solid rgba(220, 38, 38, 0.6);
-        }
-
-        .btn-terminate:hover {
-            background: rgba(220, 38, 38, 0.95);
-            border-color: rgba(220, 38, 38, 0.8);
-        }
+      }
     </style>
 </head>
-<body class="bluevox">
-    <div class="bluevox-container">
+<body class="bluevox-details">
+    <div class="details-container">
         {% if request.query_params.get("success") %}
-        <div class="bluevox-message bluevox-message-success">
+        <div class="alert alert-success">
             {{ request.query_params.get("success") }}
         </div>
         {% endif %}
         
         {% if request.query_params.get("error") %}
-        <div class="bluevox-message bluevox-message-error">
+        <div class="alert alert-error">
             {{ request.query_params.get("error") }}
         </div>
         {% endif %}
         
         {% if exam.status == "disputed" %}
-        <div class="bluevox-message bluevox-message-warning">
-            <h2 style="margin-top: 0; color: rgba(255, 255, 255, 0.95); display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 1.5em;">⚠️</span>
-                <span>Grade Disputed</span>
-            </h2>
-            <p style="margin-bottom: 10px;"><strong>This exam grade has been disputed by the student.</strong></p>
+        <div class="alert alert-warning">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <strong style="font-size: 16px;">Grade Disputed</strong>
+            </div>
+            <p style="margin-bottom: 10px; font-size: 14px;">This exam grade has been disputed by the student.</p>
             {% if exam.dispute_reason %}
-            <div style="background-color: white; padding: 15px; border-radius: 4px; margin-top: 10px;">
-                <strong style="color: #856404;">Student's Reason:</strong>
-                <p style="color: #333; margin-top: 8px; white-space: pre-wrap;">{{ exam.dispute_reason }}</p>
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 12px; border-radius: 6px; margin-top: 10px;">
+                <strong style="color: rgba(255, 255, 255, 0.9); font-size: 13px;">Student's Reason:</strong>
+                <p style="color: rgba(255, 255, 255, 0.9); margin-top: 6px; white-space: pre-wrap; font-size: 13px; line-height: 1.5;">{{ exam.dispute_reason }}</p>
             </div>
             {% endif %}
         </div>
         {% endif %}
         
-        <div class="exam-header">
-            <h1>{{ exam.exam_name }} - Exam Details{% if is_student_exam and student %} - {{ student.username }}{% endif %}</h1>
-            <a href="/teacher/dashboard" class="back-link">← Back to Dashboard</a>
+        <div class="page-header">
+            <h1 class="page-title">{{ exam.exam_name }} - Exam Details{% if is_student_exam and student %} - {{ student.username }}{% endif %}</h1>
         </div>
 
-        <div class="bluevox-card">
-            <h2 class="bluevox-section-title">Exam Information</h2>
+        <!-- Exam Information Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Exam Information</h2>
+            </div>
             <div class="details-grid">
                 <div class="detail-item">
                     <div class="detail-label">Exam ID</div>
@@ -176,15 +629,30 @@
                     <div class="detail-label">Status</div>
                     <div class="detail-value">
                         {% if exam.status == 'active' %}
-                            <span class="status-badge status-active">Active</span>
+                            <span class="status-badge status-active">
+                                <span class="status-dot"></span>
+                                Active
+                            </span>
                         {% elif exam.status == 'completed' %}
-                            <span class="status-badge status-completed">Completed</span>
+                            <span class="status-badge status-completed">
+                                <span class="status-dot"></span>
+                                Completed
+                            </span>
                         {% elif exam.status == 'disputed' %}
-                            <span class="status-badge" style="background-color: #ff9800; color: white;">Disputed</span>
+                            <span class="status-badge status-disputed">
+                                <span class="status-dot"></span>
+                                Disputed
+                            </span>
                         {% elif exam.status == 'not_started' %}
-                            <span class="status-badge status-not-started">Not Started</span>
+                            <span class="status-badge status-not-started">
+                                <span class="status-dot"></span>
+                                Not Started
+                            </span>
                         {% else %}
-                            <span class="status-badge status-draft">Draft</span>
+                            <span class="status-badge status-draft">
+                                <span class="status-dot"></span>
+                                Draft
+                            </span>
                         {% endif %}
                     </div>
                 </div>
@@ -193,14 +661,17 @@
                     <div class="detail-label">Final Grade</div>
                     {% if exam.status == "disputed" or exam.status == "completed" %}
                     <div class="detail-value">
-                        <input type="number" 
-                               name="final_grade" 
-                               form="grade-alteration-form"
-                               value="{{ '%.1f' % (exam.final_grade * 100) if exam.final_grade is not none else '' }}"
-                               max="100" 
-                               step="0.1"
-                               style="width: 100px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;"
-                               placeholder="0-100">%
+                        <div class="grade-input-group">
+                            <input type="number" 
+                                   name="final_grade" 
+                                   form="grade-alteration-form"
+                                   value="{{ '%.1f' % (exam.final_grade * 100) if exam.final_grade is not none else '' }}"
+                                   max="100" 
+                                   step="0.1"
+                                   class="grade-input"
+                                   placeholder="0-100">
+                            <span style="color: rgba(255, 255, 255, 0.7);">%</span>
+                        </div>
                     </div>
                     {% else %}
                     <div class="detail-value">{{ "%.1f"|format(exam.final_grade * 100) if exam.final_grade else 'N/A' }}{% if exam.final_grade %}%{% endif %}</div>
@@ -216,8 +687,11 @@
             </div>
         </div>
 
-        <div class="bluevox-card">
-            <h2 class="bluevox-section-title">Date & Time Information</h2>
+        <!-- Date & Time Information Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Date & Time Information</h2>
+            </div>
             <div class="details-grid">
                 <div class="detail-item">
                     <div class="detail-label">Date/Time Start</div>
@@ -251,144 +725,139 @@
             </div>
         </div>
 
+        <!-- LLM Prompt Panel -->
         {% if exam.final_explanation %}
-        <div class="bluevox-card">
-            <h2 class="bluevox-section-title">LLM Prompt / Instructions</h2>
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">LLM Prompt / Instructions</h2>
+            </div>
             <div class="llm-prompt-box">{{ exam.final_explanation }}</div>
         </div>
         {% endif %}
 
+        <!-- Terminate Exam Section -->
         {% if exam.date_published and exam.status != 'terminated' %}
-        <div class="bluevox-card">
-            <h2 class="bluevox-section-title">Actions</h2>
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Actions</h2>
+            </div>
             <form method="post" action="/teacher/exam/{{ exam.exam_id }}/terminate" 
                   onsubmit="return confirm('Are you sure? After termination this exam will not be available to any students!');">
-                <button type="submit" class="btn-terminate">Terminate Exam</button>
+                <button type="submit" class="btn btn-danger">Terminate Exam</button>
             </form>
         </div>
         {% endif %}
         
         {% if exam.status == 'terminated' %}
-        <div class="bluevox-card">
-            <div style="padding: 15px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">
-                <strong>This exam has been terminated.</strong> It is no longer available to students.
-            </div>
+        <div class="alert alert-warning">
+            <strong>This exam has been terminated.</strong> It is no longer available to students.
         </div>
         {% endif %}
         
+        <!-- Questions and Answers Section -->
         {% if is_student_exam and questions %}
-        <div class="bluevox-card">
-            <h2 class="bluevox-section-title">Questions and Answers</h2>
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Questions and Answers</h2>
+            </div>
             {% if exam.status == "disputed" or exam.status == "completed" %}
-            <form id="grade-alteration-form" method="post" action="/teacher/exam/{{ exam.exam_id }}/alter-grades" style="margin-bottom: 20px;">
+            <form id="grade-alteration-form" method="post" action="/teacher/exam/{{ exam.exam_id }}/alter-grades">
             {% endif %}
             {% for question in questions %}
-            <div style="margin-bottom: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #4CAF50;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0; color: #333;">Question {{ question.question_number }}</h3>
+            <div class="question-card">
+                <div class="question-header">
+                    <div class="question-number">Question {{ question.question_number }}</div>
                     {% if exam.status == "disputed" or exam.status == "completed" %}
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <label style="font-weight: 600; color: #666;">Grade (%):</label>
+                    <div class="grade-input-group">
+                        <label style="font-weight: 500; color: rgba(255, 255, 255, 0.7); font-size: 13px;">Grade (%):</label>
                         <input type="number" 
                                name="question_grade_{{ question.id }}" 
                                value="{{ '%.1f' % question.grade if question.grade is not none else '' }}"
                                min="0" 
                                max="100" 
                                step="0.1"
-                               style="width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;"
+                               class="grade-input"
                                placeholder="0-100">
                     </div>
                     {% else %}
                     {% if question.grade is not none %}
-                    <div style="font-size: 1.2em; font-weight: 600; color: #4CAF50;">
-                        Grade: {{ "%.1f"|format(question.grade * 100) }}%
+                    <div class="grade-display">
+                        Grade: {{ "%.1f"|format(question.grade) }}%
                     </div>
                     {% else %}
-                    <div style="font-size: 1em; color: #999; font-style: italic;">
+                    <div class="grade-not-graded">
                         Not graded yet
                     </div>
                     {% endif %}
                     {% endif %}
                 </div>
                 
-                <div style="margin-bottom: 15px;">
-                    <strong style="color: #666; display: block; margin-bottom: 5px;">Question:</strong>
-                    <div style="padding: 12px; background-color: white; border-radius: 4px; color: #333;">
-                        {{ question.question_text }}
-                    </div>
+                <div class="question-section">
+                    <div class="question-label">Question</div>
+                    <div class="question-content">{{ question.question_text }}</div>
                 </div>
                 
                 {% if question.context %}
-                <div style="margin-bottom: 15px;">
-                    <strong style="color: #666; display: block; margin-bottom: 5px;">Context:</strong>
-                    <div style="padding: 12px; background-color: white; border-radius: 4px; color: #666; font-size: 0.95em;">
-                        {{ question.context }}
-                    </div>
+                <div class="question-section">
+                    <div class="question-label">Context</div>
+                    <div class="question-content">{{ question.context }}</div>
                 </div>
                 {% endif %}
                 
                 {% if question.rubric %}
-                <div style="margin-bottom: 15px;">
-                    <strong style="color: #666; display: block; margin-bottom: 5px;">Rubric:</strong>
-                    <div style="padding: 12px; background-color: white; border-radius: 4px; color: #666; font-size: 0.95em;">
-                        {{ question.rubric }}
-                    </div>
+                <div class="question-section">
+                    <div class="question-label">Rubric</div>
+                    <div class="question-content">{{ question.rubric }}</div>
                 </div>
                 {% endif %}
                 
                 {% if question.student_answer %}
-                <div style="margin-bottom: 15px;">
-                    <strong style="color: #666; display: block; margin-bottom: 5px;">Student Answer:</strong>
-                    <div style="padding: 12px; background-color: #e7f3ff; border-radius: 4px; color: #333; white-space: pre-wrap; word-wrap: break-word;">
-                        {{ question.student_answer }}
-                    </div>
+                <div class="question-section">
+                    <div class="question-label">Student Answer</div>
+                    <div class="answer-content">{{ question.student_answer }}</div>
                 </div>
                 {% else %}
-                <div style="margin-bottom: 15px;">
-                    <strong style="color: #666; display: block; margin-bottom: 5px;">Student Answer:</strong>
-                    <div style="padding: 12px; background-color: #fff3cd; border-radius: 4px; color: #856404; font-style: italic;">
-                        No answer provided
-                    </div>
+                <div class="question-section">
+                    <div class="question-label">Student Answer</div>
+                    <div class="no-answer">No answer provided</div>
                 </div>
                 {% endif %}
                 
                 {% if question.feedback %}
-                <div style="margin-bottom: 15px;">
-                    <strong style="color: #666; display: block; margin-bottom: 5px;">Feedback:</strong>
-                    <div style="padding: 12px; background-color: #f0f0f0; border-radius: 4px; color: #333; white-space: pre-wrap; word-wrap: break-word;">
-                        {{ question.feedback }}
-                    </div>
+                <div class="question-section">
+                    <div class="question-label">Feedback</div>
+                    <div class="feedback-content">{{ question.feedback }}</div>
                 </div>
                 {% endif %}
             </div>
             {% endfor %}
             {% if exam.status == "disputed" or exam.status == "completed" %}
-            <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
-                <label for="grade_change_reason" style="display: block; font-weight: 600; color: #666; margin-bottom: 8px;">
+            <div style="margin-top: 24px; padding: 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                <label for="grade_change_reason" style="display: block; font-weight: 500; color: rgba(255, 255, 255, 0.9); margin-bottom: 8px; font-size: 14px;">
                     Reason for Grade Change (Optional):
                 </label>
                 <textarea id="grade_change_reason" 
                           name="grade_change_reason" 
                           form="grade-alteration-form"
                           rows="3" 
-                          style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif;"
                           placeholder="Explain why you are changing the grades (e.g., 'Re-evaluated answer based on rubric', 'Corrected calculation error', etc.)"></textarea>
             </div>
             </form>
-            <div class="details-section" style="margin-top: 20px;">
-                <h2 class="bluevox-section-title">{% if exam.status == "disputed" %}Dispute Actions{% else %}Grade Actions{% endif %}</h2>
-                <div style="display: flex; gap: 15px; margin-top: 15px;">
+            <div class="panel" style="margin-top: 24px;">
+                <div class="panel-header">
+                    <h2 class="panel-title">{% if exam.status == "disputed" %}Dispute Actions{% else %}Grade Actions{% endif %}</h2>
+                </div>
+                <div class="button-group">
                     <button type="submit"
                             form="grade-alteration-form"
-                            class="bluevox-btn btn-terminate"
-                            style="background-color: #4CAF50; padding: 12px 24px; border: none; border-radius: 4px; color: white; font-size: 1em; cursor: pointer;">
-                        Alter Exam
+                            class="btn btn-success">
+                        Alter Exam Grades
                     </button>
                     {% if exam.status == "disputed" %}
                     <form method="post" action="/teacher/exam/{{ exam.exam_id }}/reopen" 
                           onsubmit="return confirm('Are you sure you want to reopen this exam? The student will be able to retake it.');"
-                          style="display: inline;">
-                        <button type="submit" class="bluevox-btn">
+                          style="margin: 0;">
+                        <button type="submit" class="btn btn-info">
                             Reopen Exam
                         </button>
                     </form>

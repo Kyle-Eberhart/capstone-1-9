@@ -21,8 +21,16 @@ async def login(
     # Check email/password
     user = authenticate_user(db, email, password)
     if not user:
-        # Invalid login → stay on login page with error
-        return RedirectResponse(url="/?error=invalid_login", status_code=302)
+        # Invalid login → redirect to selection page with error
+        # Try to determine which login page they came from based on referer
+        referer = request.headers.get("referer", "")
+        if "/teacher/login" in referer:
+            return RedirectResponse(url="/teacher/login?error=invalid_login", status_code=302)
+        elif "/student/login" in referer:
+            return RedirectResponse(url="/student/login?error=invalid_login", status_code=302)
+        else:
+            # Default to selection page
+            return RedirectResponse(url="/?error=invalid_login", status_code=302)
     
     # If the user is a student, redirect to student dashboard
     if user.role == "student":
@@ -81,5 +89,8 @@ async def signup(
         # User already exists or creation failed
         return RedirectResponse(url="/signup?error=email_exists", status_code=302)
     
-    # Account created successfully - redirect to login with success message
-    return RedirectResponse(url="/?success=account_created", status_code=302)
+    # Account created successfully - redirect to appropriate login page with success message
+    if role == "teacher":
+        return RedirectResponse(url="/teacher/login?success=account_created", status_code=302)
+    else:
+        return RedirectResponse(url="/student/login?success=account_created", status_code=302)

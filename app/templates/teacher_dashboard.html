@@ -3,337 +3,1216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DePaul BlueVox — Teacher Dashboard</title>
+    <title>Instructor Dashboard - DePaul BlueVox</title>
+    <link rel="icon" type="image/png" href="/static/assets/depaul-shield.png">
     
     <!-- UI font -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        .notification-badge {
-            background: rgba(220, 38, 38, 0.8);
-            color: white;
-            border-radius: 50%;
-            padding: 4px 10px;
-            font-size: 0.9em;
-            margin-left: 10px;
-        }
-        
-        .notification-item {
-            padding: 15px;
-            margin-bottom: 10px;
-            background: rgba(2, 10, 28, 0.4);
-            border: 1px solid rgba(120, 175, 255, 0.2);
-            border-left: 4px solid rgba(120, 175, 255, 0.6);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .notification-item:hover {
-            background: rgba(2, 10, 28, 0.6);
-            border-color: rgba(120, 175, 255, 0.4);
-            transform: translateX(4px);
-        }
-        
-        .notification-item.unread {
-            background: rgba(30, 110, 255, 0.15);
-            border-left-color: rgba(70, 170, 255, 0.8);
-            font-weight: 500;
-        }
-        
-        .notification-item.read {
-            opacity: 0.7;
-        }
-        
-        .notification-title {
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.95);
-            margin-bottom: 5px;
-        }
-        
-        .notification-message {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-        
-        .notification-time {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.8em;
-        }
-        
-        .no-notifications {
-            color: rgba(255, 255, 255, 0.6);
-            font-style: italic;
-            text-align: center;
-            padding: 20px;
-        }
+      :root {
+        --page-text: rgba(255, 255, 255, 0.9);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: rgba(120, 190, 255, 0.75);
+        --accent-soft: rgba(90, 160, 255, 0.22);
+        --panel-bg: rgba(2, 10, 28, 0.65);
+        --panel-border: rgba(120, 175, 255, 0.3);
+        --field-bg: rgba(2, 10, 28, 0.38);
+        --field-border: rgba(120, 175, 255, 0.55);
+        --field-border-focus: rgba(150, 210, 255, 0.85);
+        --btn-primary: rgba(70, 150, 255, 0.92);
+        --btn-primary-hover: rgba(90, 170, 255, 0.95);
+      }
 
-        .course-list-item {
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            background: rgba(2, 10, 28, 0.4);
-            border: 1px solid rgba(120, 175, 255, 0.2);
-            border-left: 4px solid rgba(70, 170, 255, 0.6);
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-        
-        .course-list-item:hover {
-            background: rgba(2, 10, 28, 0.6);
-            border-color: rgba(120, 175, 255, 0.4);
-            transform: translateX(4px);
-        }
-        
-        .course-list-item a {
-            color: rgba(140, 195, 255, 0.9);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .course-list-item a:hover {
-            color: rgba(220, 245, 255, 0.95);
-            text-decoration: underline;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-        .no-courses {
-            color: rgba(255, 255, 255, 0.6);
-            font-style: italic;
-            margin: 15px 0;
-        }
+      /* Global input/select/textarea styling to prevent white backgrounds */
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      input[type="number"],
+      input[type="search"],
+      select,
+      textarea {
+        background: var(--field-bg) !important;
+        border: 1px solid var(--field-border) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
 
-        .open-exams-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid rgba(120, 175, 255, 0.2);
-            border-radius: 8px;
-        }
+      input[type="text"]:focus,
+      input[type="email"]:focus,
+      input[type="password"]:focus,
+      input[type="number"]:focus,
+      input[type="search"]:focus,
+      select:focus,
+      textarea:focus {
+        outline: none !important;
+        border-color: var(--field-border-focus) !important;
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15) !important;
+      }
 
-        .exams-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9em;
-        }
+      input::placeholder,
+      textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+      }
 
-        .exams-table th {
-            background: rgba(2, 10, 28, 0.6);
-            color: rgba(255, 255, 255, 0.95);
-            padding: 12px 8px;
-            text-align: left;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            border-bottom: 1px solid rgba(120, 175, 255, 0.3);
-        }
+      /* Fix select option backgrounds */
+      select option {
+        background: rgba(2, 10, 28, 0.95) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
 
-        .exams-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid rgba(120, 175, 255, 0.15);
-            color: rgba(255, 255, 255, 0.8);
-        }
+      select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
 
-        .exams-table tr:hover td {
-            background: rgba(2, 10, 28, 0.4);
-            color: rgba(255, 255, 255, 0.95);
-        }
+      body.bluevox-dashboard {
+        margin: 0;
+        padding: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--page-text);
+        overflow-x: hidden;
+        min-height: 100vh;
+        background:
+          radial-gradient(1100px 760px at 88% 55%, rgba(40, 165, 255, 0.34), rgba(0, 0, 0, 0) 62%),
+          radial-gradient(900px 650px at 92% 60%, rgba(20, 120, 255, 0.20), rgba(0, 0, 0, 0) 62%),
+          linear-gradient(90deg, #02040b, #031531 55%, #062f67);
+        position: relative;
+      }
 
-        .exams-table tr a {
-            color: rgba(140, 195, 255, 0.9);
-            text-decoration: none;
-        }
+      body.bluevox-dashboard::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.75) 50%, transparent 52%),
+          radial-gradient(1px 1px at 18% 62%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 28% 78%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 33% 35%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 46% 22%, rgba(255, 255, 255, 0.5) 50%, transparent 52%),
+          radial-gradient(1px 1px at 52% 66%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 63% 44%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 71% 77%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 79% 16%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 86% 58%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
+          radial-gradient(1px 1px at 92% 32%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 6% 82%, rgba(255, 255, 255, 0.5) 50%, transparent 52%);
+        opacity: 0.55;
+        pointer-events: none;
+        z-index: 0;
+      }
 
-        .exams-table tr a:hover {
-            color: rgba(220, 245, 255, 0.95);
-            text-decoration: underline;
-        }
+      .dashboard-layout {
+        display: flex;
+        min-height: 100vh;
+        position: relative;
+        z-index: 1;
+      }
 
-        .status-active {
-            color: rgba(86, 239, 172, 0.9);
-            font-weight: bold;
-        }
+      /* ===== Sidebar ===== */
+      .sidebar {
+        width: 260px;
+        background: rgba(2, 10, 28, 0.8);
+        backdrop-filter: blur(12px);
+        border-right: 1px solid rgba(120, 175, 255, 0.15);
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+      }
 
-        .status-completed {
-            color: rgba(140, 195, 255, 0.9);
-            font-weight: bold;
-        }
+      .sidebar-logo {
+        margin-bottom: 48px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
 
-        .status-not-started {
-            color: rgba(251, 191, 36, 0.9);
-            font-weight: bold;
-        }
+      .sidebar-logo img {
+        width: 100%;
+        max-width: 200px;
+        height: auto;
+        margin-bottom: 12px;
+        filter: drop-shadow(0 0 10px rgba(90, 170, 255, 0.2));
+      }
 
-        .status-terminated {
-            color: rgba(252, 165, 165, 0.9);
-            font-weight: bold;
+      .sidebar-logo .brand-tagline {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 400;
+        margin-top: 4px;
+      }
+
+      .nav-menu {
+        list-style: none;
+        flex: 1;
+      }
+
+      .nav-item {
+        margin-bottom: 4px;
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .nav-link:hover {
+        background: rgba(120, 175, 255, 0.15);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .nav-link.active {
+        background: rgba(70, 150, 255, 0.2);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .nav-link::before {
+        content: "";
+        width: 3px;
+        height: 0;
+        background: var(--accent);
+        border-radius: 0 2px 2px 0;
+        margin-right: 0;
+        transition: height 0.2s ease;
+      }
+
+      .nav-link.active::before {
+        height: 20px;
+        margin-right: 12px;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid var(--panel-border);
+      }
+
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 500;
+        width: 100%;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+
+      .logout-btn:hover {
+        background: rgba(220, 38, 38, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* ===== Main Content ===== */
+      .main-content {
+        flex: 1;
+        margin-left: 260px;
+        padding: 32px 40px;
+      }
+
+      .dashboard-header {
+        margin-bottom: 32px;
+      }
+
+      .welcome-section {
+        margin-bottom: 20px;
+      }
+
+      .welcome-title {
+        font-size: 32px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 6px;
+        letter-spacing: -0.5px;
+      }
+
+      .welcome-subtitle {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.55);
+        font-weight: 400;
+        letter-spacing: 0.2px;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .btn-primary {
+        background: linear-gradient(180deg, var(--btn-primary), rgba(35, 105, 245, 0.88));
+        border: 1px solid rgba(170, 220, 255, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(180deg, var(--btn-primary-hover), rgba(45, 115, 255, 0.92));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      /* ===== Panels ===== */
+      .panels-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      .panel {
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(120, 175, 255, 0.15);
+        border-radius: 10px;
+        padding: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+
+      .panel-full {
+        grid-column: 1 / -1;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .panel-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        letter-spacing: -0.2px;
+      }
+
+      .panel-link {
+        color: rgba(170, 220, 255, 0.8);
+        text-decoration: none;
+        font-size: 13px;
+        transition: color 0.2s;
+      }
+
+      .panel-link:hover {
+        color: rgba(220, 245, 255, 0.95);
+      }
+
+      .notification-badge {
+        background: rgba(220, 38, 38, 0.8);
+        color: white;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 8px;
+      }
+
+      .notification-item {
+        padding: 14px;
+        margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid rgba(120, 175, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .notification-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-left-color: var(--accent);
+      }
+
+      .notification-item.unread {
+        background: rgba(90, 160, 255, 0.15);
+        border-left-color: var(--accent);
+      }
+
+      .notification-title {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .notification-message {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
+        margin-bottom: 6px;
+        line-height: 1.4;
+      }
+
+      .notification-time {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+      }
+
+      .no-notifications {
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+        text-align: center;
+        padding: 30px;
+      }
+
+      .course-list {
+        list-style: none;
+      }
+
+      .course-item {
+        padding: 12px;
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .course-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(120, 175, 255, 0.3);
+      }
+
+      .course-link {
+        color: rgba(170, 220, 255, 0.9);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .course-link:hover {
+        color: rgba(220, 245, 255, 0.95);
+      }
+
+      .no-courses {
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+        padding: 20px;
+        text-align: center;
+      }
+
+      /* ===== Tables ===== */
+      .table-container {
+        overflow-x: auto;
+        border-radius: 8px;
+      }
+
+      .exams-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .exams-table thead {
+        background: rgba(70, 150, 255, 0.2);
+        border-bottom: 2px solid rgba(120, 175, 255, 0.3);
+      }
+
+      .exams-table th {
+        padding: 12px 10px;
+        text-align: left;
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .exams-table td {
+        padding: 14px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .exams-table tbody tr {
+        transition: background 0.2s ease;
+      }
+
+      .exams-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .exams-table a {
+        color: rgba(170, 220, 255, 0.9);
+        text-decoration: none;
+      }
+
+      .exams-table a:hover {
+        color: rgba(220, 245, 255, 0.95);
+        text-decoration: underline;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .status-active .status-dot {
+        background: #4CAF50;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+      }
+
+      .status-completed .status-dot,
+      .status-submitted .status-dot {
+        background: #2196F3;
+        box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
+      }
+
+      .status-in-progress .status-dot {
+        background: #ff9800;
+        box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
+      }
+
+      .status-not-started .status-dot {
+        background: #9e9e9e;
+      }
+
+      .status-terminated .status-dot {
+        background: #dc3545;
+        box-shadow: 0 0 8px rgba(220, 53, 69, 0.5);
+      }
+
+      .status-active {
+        color: #86efac;
+      }
+
+      .status-completed,
+      .status-submitted {
+        color: #93c5fd;
+      }
+
+      .status-in-progress {
+        color: #fbbf24;
+      }
+
+      .status-not-started {
+        color: #d1d5db;
+      }
+
+      .status-terminated {
+        color: #fca5a5;
+      }
+
+      .empty-state {
+        padding: 40px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+      }
+
+      /* ===== Responsive ===== */
+      @media (max-width: 1200px) {
+        .panels-grid {
+          grid-template-columns: 1fr;
         }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 240px;
+        }
+        .main-content {
+          margin-left: 240px;
+          padding: 20px;
+        }
+      }
     </style>
 </head>
-<body class="bluevox">
-    <div class="bluevox-container">
-        <div class="bluevox-header">
-            <h1>Welcome, {{ first_name }}</h1>
-            <a href="/" class="bluevox-link">Logout</a>
-        </div>
 
-        <!-- Notifications Section -->
-        <div class="bluevox-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 class="bluevox-section-title" style="margin: 0; flex: 1;">Notifications{% if unread_count > 0 %}<span class="notification-badge">{{ unread_count }}</span>{% endif %}</h2>
+<body class="bluevox-dashboard">
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="/static/assets/depaul-bluevox-logo.png" alt="DePaul BlueVox" />
+                <div class="brand-tagline">AI Exam Platform</div>
             </div>
-            {% if notifications %}
-            <div>
-                {% for notification in notifications %}
-                <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" 
-                     onclick="window.location.href='/api/notification/{{ notification.id }}/read?redirect=/api/teacher/dashboard'">
-                    <div class="notification-title">{{ notification.title }}</div>
-                    <div class="notification-message">{{ notification.message }}</div>
-                    <div class="notification-time">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else '' }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="no-notifications">No notifications</p>
-            {% endif %}
-        </div>
-
-        <div class="bluevox-grid bluevox-grid-2">
-            <!-- Courses Section -->
-            <div class="bluevox-card">
-                <h2 class="bluevox-section-title">Courses</h2>
-                {% if courses %}
-                <ul class="bluevox-list">
-                    {% for course in courses %}
-                    <li class="course-list-item">
-                        <a href="/teacher/course/{{ course.course_number }}/{{ course.section }}">
-                            {{ course.course_number }} - Section {{ course.section }}
+            
+            <nav class="nav-menu">
+                <ul style="list-style: none; padding: 0;">
+                    <li class="nav-item">
+                        <a href="/teacher/dashboard" class="nav-link active">
+                            Dashboard
                         </a>
                     </li>
-                    {% endfor %}
+                    <li class="nav-item">
+                        <a href="/teacher/manage-students" class="nav-link">
+                            Manage Students
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/teacher/exams" class="nav-link">
+                            Exams
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/teacher/analytics" class="nav-link">
+                            Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/teacher/settings" class="nav-link">
+                            Settings
+                        </a>
+                    </li>
                 </ul>
-                {% else %}
-                <p class="no-courses">You have no active courses</p>
-                {% endif %}
-                <a href="/teacher/register-course" class="bluevox-btn" style="margin-top: 15px; display: inline-block;">Register New Course</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="/" class="logout-btn">
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="welcome-section">
+                    <h1 class="welcome-title">Welcome, {{ first_name }}</h1>
+                    <p class="welcome-subtitle">Instructor Dashboard - Spring 2026</p>
+                </div>
+                
+                <div class="header-actions">
+                    <a href="/teacher/register-course" class="btn-secondary">New Course</a>
+                    <a href="/teacher/create-exam" class="btn-primary">Create Exam</a>
+                </div>
             </div>
 
-            <!-- Create New Exam Section -->
-            <div class="bluevox-card">
-                <h2 class="bluevox-section-title">Create New Exam</h2>
-                <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px;">Create and configure a new exam for your courses.</p>
-                <a href="/teacher/create-exam" class="bluevox-btn" style="margin-top: 10px; display: inline-block;">Create New Exam</a>
-            </div>
-        </div>
-
-        <!-- Open Exams Section -->
-        <div class="bluevox-card">
-            <h2 class="bluevox-section-title">Open Exams</h2>
-            <div class="open-exams-container">
-                {% if open_exams %}
-                <table class="exams-table">
-                    <thead>
-                        <tr>
-                            <th>Exam ID</th>
-                            <th>Student ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Status</th>
-                            <th>Percent</th>
-                            <th>Grade</th>
-                            <th>Date/Time Started</th>
-                            <th>Date/Time Completed</th>
-                            <th>Date/Time Published</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for exam in open_exams %}
-                        <tr>
-                            <td><a href="/teacher/exam/{{ exam.exam_id }}">{{ exam.exam_id }}</a></td>
-                            <td>{{ exam.student_id or 'N/A' }}</td>
-                            <td>{{ exam.first_name or 'N/A' }}</td>
-                            <td>{{ exam.last_name or 'N/A' }}</td>
-                            <td>
-                                {% if exam.status == 'active' %}
-                                    <span class="status-active">Active</span>
-                                {% elif exam.status == 'completed' %}
-                                    <span class="status-completed">Completed</span>
-                                {% else %}
-                                    <span class="status-not-started">Not Started</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
-                            <td>{{ exam.grade or 'N/A' }}</td>
-                            <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
-                            <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
-                            <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
-                        </tr>
+            <!-- Panels Grid -->
+            <div class="panels-grid">
+                <!-- Notifications Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            Notifications
+                            {% if unread_count > 0 %}
+                            <span class="notification-badge">{{ unread_count }}</span>
+                            {% endif %}
+                        </h2>
+                        <a href="/teacher/notifications" class="panel-link">View all</a>
+                    </div>
+                    {% if notifications %}
+                    <div class="notifications-list">
+                        {% for notification in notifications[:3] %}
+                        <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" 
+                             onclick="window.location.href='/api/notification/{{ notification.id }}/read?redirect=/api/teacher/dashboard'">
+                            <div class="notification-title">{{ notification.title }}</div>
+                            <div class="notification-message">{{ notification.message[:80] }}{% if notification.message|length > 80 %}...{% endif %}</div>
+                            <div class="notification-time">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else '' }}</div>
+                        </div>
                         {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="no-courses" style="padding: 20px; text-align: center;">No open exams at this time</p>
-                {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="no-notifications">No notifications</p>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Actions Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Quick Actions</h2>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <label style="display: block; color: rgba(255, 255, 255, 0.7); font-size: 12px; margin-bottom: 6px;">Course</label>
+                            <select style="width: 100%; padding: 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
+                                {% if courses %}
+                                {% for course in courses %}
+                                <option value="{{ course.course_number }}-{{ course.section }}">{{ course.course_number }} - {{ course.section }}</option>
+                                {% endfor %}
+                                {% else %}
+                                <option>No courses</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; color: rgba(255, 255, 255, 0.7); font-size: 12px; margin-bottom: 6px;">Search</label>
+                            <input type="text" placeholder="Search student / exam" style="width: 100%; padding: 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <a href="/teacher/exams?filter=open" class="btn-primary" style="flex: 1; padding: 10px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;">Open Exams</a>
+                            <a href="/teacher/exams?filter=closed" class="btn-secondary" style="flex: 1; padding: 10px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;">Closed Exams</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Courses Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Courses</h2>
+                    </div>
+                    {% if courses %}
+                    <ul class="course-list">
+                        {% for course in courses %}
+                        <li class="course-item">
+                            <a href="/teacher/course/{{ course.course_number }}/{{ course.section }}" class="course-link">
+                                {{ course.course_number }} - Section {{ course.section }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="no-courses">You have no active courses</p>
+                    {% endif %}
+                    <a href="/teacher/register-course" class="btn-primary" style="display: inline-block; margin-top: 15px; width: 100%; text-align: center;">Register New Course</a>
+                </div>
+
+                <!-- Create Exam Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Create New Exam</h2>
+                    </div>
+                    <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px; font-size: 14px;">Create and configure a new exam for your courses.</p>
+                    <a href="/teacher/create-exam" class="btn-primary" style="display: inline-block; width: 100%; text-align: center;">Create New Exam</a>
+                </div>
             </div>
         </div>
 
-        <!-- Closed Exams Section -->
-        <div class="bluevox-card">
-            <h2 class="bluevox-section-title">Closed Exams</h2>
-            <div class="open-exams-container">
-                {% if closed_exams %}
-                <table class="exams-table">
-                    <thead>
-                        <tr>
-                            <th>Exam ID</th>
-                            <th>Student ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Status</th>
-                            <th>Percent</th>
-                            <th>Grade</th>
-                            <th>Date/Time Started</th>
-                            <th>Date/Time Completed</th>
-                            <th>Date/Time Published</th>
-                            <th>Date/Time Terminated</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for exam in closed_exams %}
-                        <tr>
-                            <td><a href="/teacher/exam/{{ exam.exam_id }}">{{ exam.exam_id }}</a></td>
-                            <td>{{ exam.student_id or 'N/A' }}</td>
-                            <td>{{ exam.first_name or 'N/A' }}</td>
-                            <td>{{ exam.last_name or 'N/A' }}</td>
-                            <td>
-                                {% if exam.status == 'terminated' %}
-                                    <span class="status-terminated">Terminated</span>
-                                {% elif exam.status == 'completed' %}
-                                    <span class="status-completed">Completed</span>
-                                {% else %}
-                                    <span class="status-not-started">{{ exam.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
-                            <td>{{ exam.grade or 'N/A' }}</td>
-                            <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
-                            <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
-                            <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
-                            <td>{{ exam.date_end_availability.strftime('%m/%d/%Y %I:%M %p') if exam.date_end_availability else 'N/A' }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="no-courses" style="padding: 20px; text-align: center;">No closed exams at this time</p>
-                {% endif %}
+            <!-- Open Exams Table -->
+            <div class="panel panel-full" style="margin-top: 20px;">
+                <div class="panel-header">
+                    <h2 class="panel-title">Open Exams</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">Export</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    {% if open_exams %}
+                    <table class="exams-table">
+                        <thead>
+                            <tr>
+                                <th>Exam ID</th>
+                                <th>Student</th>
+                                <th>Section</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                                <th>Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in open_exams %}
+                            <tr>
+                                <td>
+                                    <a href="/teacher/exam/{{ exam.exam_id }}">
+                                        {{ exam.exam_id[:30] }}{% if exam.exam_id|length > 30 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if exam.first_name or exam.last_name %}
+                                        {{ exam.first_name or '' }} {{ exam.last_name or '' }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>{{ exam.exam_id.split('-')[1] if exam.exam_id and '-' in exam.exam_id else '—' }}</td>
+                                <td>
+                                    {% if exam.status == 'active' %}
+                                        <span class="status-badge status-active">
+                                            <span class="status-dot"></span>
+                                            Active
+                                        </span>
+                                    {% elif exam.status == 'completed' %}
+                                        <span class="status-badge status-completed">
+                                            <span class="status-dot"></span>
+                                            Submitted
+                                        </span>
+                                    {% elif exam.status == 'in_progress' %}
+                                        <span class="status-badge status-in-progress">
+                                            <span class="status-dot"></span>
+                                            In Progress
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge status-not-started">
+                                            <span class="status-dot"></span>
+                                            Not Started
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ exam.date_started.strftime('%Y-%m-%d %H:%M') if exam.date_started else '—' }}</td>
+                                <td>{{ exam.date_completed.strftime('%Y-%m-%d %H:%M') if exam.date_completed else '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">No open exams at this time</div>
+                    {% endif %}
+                </div>
             </div>
         </div>
+
+            <!-- Closed Exams Table -->
+            <div class="panel panel-full" style="margin-top: 20px;">
+                <div class="panel-header">
+                    <h2 class="panel-title">Closed Exams</h2>
+                </div>
+                <div class="table-container">
+                    {% if closed_exams %}
+                    <table class="exams-table">
+                        <thead>
+                            <tr>
+                                <th>Exam ID</th>
+                                <th>Student</th>
+                                <th>Section</th>
+                                <th>Status</th>
+                                <th>Started</th>
+                                <th>Completed</th>
+                                <th>Terminated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in closed_exams %}
+                            <tr>
+                                <td>
+                                    <a href="/teacher/exam/{{ exam.exam_id }}">
+                                        {{ exam.exam_id[:30] }}{% if exam.exam_id|length > 30 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if exam.first_name or exam.last_name %}
+                                        {{ exam.first_name or '' }} {{ exam.last_name or '' }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>{{ exam.exam_id.split('-')[1] if exam.exam_id and '-' in exam.exam_id else '—' }}</td>
+                                <td>
+                                    {% if exam.status == 'terminated' %}
+                                        <span class="status-badge status-terminated">
+                                            <span class="status-dot"></span>
+                                            Terminated
+                                        </span>
+                                    {% elif exam.status == 'completed' %}
+                                        <span class="status-badge status-completed">
+                                            <span class="status-dot"></span>
+                                            Completed
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge status-not-started">
+                                            <span class="status-dot"></span>
+                                            {{ exam.status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ exam.date_started.strftime('%Y-%m-%d %H:%M') if exam.date_started else '—' }}</td>
+                                <td>{{ exam.date_completed.strftime('%Y-%m-%d %H:%M') if exam.date_completed else '—' }}</td>
+                                <td>{{ exam.date_end_availability.strftime('%Y-%m-%d %H:%M') if exam.date_end_availability else '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">No closed exams at this time</div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
     </div>
+
+    <script>
+        // SPA Navigation Handler
+        (function() {
+            const mainContent = document.getElementById('main-content');
+            const navLinks = document.querySelectorAll('.nav-link[href^="/teacher/"]');
+            const headerActions = document.querySelectorAll('.header-actions a[href^="/teacher/"]');
+            const allTeacherLinks = [...navLinks, ...headerActions];
+            
+            // Store original dashboard HTML
+            const originalContent = mainContent.innerHTML;
+            
+            // Loading state
+            let isLoading = false;
+            
+            // Add loading overlay
+            function showLoading() {
+                if (isLoading) return;
+                isLoading = true;
+                const overlay = document.createElement('div');
+                overlay.id = 'loading-overlay';
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(2, 10, 28, 0.7);
+                    backdrop-filter: blur(4px);
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    opacity: 0;
+                    transition: opacity 0.2s ease;
+                `;
+                overlay.innerHTML = `
+                    <div style="color: rgba(255, 255, 255, 0.9); font-size: 18px; font-weight: 500;">
+                        Loading...
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                setTimeout(() => overlay.style.opacity = '1', 10);
+            }
+            
+            function hideLoading() {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 200);
+                }
+                isLoading = false;
+            }
+            
+            // Extract main content from HTML
+            function extractMainContent(html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Try to find main content in order of preference
+                let main = doc.querySelector('main.main-content');
+                if (!main) {
+                    main = doc.querySelector('main');
+                }
+                if (!main) {
+                    // For standalone pages like manage_students that have their own container
+                    // Extract just the container content, not the whole page structure
+                    const container = doc.querySelector('.manage-container') || 
+                                     doc.querySelector('.exams-container') ||
+                                     doc.querySelector('.analytics-container') ||
+                                     doc.querySelector('.settings-container') ||
+                                     doc.querySelector('.notifications-container') ||
+                                     doc.querySelector('.review-container') ||
+                                     doc.querySelector('.details-container') ||
+                                     doc.querySelector('.form-container') ||
+                                     doc.querySelector('.container');
+                    if (container) {
+                        // Return the container's innerHTML - this is the page content
+                        return container.innerHTML;
+                    }
+                }
+                
+                // If we found a main element, extract its content
+                if (main) {
+                    return main.innerHTML;
+                }
+                
+                // Fallback: try to get body content excluding sidebar and dashboard layout
+                const body = doc.body;
+                const sidebar = body.querySelector('.sidebar, aside');
+                const dashboardLayout = body.querySelector('.dashboard-layout');
+                
+                if (dashboardLayout) {
+                    // If there's a dashboard layout, extract just the main-content from it
+                    const mainContent = dashboardLayout.querySelector('main.main-content') || dashboardLayout.querySelector('main');
+                    if (mainContent) {
+                        return mainContent.innerHTML;
+                    }
+                }
+                
+                if (sidebar) {
+                    // Remove sidebar and return rest
+                    const clone = body.cloneNode(true);
+                    const sidebarClone = clone.querySelector('.sidebar, aside');
+                    if (sidebarClone) sidebarClone.remove();
+                    const layoutClone = clone.querySelector('.dashboard-layout');
+                    if (layoutClone) {
+                        const mainClone = layoutClone.querySelector('main');
+                        if (mainClone) return mainClone.innerHTML;
+                    }
+                }
+                
+                // Last resort: return body content but try to exclude common page structure
+                const bodyContent = body.innerHTML;
+                // Remove any script tags that might cause issues
+                return bodyContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+            }
+            
+            // Update active nav link
+            function updateActiveNav(href) {
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === href) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Load page content
+            async function loadPage(url) {
+                if (isLoading) return;
+                
+                showLoading();
+                
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const html = await response.text();
+                    const content = extractMainContent(html);
+                    
+                    // Fade out
+                    mainContent.style.opacity = '0';
+                    mainContent.style.transition = 'opacity 0.2s ease';
+                    
+                    setTimeout(() => {
+                        // Ensure sidebar and layout structure are still present before replacing content
+                        const sidebar = document.querySelector('.sidebar');
+                        const dashboardLayout = document.querySelector('.dashboard-layout');
+                        
+                        if (!sidebar || !dashboardLayout || !mainContent) {
+                            // Critical structure missing, reload page normally
+                            console.error('Dashboard structure missing, reloading page');
+                            window.location.href = url;
+                            return;
+                        }
+                        
+                        // Only replace the main content, never the sidebar
+                        if (mainContent && mainContent.parentNode === dashboardLayout) {
+                            mainContent.innerHTML = content;
+                            updateActiveNav(url);
+                            
+                            // Re-initialize any scripts or event handlers in the new content
+                            initializePageContent();
+                            
+                            // Fade in
+                            setTimeout(() => {
+                                mainContent.style.opacity = '1';
+                            }, 10);
+                            
+                            hideLoading();
+                        } else {
+                            // Main content is not in the right place, reload
+                            console.error('Main content structure invalid, reloading page');
+                            window.location.href = url;
+                        }
+                    }, 200);
+                    
+                    // Update URL without reload
+                    window.history.pushState({ url: url }, '', url);
+                    
+                } catch (error) {
+                    console.error('Error loading page:', error);
+                    hideLoading();
+                    mainContent.style.opacity = '1';
+                    alert('Error loading page. Please try again.');
+                }
+            }
+            
+            // Initialize page-specific content
+            function initializePageContent() {
+                // Re-attach event listeners for any dynamic content
+                const newLinks = mainContent.querySelectorAll('a[href^="/teacher/"]');
+                newLinks.forEach(link => {
+                    link.addEventListener('click', handleLinkClick);
+                });
+                
+                // Re-initialize forms if needed
+                const forms = mainContent.querySelectorAll('form');
+                forms.forEach(form => {
+                    form.addEventListener('submit', function(e) {
+                        // Let forms submit normally for now
+                        // Can be enhanced later for AJAX form submission
+                    });
+                });
+            }
+            
+            // Handle link clicks
+            function handleLinkClick(e) {
+                const link = e.currentTarget;
+                const href = link.getAttribute('href');
+                
+                // Skip if it's a hash link or external link
+                if (!href || href.startsWith('#') || href.startsWith('http')) {
+                    return;
+                }
+                
+                // Skip logout and external links
+                if (href === '/' || href.startsWith('/api/') || href.startsWith('/student/')) {
+                    return; // Let these navigate normally
+                }
+                
+                // Only handle teacher dashboard routes
+                if (href.startsWith('/teacher/')) {
+                    e.preventDefault();
+                    loadPage(href);
+                }
+            }
+            
+            // Handle browser back/forward
+            window.addEventListener('popstate', function(e) {
+                const currentUrl = window.location.pathname;
+                if (currentUrl.startsWith('/teacher/')) {
+                    // Ensure sidebar exists before loading
+                    const sidebar = document.querySelector('.sidebar');
+                    if (!sidebar) {
+                        // Reload page if sidebar is missing
+                        window.location.href = currentUrl;
+                        return;
+                    }
+                    loadPage(currentUrl);
+                } else {
+                    // Load dashboard if no state
+                    const sidebar = document.querySelector('.sidebar');
+                    if (!sidebar) {
+                        window.location.href = '/teacher/dashboard';
+                        return;
+                    }
+                    mainContent.innerHTML = originalContent;
+                    updateActiveNav('/teacher/dashboard');
+                    initializePageContent();
+                }
+            });
+            
+            // Set initial state for browser history
+            window.history.replaceState({ url: window.location.pathname }, '', window.location.pathname);
+            
+            // Ensure sidebar is always present
+            function ensureSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const dashboardLayout = document.querySelector('.dashboard-layout');
+                
+                if (!sidebar && window.location.pathname.startsWith('/teacher/')) {
+                    // Sidebar is missing - reload page to restore it
+                    console.warn('Sidebar missing, reloading page');
+                    window.location.reload();
+                    return false;
+                }
+                
+                // Ensure main-content exists
+                if (!mainContent && dashboardLayout) {
+                    // Main content was removed, reload
+                    console.warn('Main content missing, reloading page');
+                    window.location.reload();
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Check sidebar on page load
+            if (!ensureSidebar()) {
+                return; // Page will reload
+            }
+            
+            // Monitor sidebar to ensure it stays present
+            const observer = new MutationObserver(function(mutations) {
+                ensureSidebar();
+            });
+            
+            // Observe the dashboard layout for changes
+            const dashboardLayout = document.querySelector('.dashboard-layout');
+            if (dashboardLayout) {
+                observer.observe(dashboardLayout, { 
+                    childList: true, 
+                    subtree: true,
+                    attributes: false
+                });
+            }
+            
+            // Also check periodically (as a safety net)
+            setInterval(function() {
+                if (window.location.pathname.startsWith('/teacher/')) {
+                    ensureSidebar();
+                }
+            }, 1000);
+            
+            // Attach click handlers to all teacher links
+            allTeacherLinks.forEach(link => {
+                link.addEventListener('click', handleLinkClick);
+            });
+            
+            // Also handle clicks on links within main content (for exam links, etc.)
+            mainContent.addEventListener('click', function(e) {
+                const link = e.target.closest('a[href^="/teacher/"]');
+                if (link) {
+                    handleLinkClick(e);
+                }
+            });
+            
+            // Initialize on page load
+            initializePageContent();
+        })();
+    </script>
 </body>
 </html>
