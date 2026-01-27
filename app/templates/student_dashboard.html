@@ -2,58 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Student Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DePaul BlueVox — Student Dashboard</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .dashboard-header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .notifications-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .notifications-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .notifications-header h2 {
-            margin: 0;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #2196F3;
-            padding-bottom: 10px;
-            flex: 1;
-        }
-        
         .notification-badge {
-            background: #f44336;
+            background: rgba(220, 38, 38, 0.8);
             color: white;
             border-radius: 50%;
             padding: 4px 10px;
@@ -64,20 +28,23 @@
         .notification-item {
             padding: 15px;
             margin-bottom: 10px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border-left: 4px solid #2196F3;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(120, 175, 255, 0.6);
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
         }
         
         .notification-item:hover {
-            background-color: #e9ecef;
+            background: rgba(2, 10, 28, 0.6);
+            border-color: rgba(120, 175, 255, 0.4);
+            transform: translateX(4px);
         }
         
         .notification-item.unread {
-            background-color: #e3f2fd;
-            border-left-color: #2196F3;
+            background: rgba(30, 110, 255, 0.15);
+            border-left-color: rgba(70, 170, 255, 0.8);
             font-weight: 500;
         }
         
@@ -87,124 +54,69 @@
         
         .notification-title {
             font-weight: 600;
-            color: #333;
+            color: rgba(255, 255, 255, 0.95);
             margin-bottom: 5px;
         }
         
         .notification-message {
-            color: #666;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.9em;
             margin-bottom: 5px;
         }
         
         .notification-time {
-            color: #999;
+            color: rgba(255, 255, 255, 0.5);
             font-size: 0.8em;
         }
         
         .no-notifications {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-style: italic;
             text-align: center;
             padding: 20px;
         }
 
-        .dashboard-header h1 {
-            margin: 0;
-            color: #333;
-        }
-
-        .logout-link {
-            color: #666;
-            text-decoration: none;
-            font-size: 0.9em;
-        }
-
-        .logout-link:hover {
-            color: #000;
-        }
-
-        .error-message {
-            background-color: #ffe6e6;
-            color: #cc0000;
-            padding: 12px 20px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border: 1px solid #ff9999;
-        }
-
-        .dashboard-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .dashboard-section h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
-        .course-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 15px 0;
-        }
-
-        .course-list li {
-            padding: 12px;
+        .course-list-item {
+            padding: 12px 16px;
             margin-bottom: 8px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border-left: 4px solid #4CAF50;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(70, 170, 255, 0.6);
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
-
-        .course-list li a {
-            color: #4CAF50;
+        
+        .course-list-item:hover {
+            background: rgba(2, 10, 28, 0.6);
+            border-color: rgba(120, 175, 255, 0.4);
+            transform: translateX(4px);
+        }
+        
+        .course-list-item a {
+            color: rgba(140, 195, 255, 0.9);
             text-decoration: none;
             font-weight: 500;
             font-size: 1.05em;
         }
-
-        .course-list li a:hover {
+        
+        .course-list-item a:hover {
+            color: rgba(220, 245, 255, 0.95);
             text-decoration: underline;
         }
 
         .no-courses {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-style: italic;
             margin: 15px 0;
             padding: 20px;
             text-align: center;
         }
 
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 0.95em;
-            margin-top: 10px;
-        }
-
-        .btn-primary:hover {
-            background-color: #45a049;
-        }
-
         .exams-container {
             max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-radius: 8px;
         }
 
         .exams-table {
@@ -214,79 +126,103 @@
         }
 
         .exams-table th {
-            background-color: #4CAF50;
-            color: white;
+            background: rgba(2, 10, 28, 0.6);
+            color: rgba(255, 255, 255, 0.95);
             padding: 12px 8px;
             text-align: left;
             position: sticky;
             top: 0;
             z-index: 10;
+            border-bottom: 1px solid rgba(120, 175, 255, 0.3);
         }
 
         .exams-table td {
             padding: 10px 8px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid rgba(120, 175, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
         }
 
-        .exams-table tr:hover {
-            background-color: #f8f9fa;
+        .exams-table tr:hover td {
+            background: rgba(2, 10, 28, 0.4);
+            color: rgba(255, 255, 255, 0.95);
         }
 
         .exams-table tr a {
-            color: #4CAF50;
+            color: rgba(140, 195, 255, 0.9);
             text-decoration: none;
         }
 
         .exams-table tr a:hover {
+            color: rgba(220, 245, 255, 0.95);
             text-decoration: underline;
         }
 
         .status-active {
-            color: #4CAF50;
+            color: rgba(86, 239, 172, 0.9);
             font-weight: bold;
         }
 
         .status-completed {
-            color: #2196F3;
+            color: rgba(140, 195, 255, 0.9);
             font-weight: bold;
         }
 
         .status-not-started {
-            color: #ff9800;
+            color: rgba(251, 191, 36, 0.9);
             font-weight: bold;
         }
 
         .status-terminated {
-            color: #dc3545;
+            color: rgba(252, 165, 165, 0.9);
             font-weight: bold;
         }
 
         .status-closed {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-weight: bold;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(120, 175, 255, 0.2);
+        }
+
+        .search-form > div {
+            flex: 1;
+        }
+
+        .search-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.7);
         }
     </style>
 </head>
-<body>
-    <div class="dashboard-container">
-        <div class="dashboard-header">
+<body class="bluevox">
+    <div class="bluevox-container">
+        <div class="bluevox-header">
             <h1>Welcome, {{ first_name }}</h1>
-            <a href="/" class="logout-link">Logout</a>
+            <a href="/" class="bluevox-link">Logout</a>
         </div>
 
         {% if error %}
-        <div class="error-message">
+        <div class="bluevox-message bluevox-message-error">
             {{ error }}
         </div>
         {% endif %}
 
         <!-- Notifications Section -->
-        <div class="notifications-section">
-            <div class="notifications-header">
-                <h2>Notifications{% if unread_count > 0 %}<span class="notification-badge">{{ unread_count }}</span>{% endif %}</h2>
+        <div class="bluevox-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 class="bluevox-section-title" style="margin: 0; flex: 1;">Notifications{% if unread_count > 0 %}<span class="notification-badge">{{ unread_count }}</span>{% endif %}</h2>
             </div>
             {% if notifications %}
-            <div class="notifications-list">
+            <div>
                 {% for notification in notifications %}
                 <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" 
                      onclick="window.location.href='/api/notification/{{ notification.id }}/read?redirect=/student/dashboard'">
@@ -302,12 +238,12 @@
         </div>
 
         <!-- Your Courses Section -->
-        <div class="dashboard-section">
-            <h2>Your Courses</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Your Courses</h2>
             {% if student_courses %}
-            <ul class="course-list">
+            <ul class="bluevox-list">
                 {% for course in student_courses %}
-                <li>
+                <li class="course-list-item">
                     <a href="/student/course/{{ course.course_number }}/{{ course.section }}">
                         {{ course.course_number }} - Section {{ course.section }} ({{ course.quarter_year }})
                     </a>
@@ -317,37 +253,37 @@
             {% else %}
             <p class="no-courses">You have no courses yet</p>
             {% endif %}
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                <h3 style="font-size: 1em; margin-bottom: 10px; color: #666;">Find a Course</h3>
-                <form method="get" action="/student/search-course" style="display: flex; gap: 10px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Course Number</label>
+            <div style="margin-top: 15px;">
+                <h3 style="font-size: 1em; margin-bottom: 10px; color: rgba(255, 255, 255, 0.7);">Find a Course</h3>
+                <form method="get" action="/student/search-course" class="search-form">
+                    <div>
+                        <label>Course Number</label>
                         <input
                             type="text"
                             name="course_number"
                             placeholder="e.g. CSC299"
-                            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box;"
+                            class="bluevox-input"
                             required
                         >
                     </div>
-                    <div style="flex: 1;">
-                        <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Section</label>
+                    <div>
+                        <label>Section</label>
                         <input
                             type="text"
                             name="section"
                             placeholder="e.g. 002"
-                            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box;"
+                            class="bluevox-input"
                             required
                         >
                     </div>
-                    <button type="submit" class="btn-primary" style="margin-top: 0; white-space: nowrap;">Search</button>
+                    <button type="submit" class="bluevox-btn" style="margin-top: 0; white-space: nowrap;">Search</button>
                 </form>
             </div>
         </div>
 
         <!-- Open Exams Section -->
-        <div class="dashboard-section">
-            <h2>Open Exams</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Open Exams</h2>
             <div class="exams-container">
                 {% if open_exams %}
                 <table class="exams-table">
@@ -389,8 +325,8 @@
         </div>
 
         <!-- Previous Exams Section -->
-        <div class="dashboard-section">
-            <h2>Previous Exams</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Previous Exams</h2>
             <div class="exams-container">
                 {% if previous_exams %}
                 <table class="exams-table">

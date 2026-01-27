@@ -2,129 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Teacher Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DePaul BlueVox — Teacher Dashboard</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .dashboard-header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dashboard-header h1 {
-            margin: 0;
-            color: #333;
-        }
-
-        .logout-link {
-            color: #666;
-            text-decoration: none;
-            font-size: 0.9em;
-        }
-
-        .logout-link:hover {
-            color: #000;
-        }
-
-        .dashboard-sections {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .dashboard-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .dashboard-section h2 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #333;
-            font-size: 1.3em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .course-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 15px 0;
-        }
-
-        .course-list li {
-            padding: 10px;
-            margin-bottom: 8px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-        }
-
-        .course-list li a {
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .course-list li a:hover {
-            text-decoration: underline;
-        }
-
-        .no-courses {
-            color: #666;
-            font-style: italic;
-            margin: 15px 0;
-        }
-        
-        .notifications-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .notifications-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .notifications-header h2 {
-            margin: 0;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #2196F3;
-            padding-bottom: 10px;
-            flex: 1;
-        }
-        
         .notification-badge {
-            background: #f44336;
+            background: rgba(220, 38, 38, 0.8);
             color: white;
             border-radius: 50%;
             padding: 4px 10px;
@@ -135,20 +28,23 @@
         .notification-item {
             padding: 15px;
             margin-bottom: 10px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border-left: 4px solid #2196F3;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(120, 175, 255, 0.6);
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
         }
         
         .notification-item:hover {
-            background-color: #e9ecef;
+            background: rgba(2, 10, 28, 0.6);
+            border-color: rgba(120, 175, 255, 0.4);
+            transform: translateX(4px);
         }
         
         .notification-item.unread {
-            background-color: #e3f2fd;
-            border-left-color: #2196F3;
+            background: rgba(30, 110, 255, 0.15);
+            border-left-color: rgba(70, 170, 255, 0.8);
             font-weight: 500;
         }
         
@@ -158,50 +54,66 @@
         
         .notification-title {
             font-weight: 600;
-            color: #333;
+            color: rgba(255, 255, 255, 0.95);
             margin-bottom: 5px;
         }
         
         .notification-message {
-            color: #666;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.9em;
             margin-bottom: 5px;
         }
         
         .notification-time {
-            color: #999;
+            color: rgba(255, 255, 255, 0.5);
             font-size: 0.8em;
         }
         
         .no-notifications {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-style: italic;
             text-align: center;
             padding: 20px;
         }
 
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        .course-list-item {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(70, 170, 255, 0.6);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .course-list-item:hover {
+            background: rgba(2, 10, 28, 0.6);
+            border-color: rgba(120, 175, 255, 0.4);
+            transform: translateX(4px);
+        }
+        
+        .course-list-item a {
+            color: rgba(140, 195, 255, 0.9);
             text-decoration: none;
-            display: inline-block;
-            font-size: 0.95em;
-            margin-top: 10px;
+            font-weight: 500;
+        }
+        
+        .course-list-item a:hover {
+            color: rgba(220, 245, 255, 0.95);
+            text-decoration: underline;
         }
 
-        .btn-primary:hover {
-            background-color: #45a049;
+        .no-courses {
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            margin: 15px 0;
         }
 
         .open-exams-container {
             max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-radius: 8px;
         }
 
         .exams-table {
@@ -211,59 +123,72 @@
         }
 
         .exams-table th {
-            background-color: #4CAF50;
-            color: white;
+            background: rgba(2, 10, 28, 0.6);
+            color: rgba(255, 255, 255, 0.95);
             padding: 12px 8px;
             text-align: left;
             position: sticky;
             top: 0;
             z-index: 10;
+            border-bottom: 1px solid rgba(120, 175, 255, 0.3);
         }
 
         .exams-table td {
             padding: 10px 8px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid rgba(120, 175, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
         }
 
-        .exams-table tr:hover {
-            background-color: #f8f9fa;
+        .exams-table tr:hover td {
+            background: rgba(2, 10, 28, 0.4);
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .exams-table tr a {
+            color: rgba(140, 195, 255, 0.9);
+            text-decoration: none;
+        }
+
+        .exams-table tr a:hover {
+            color: rgba(220, 245, 255, 0.95);
+            text-decoration: underline;
         }
 
         .status-active {
-            color: #4CAF50;
+            color: rgba(86, 239, 172, 0.9);
             font-weight: bold;
         }
 
         .status-completed {
-            color: #2196F3;
+            color: rgba(140, 195, 255, 0.9);
             font-weight: bold;
         }
 
         .status-not-started {
-            color: #ff9800;
+            color: rgba(251, 191, 36, 0.9);
             font-weight: bold;
         }
 
         .status-terminated {
-            color: #dc3545;
+            color: rgba(252, 165, 165, 0.9);
             font-weight: bold;
         }
     </style>
 </head>
-<body>
-    <div class="dashboard-container">
-        <div class="dashboard-header">
+<body class="bluevox">
+    <div class="bluevox-container">
+        <div class="bluevox-header">
             <h1>Welcome, {{ first_name }}</h1>
-            <a href="/" class="logout-link">Logout</a>
+            <a href="/" class="bluevox-link">Logout</a>
         </div>
 
         <!-- Notifications Section -->
-        <div class="notifications-section">
-            <div class="notifications-header">
-                <h2>Notifications{% if unread_count > 0 %}<span class="notification-badge">{{ unread_count }}</span>{% endif %}</h2>
+        <div class="bluevox-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 class="bluevox-section-title" style="margin: 0; flex: 1;">Notifications{% if unread_count > 0 %}<span class="notification-badge">{{ unread_count }}</span>{% endif %}</h2>
             </div>
             {% if notifications %}
-            <div class="notifications-list">
+            <div>
                 {% for notification in notifications %}
                 <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" 
                      onclick="window.location.href='/api/notification/{{ notification.id }}/read?redirect=/api/teacher/dashboard'">
@@ -278,134 +203,137 @@
             {% endif %}
         </div>
 
-        <div class="dashboard-sections">
+        <div class="bluevox-grid bluevox-grid-2">
             <!-- Courses Section -->
-            <div class="dashboard-section">
-                <h2>Courses</h2>
+            <div class="bluevox-card">
+                <h2 class="bluevox-section-title">Courses</h2>
                 {% if courses %}
-                <ul class="course-list">
+                <ul class="bluevox-list">
                     {% for course in courses %}
-                    <li><a href="/teacher/course/{{ course.course_number }}/{{ course.section }}">{{ course.course_number }} - Section {{ course.section }}</a></li>
+                    <li class="course-list-item">
+                        <a href="/teacher/course/{{ course.course_number }}/{{ course.section }}">
+                            {{ course.course_number }} - Section {{ course.section }}
+                        </a>
+                    </li>
                     {% endfor %}
                 </ul>
                 {% else %}
                 <p class="no-courses">You have no active courses</p>
                 {% endif %}
-                <a href="/teacher/register-course" class="btn-primary">Register New Course</a>
+                <a href="/teacher/register-course" class="bluevox-btn" style="margin-top: 15px; display: inline-block;">Register New Course</a>
             </div>
 
             <!-- Create New Exam Section -->
-            <div class="dashboard-section">
-                <h2>Create New Exam</h2>
-                <p style="color: #666; margin-bottom: 15px;">Create and configure a new exam for your courses.</p>
-                <a href="/teacher/create-exam" class="btn-primary">Create New Exam</a>
+            <div class="bluevox-card">
+                <h2 class="bluevox-section-title">Create New Exam</h2>
+                <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px;">Create and configure a new exam for your courses.</p>
+                <a href="/teacher/create-exam" class="bluevox-btn" style="margin-top: 10px; display: inline-block;">Create New Exam</a>
             </div>
+        </div>
 
-            <!-- Open Exams Section -->
-            <div class="dashboard-section full-width">
-                <h2>Open Exams</h2>
-                <div class="open-exams-container">
-                    {% if open_exams %}
-                    <table class="exams-table">
-                        <thead>
-                            <tr>
-                                <th>Exam ID</th>
-                                <th>Student ID</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Status</th>
-                                <th>Percent</th>
-                                <th>Grade</th>
-                                <th>Date/Time Started</th>
-                                <th>Date/Time Completed</th>
-                                <th>Date/Time Published</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for exam in open_exams %}
-                            <tr>
-                                <td><a href="/teacher/exam/{{ exam.exam_id }}" style="color: #4CAF50; text-decoration: none;">{{ exam.exam_id }}</a></td>
-                                <td>{{ exam.student_id or 'N/A' }}</td>
-                                <td>{{ exam.first_name or 'N/A' }}</td>
-                                <td>{{ exam.last_name or 'N/A' }}</td>
-                                <td>
-                                    {% if exam.status == 'active' %}
-                                        <span class="status-active">Active</span>
-                                    {% elif exam.status == 'completed' %}
-                                        <span class="status-completed">Completed</span>
-                                    {% else %}
-                                        <span class="status-not-started">Not Started</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
-                                <td>{{ exam.grade or 'N/A' }}</td>
-                                <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
-                                <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
-                                <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="no-courses" style="padding: 20px;">No open exams at this time</p>
-                    {% endif %}
-                </div>
+        <!-- Open Exams Section -->
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Open Exams</h2>
+            <div class="open-exams-container">
+                {% if open_exams %}
+                <table class="exams-table">
+                    <thead>
+                        <tr>
+                            <th>Exam ID</th>
+                            <th>Student ID</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Status</th>
+                            <th>Percent</th>
+                            <th>Grade</th>
+                            <th>Date/Time Started</th>
+                            <th>Date/Time Completed</th>
+                            <th>Date/Time Published</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exam in open_exams %}
+                        <tr>
+                            <td><a href="/teacher/exam/{{ exam.exam_id }}">{{ exam.exam_id }}</a></td>
+                            <td>{{ exam.student_id or 'N/A' }}</td>
+                            <td>{{ exam.first_name or 'N/A' }}</td>
+                            <td>{{ exam.last_name or 'N/A' }}</td>
+                            <td>
+                                {% if exam.status == 'active' %}
+                                    <span class="status-active">Active</span>
+                                {% elif exam.status == 'completed' %}
+                                    <span class="status-completed">Completed</span>
+                                {% else %}
+                                    <span class="status-not-started">Not Started</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
+                            <td>{{ exam.grade or 'N/A' }}</td>
+                            <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
+                            <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
+                            <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-courses" style="padding: 20px; text-align: center;">No open exams at this time</p>
+                {% endif %}
             </div>
+        </div>
 
-            <!-- Closed Exams Section -->
-            <div class="dashboard-section full-width">
-                <h2>Closed Exams</h2>
-                <div class="open-exams-container">
-                    {% if closed_exams %}
-                    <table class="exams-table">
-                        <thead>
-                            <tr>
-                                <th>Exam ID</th>
-                                <th>Student ID</th>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Status</th>
-                                <th>Percent</th>
-                                <th>Grade</th>
-                                <th>Date/Time Started</th>
-                                <th>Date/Time Completed</th>
-                                <th>Date/Time Published</th>
-                                <th>Date/Time Terminated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for exam in closed_exams %}
-                            <tr>
-                                <td><a href="/teacher/exam/{{ exam.exam_id }}">{{ exam.exam_id }}</a></td>
-                                <td>{{ exam.student_id or 'N/A' }}</td>
-                                <td>{{ exam.first_name or 'N/A' }}</td>
-                                <td>{{ exam.last_name or 'N/A' }}</td>
-                                <td>
-                                    {% if exam.status == 'terminated' %}
-                                        <span class="status-terminated">Terminated</span>
-                                    {% elif exam.status == 'completed' %}
-                                        <span class="status-completed">Completed</span>
-                                    {% else %}
-                                        <span class="status-not-started">{{ exam.status }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
-                                <td>{{ exam.grade or 'N/A' }}</td>
-                                <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
-                                <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
-                                <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
-                                <td>{{ exam.date_end_availability.strftime('%m/%d/%Y %I:%M %p') if exam.date_end_availability else 'N/A' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="no-courses" style="padding: 20px;">No closed exams at this time</p>
-                    {% endif %}
-                </div>
+        <!-- Closed Exams Section -->
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Closed Exams</h2>
+            <div class="open-exams-container">
+                {% if closed_exams %}
+                <table class="exams-table">
+                    <thead>
+                        <tr>
+                            <th>Exam ID</th>
+                            <th>Student ID</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Status</th>
+                            <th>Percent</th>
+                            <th>Grade</th>
+                            <th>Date/Time Started</th>
+                            <th>Date/Time Completed</th>
+                            <th>Date/Time Published</th>
+                            <th>Date/Time Terminated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exam in closed_exams %}
+                        <tr>
+                            <td><a href="/teacher/exam/{{ exam.exam_id }}">{{ exam.exam_id }}</a></td>
+                            <td>{{ exam.student_id or 'N/A' }}</td>
+                            <td>{{ exam.first_name or 'N/A' }}</td>
+                            <td>{{ exam.last_name or 'N/A' }}</td>
+                            <td>
+                                {% if exam.status == 'terminated' %}
+                                    <span class="status-terminated">Terminated</span>
+                                {% elif exam.status == 'completed' %}
+                                    <span class="status-completed">Completed</span>
+                                {% else %}
+                                    <span class="status-not-started">{{ exam.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.1f"|format(exam.percent) if exam.percent else 'N/A' }}%</td>
+                            <td>{{ exam.grade or 'N/A' }}</td>
+                            <td>{{ exam.date_started.strftime('%m/%d/%Y %I:%M %p') if exam.date_started else 'N/A' }}</td>
+                            <td>{{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') if exam.date_completed else 'N/A' }}</td>
+                            <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
+                            <td>{{ exam.date_end_availability.strftime('%m/%d/%Y %I:%M %p') if exam.date_end_availability else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-courses" style="padding: 20px; text-align: center;">No closed exams at this time</p>
+                {% endif %}
             </div>
         </div>
     </div>
-
 </body>
 </html>

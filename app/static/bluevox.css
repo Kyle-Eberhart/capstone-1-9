@@ -1,0 +1,335 @@
+/* BlueVox Design System - Shared Styles */
+
+:root {
+  /* Colors */
+  --bluevox-bg-dark: #02040b;
+  --bluevox-bg-mid: #031531;
+  --bluevox-bg-light: #062f67;
+  --bluevox-text: rgba(255, 255, 255, 0.9);
+  --bluevox-text-muted: rgba(255, 255, 255, 0.7);
+  --bluevox-accent: rgba(120, 190, 255, 0.75);
+  --bluevox-accent-soft: rgba(90, 160, 255, 0.22);
+  
+  /* Cards */
+  --bluevox-card-bg: rgba(2, 10, 28, 0.65);
+  --bluevox-card-border: rgba(120, 175, 255, 0.3);
+  
+  /* Fields */
+  --bluevox-field-bg: rgba(2, 10, 28, 0.38);
+  --bluevox-field-border: rgba(120, 175, 255, 0.55);
+  --bluevox-field-border-focus: rgba(150, 210, 255, 0.85);
+  
+  /* Buttons */
+  --bluevox-btn-top: rgba(70, 150, 255, 0.92);
+  --bluevox-btn-bot: rgba(35, 105, 245, 0.88);
+  --bluevox-btn-border: rgba(170, 220, 255, 0.5);
+  
+  /* Links */
+  --bluevox-link: rgba(140, 195, 255, 0.75);
+  --bluevox-link-hover: rgba(220, 245, 255, 0.95);
+}
+
+/* Base BlueVox Body */
+body.bluevox {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--bluevox-text);
+  background: 
+    radial-gradient(1100px 760px at 88% 55%, rgba(40, 165, 255, 0.34), rgba(0, 0, 0, 0) 62%),
+    radial-gradient(900px 650px at 92% 60%, rgba(20, 120, 255, 0.20), rgba(0, 0, 0, 0) 62%),
+    linear-gradient(90deg, var(--bluevox-bg-dark), var(--bluevox-bg-mid) 55%, var(--bluevox-bg-light));
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Starfield Background */
+body.bluevox::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.75) 50%, transparent 52%),
+    radial-gradient(1px 1px at 18% 62%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+    radial-gradient(1px 1px at 28% 78%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+    radial-gradient(1px 1px at 33% 35%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+    radial-gradient(1px 1px at 46% 22%, rgba(255, 255, 255, 0.5) 50%, transparent 52%),
+    radial-gradient(1px 1px at 52% 66%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+    radial-gradient(1px 1px at 63% 44%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+    radial-gradient(1px 1px at 71% 77%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+    radial-gradient(1px 1px at 79% 16%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+    radial-gradient(1px 1px at 86% 58%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
+    radial-gradient(1px 1px at 92% 32%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+    radial-gradient(1px 1px at 6% 82%, rgba(255, 255, 255, 0.5) 50%, transparent 52%);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Container */
+.bluevox-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Cards */
+.bluevox-card {
+  background: var(--bluevox-card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--bluevox-card-border);
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+}
+
+/* Headers */
+.bluevox-header {
+  background: var(--bluevox-card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--bluevox-card-border);
+  border-radius: 12px;
+  padding: 20px 30px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.bluevox-header h1,
+.bluevox-header h2 {
+  margin: 0;
+  color: var(--bluevox-text);
+  font-weight: 500;
+}
+
+/* Forms */
+.bluevox-form-group {
+  margin-bottom: 20px;
+}
+
+.bluevox-form-group label {
+  display: block;
+  color: var(--bluevox-text);
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.bluevox-input,
+.bluevox-input[type="text"],
+.bluevox-input[type="email"],
+.bluevox-input[type="password"],
+.bluevox-input[type="number"],
+.bluevox-textarea,
+.bluevox-select {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bluevox-field-bg);
+  border: 2px solid var(--bluevox-field-border);
+  border-radius: 6px;
+  color: var(--bluevox-text);
+  font-size: 15px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25) inset, 0 0 18px rgba(30, 110, 255, 0.10);
+}
+
+.bluevox-input:focus,
+.bluevox-textarea:focus,
+.bluevox-select:focus {
+  outline: none;
+  border-color: var(--bluevox-field-border-focus);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2) inset, 0 0 22px rgba(70, 170, 255, 0.18);
+  background: rgba(2, 10, 28, 0.5);
+}
+
+.bluevox-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Buttons */
+.bluevox-btn {
+  padding: 14px 28px;
+  border-radius: 8px;
+  border: 1px solid var(--bluevox-btn-border);
+  background: linear-gradient(180deg, var(--bluevox-btn-top), var(--bluevox-btn-bot));
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.18) inset, 0 0 18px rgba(70, 160, 255, 0.16);
+  font-family: inherit;
+}
+
+.bluevox-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(0, 0, 0, 0.18) inset, 0 0 22px rgba(70, 160, 255, 0.2);
+}
+
+.bluevox-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.bluevox-btn-secondary {
+  background: rgba(2, 10, 28, 0.6);
+  border-color: rgba(120, 175, 255, 0.4);
+}
+
+.bluevox-btn-secondary:hover {
+  background: rgba(2, 10, 28, 0.8);
+  border-color: rgba(120, 175, 255, 0.6);
+}
+
+/* Links */
+.bluevox-link {
+  color: var(--bluevox-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.bluevox-link:hover {
+  color: var(--bluevox-link-hover);
+}
+
+/* Lists */
+.bluevox-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.bluevox-list-item {
+  padding: 15px;
+  margin-bottom: 10px;
+  background: rgba(2, 10, 28, 0.4);
+  border: 1px solid rgba(120, 175, 255, 0.2);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.bluevox-list-item:hover {
+  background: rgba(2, 10, 28, 0.6);
+  border-color: rgba(120, 175, 255, 0.4);
+  transform: translateX(4px);
+}
+
+/* Tables */
+.bluevox-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bluevox-card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bluevox-table th {
+  background: rgba(2, 10, 28, 0.6);
+  color: var(--bluevox-text);
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(120, 175, 255, 0.3);
+}
+
+.bluevox-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(120, 175, 255, 0.15);
+  color: var(--bluevox-text-muted);
+}
+
+.bluevox-table tr:hover td {
+  background: rgba(2, 10, 28, 0.4);
+  color: var(--bluevox-text);
+}
+
+/* Messages */
+.bluevox-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid;
+}
+
+.bluevox-message-error {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.5);
+  color: #fca5a5;
+}
+
+.bluevox-message-success {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #86efac;
+}
+
+.bluevox-message-warning {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fde047;
+}
+
+/* Badges */
+.bluevox-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(70, 150, 255, 0.2);
+  color: rgba(170, 220, 255, 0.9);
+  border: 1px solid rgba(70, 150, 255, 0.3);
+}
+
+/* Sections */
+.bluevox-section {
+  margin-bottom: 30px;
+}
+
+.bluevox-section-title {
+  color: var(--bluevox-text);
+  font-size: 1.3em;
+  font-weight: 500;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(120, 175, 255, 0.3);
+}
+
+/* Grid Layouts */
+.bluevox-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.bluevox-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.bluevox-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 768px) {
+  .bluevox-grid-2,
+  .bluevox-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .bluevox-container {
+    padding: 15px;
+  }
+  
+  .bluevox-card {
+    padding: 20px;
+  }
+}

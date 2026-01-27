@@ -2,74 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Exam Details - {{ exam.exam_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Details - {{ exam.exam_name }} — DePaul BlueVox</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .exam-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .exam-header {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .exam-header h1 {
-            margin: 0;
-            color: #333;
-            font-size: 1.8em;
-        }
-
-        .back-link {
-            color: #4CAF50;
-            text-decoration: none;
-            font-size: 0.95em;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .error-message {
-            background-color: #ffe6e6;
-            color: #cc0000;
-            padding: 12px 20px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border: 1px solid #ff9999;
-        }
-
-        .details-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .details-section h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
         .details-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -78,90 +24,59 @@
 
         .detail-item {
             padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-radius: 8px;
         }
 
         .detail-label {
             font-weight: 600;
-            color: #666;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.9em;
             margin-bottom: 5px;
         }
 
         .detail-value {
-            color: #333;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 1em;
-        }
-
-        .actions-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: background-color 0.2s;
-        }
-
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #45a049;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
         }
 
         .completed-notice {
-            background: #e7f3ff;
+            background: rgba(30, 110, 255, 0.15);
             padding: 15px;
-            border-radius: 4px;
-            border-left: 4px solid #2196F3;
+            border-radius: 8px;
+            border-left: 4px solid rgba(70, 170, 255, 0.8);
             margin-bottom: 20px;
+            border: 1px solid rgba(120, 175, 255, 0.2);
         }
 
         .completed-notice strong {
-            color: #1976D2;
+            color: rgba(170, 220, 255, 0.95);
         }
 
         .info-box {
-            background: #fff3cd;
+            background: rgba(251, 191, 36, 0.15);
             padding: 15px;
-            border-radius: 4px;
-            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            border-left: 4px solid rgba(251, 191, 36, 0.6);
             margin-bottom: 20px;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .info-box strong {
+            color: rgba(255, 255, 255, 0.95);
         }
     </style>
 </head>
-<body>
-    <div class="exam-container">
-        <div class="exam-header">
+<body class="bluevox">
+    <div class="bluevox-container">
+        <div class="bluevox-header">
             <h1>{{ exam.exam_name }} - Exam Details</h1>
-            <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="back-link">← Back to Course</a>
+            <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="bluevox-link">← Back to Course</a>
         </div>
 
         {% if error %}
-        <div class="error-message">
+        <div class="bluevox-message bluevox-message-error">
             {{ error }}
         </div>
         {% endif %}
@@ -178,8 +93,8 @@
         </div>
         {% endif %}
 
-        <div class="details-section">
-            <h2>Exam Information</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Exam Information</h2>
             <div class="details-grid">
                 <div class="detail-item">
                     <div class="detail-label">Exam ID</div>
@@ -201,7 +116,7 @@
                 <div class="detail-item">
                     <div class="detail-label">Timed Exam</div>
                     <div class="detail-value">
-                        <strong style="color: #2196F3;">Yes - {{ exam.duration_hours }}h {{ exam.duration_minutes }}m</strong>
+                        <strong style="color: rgba(140, 195, 255, 0.9);">Yes - {{ exam.duration_hours }}h {{ exam.duration_minutes }}m</strong>
                     </div>
                 </div>
                 {% else %}
@@ -218,9 +133,9 @@
         </div>
 
         {% if not completed_exam %}
-        <div class="actions-section">
-            <h2>Start Exam</h2>
-            <p style="margin-bottom: 20px; color: #666;">
+        <div class="bluevox-card" style="text-align: center;">
+            <h2 class="bluevox-section-title">Start Exam</h2>
+            <p style="margin-bottom: 20px; color: rgba(255, 255, 255, 0.7);">
                 {% if exam.is_timed and exam.duration_hours is not none and exam.duration_minutes is not none %}
                     This is a timed exam. You will have <strong>{{ exam.duration_hours }} hours and {{ exam.duration_minutes }} minutes</strong> to complete it once you start.
                 {% else %}
@@ -233,17 +148,17 @@
                     <br>Click below to continue.
                 </div>
             {% endif %}
-            <form method="post" action="/student/exam/{{ exam.exam_id }}/start">
-                <button type="submit" class="btn btn-primary">
+            <form method="post" action="/student/exam/{{ exam.exam_id }}/start" style="margin-top: 20px;">
+                <button type="submit" class="bluevox-btn">
                     {% if student_exam and student_exam.status != 'completed' %}Continue Exam{% else %}Start Exam{% endif %}
                 </button>
-                <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
+                <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="bluevox-btn bluevox-btn-secondary" style="margin-left: 10px;">Cancel</a>
             </form>
         </div>
         {% else %}
-        <div class="actions-section">
-            <p style="color: #666;">This exam has been completed and cannot be retaken.</p>
-            <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="btn btn-secondary">Back to Course</a>
+        <div class="bluevox-card" style="text-align: center;">
+            <p style="color: rgba(255, 255, 255, 0.7);">This exam has been completed and cannot be retaken.</p>
+            <a href="/student/course/{{ exam.course_number }}/{{ exam.section }}" class="bluevox-btn bluevox-btn-secondary" style="margin-top: 15px; display: inline-block;">Back to Course</a>
         </div>
         {% endif %}
     </div>

@@ -2,65 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Exam Details - {{ exam.exam_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Details - {{ exam.exam_name }} — DePaul BlueVox</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .exam-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .exam-header {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .exam-header h1 {
-            margin: 0;
-            color: #333;
-            font-size: 1.8em;
-        }
-
-        .back-link {
-            color: #4CAF50;
-            text-decoration: none;
-            font-size: 0.95em;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .details-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .details-section h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
         .details-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -69,24 +24,25 @@
 
         .detail-item {
             padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-radius: 8px;
         }
 
         .detail-label {
             font-weight: 600;
-            color: #666;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.9em;
             margin-bottom: 5px;
         }
 
         .detail-value {
-            color: #333;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 1em;
         }
 
         .detail-value.N/A {
-            color: #999;
+            color: rgba(255, 255, 255, 0.5);
             font-style: italic;
         }
 
@@ -99,23 +55,27 @@
         }
 
         .status-active {
-            background-color: #4CAF50;
-            color: white;
+            background: rgba(86, 239, 172, 0.3);
+            color: rgba(86, 239, 172, 0.95);
+            border: 1px solid rgba(86, 239, 172, 0.4);
         }
 
         .status-completed {
-            background-color: #2196F3;
-            color: white;
+            background: rgba(70, 150, 255, 0.3);
+            color: rgba(140, 195, 255, 0.95);
+            border: 1px solid rgba(70, 150, 255, 0.4);
         }
 
         .status-not-started {
-            background-color: #ff9800;
-            color: white;
+            background: rgba(251, 191, 36, 0.3);
+            color: rgba(251, 191, 36, 0.95);
+            border: 1px solid rgba(251, 191, 36, 0.4);
         }
 
         .status-draft {
-            background-color: #9e9e9e;
-            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .full-width {
@@ -123,51 +83,48 @@
         }
 
         .llm-prompt-box {
-            background-color: #f8f9fa;
+            background: rgba(2, 10, 28, 0.4);
             padding: 15px;
-            border-radius: 4px;
-            border-left: 4px solid #4CAF50;
+            border-radius: 8px;
+            border-left: 4px solid rgba(70, 170, 255, 0.6);
             white-space: pre-wrap;
             word-wrap: break-word;
+            color: rgba(255, 255, 255, 0.85);
         }
 
         .btn-terminate {
-            background-color: #dc3545;
+            background: rgba(220, 38, 38, 0.8);
             color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            border: 1px solid rgba(220, 38, 38, 0.6);
         }
 
         .btn-terminate:hover {
-            background-color: #c82333;
+            background: rgba(220, 38, 38, 0.95);
+            border-color: rgba(220, 38, 38, 0.8);
         }
     </style>
 </head>
-<body>
-    <div class="exam-container">
+<body class="bluevox">
+    <div class="bluevox-container">
         {% if request.query_params.get("success") %}
-        <div class="success-message" style="background-color: #d4edda; color: #155724; padding: 12px 20px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+        <div class="bluevox-message bluevox-message-success">
             {{ request.query_params.get("success") }}
         </div>
         {% endif %}
         
         {% if request.query_params.get("error") %}
-        <div class="error-message" style="background-color: #f8d7da; color: #721c24; padding: 12px 20px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+        <div class="bluevox-message bluevox-message-error">
             {{ request.query_params.get("error") }}
         </div>
         {% endif %}
         
         {% if exam.status == "disputed" %}
-        <div class="dispute-notice" style="background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h2 style="margin-top: 0; color: #856404; display: flex; align-items: center; gap: 10px;">
+        <div class="bluevox-message bluevox-message-warning">
+            <h2 style="margin-top: 0; color: rgba(255, 255, 255, 0.95); display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 1.5em;">⚠️</span>
                 <span>Grade Disputed</span>
             </h2>
-            <p style="color: #856404; margin-bottom: 10px;"><strong>This exam grade has been disputed by the student.</strong></p>
+            <p style="margin-bottom: 10px;"><strong>This exam grade has been disputed by the student.</strong></p>
             {% if exam.dispute_reason %}
             <div style="background-color: white; padding: 15px; border-radius: 4px; margin-top: 10px;">
                 <strong style="color: #856404;">Student's Reason:</strong>
@@ -182,8 +139,8 @@
             <a href="/teacher/dashboard" class="back-link">← Back to Dashboard</a>
         </div>
 
-        <div class="details-section">
-            <h2>Exam Information</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Exam Information</h2>
             <div class="details-grid">
                 <div class="detail-item">
                     <div class="detail-label">Exam ID</div>
@@ -259,8 +216,8 @@
             </div>
         </div>
 
-        <div class="details-section">
-            <h2>Date & Time Information</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Date & Time Information</h2>
             <div class="details-grid">
                 <div class="detail-item">
                     <div class="detail-label">Date/Time Start</div>
@@ -295,15 +252,15 @@
         </div>
 
         {% if exam.final_explanation %}
-        <div class="details-section">
-            <h2>LLM Prompt / Instructions</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">LLM Prompt / Instructions</h2>
             <div class="llm-prompt-box">{{ exam.final_explanation }}</div>
         </div>
         {% endif %}
 
         {% if exam.date_published and exam.status != 'terminated' %}
-        <div class="details-section">
-            <h2>Actions</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Actions</h2>
             <form method="post" action="/teacher/exam/{{ exam.exam_id }}/terminate" 
                   onsubmit="return confirm('Are you sure? After termination this exam will not be available to any students!');">
                 <button type="submit" class="btn-terminate">Terminate Exam</button>
@@ -312,7 +269,7 @@
         {% endif %}
         
         {% if exam.status == 'terminated' %}
-        <div class="details-section">
+        <div class="bluevox-card">
             <div style="padding: 15px; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">
                 <strong>This exam has been terminated.</strong> It is no longer available to students.
             </div>
@@ -320,8 +277,8 @@
         {% endif %}
         
         {% if is_student_exam and questions %}
-        <div class="details-section">
-            <h2>Questions and Answers</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Questions and Answers</h2>
             {% if exam.status == "disputed" or exam.status == "completed" %}
             <form id="grade-alteration-form" method="post" action="/teacher/exam/{{ exam.exam_id }}/alter-grades" style="margin-bottom: 20px;">
             {% endif %}
@@ -419,11 +376,11 @@
             </div>
             </form>
             <div class="details-section" style="margin-top: 20px;">
-                <h2>{% if exam.status == "disputed" %}Dispute Actions{% else %}Grade Actions{% endif %}</h2>
+                <h2 class="bluevox-section-title">{% if exam.status == "disputed" %}Dispute Actions{% else %}Grade Actions{% endif %}</h2>
                 <div style="display: flex; gap: 15px; margin-top: 15px;">
                     <button type="submit"
                             form="grade-alteration-form"
-                            class="btn-terminate"
+                            class="bluevox-btn btn-terminate"
                             style="background-color: #4CAF50; padding: 12px 24px; border: none; border-radius: 4px; color: white; font-size: 1em; cursor: pointer;">
                         Alter Exam
                     </button>
@@ -431,7 +388,7 @@
                     <form method="post" action="/teacher/exam/{{ exam.exam_id }}/reopen" 
                           onsubmit="return confirm('Are you sure you want to reopen this exam? The student will be able to retake it.');"
                           style="display: inline;">
-                        <button type="submit" style="background-color: #2196F3; padding: 12px 24px; border: none; border-radius: 4px; color: white; font-size: 1em; cursor: pointer;">
+                        <button type="submit" class="bluevox-btn">
                             Reopen Exam
                         </button>
                     </form>

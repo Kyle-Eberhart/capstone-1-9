@@ -3,157 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register New Course - Teacher Portal</title>
+    <title>Register New Course — DePaul BlueVox</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
         .register-card {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 600px;
         }
+        
         .register-card h1 {
             margin-top: 0;
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
+            color: rgba(255, 255, 255, 0.95);
+            border-bottom: 2px solid rgba(120, 175, 255, 0.3);
             padding-bottom: 10px;
         }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-        }
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1em;
-            box-sizing: border-box;
-        }
+        
         .form-group input {
             text-transform: uppercase;
         }
+        
         .sections-container {
             margin-bottom: 15px;
         }
+        
         .section-input-group {
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
             align-items: center;
         }
+        
         .section-input-group input {
             flex: 1;
             text-transform: none;
         }
+        
         .btn-remove-section {
             padding: 8px 15px;
-            background-color: #f44336;
+            background: rgba(220, 38, 38, 0.8);
             color: white;
-            border: none;
-            border-radius: 4px;
+            border: 1px solid rgba(220, 38, 38, 0.6);
+            border-radius: 6px;
             cursor: pointer;
             font-size: 0.9em;
+            transition: all 0.2s ease;
         }
+        
         .btn-remove-section:hover {
-            background-color: #da190b;
+            background: rgba(220, 38, 38, 0.95);
+            border-color: rgba(220, 38, 38, 0.8);
         }
+        
         .btn-add-section {
             padding: 8px 15px;
-            background-color: #2196F3;
+            background: rgba(70, 150, 255, 0.8);
             color: white;
-            border: none;
-            border-radius: 4px;
+            border: 1px solid rgba(70, 150, 255, 0.6);
+            border-radius: 6px;
             cursor: pointer;
             font-size: 0.9em;
             margin-bottom: 15px;
+            transition: all 0.2s ease;
         }
+        
         .btn-add-section:hover {
-            background-color: #0b7dda;
+            background: rgba(70, 150, 255, 0.95);
+            border-color: rgba(70, 150, 255, 0.8);
         }
+        
         .quarter-year-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            width: 100%;
-        }
-        .btn-primary:hover {
-            background-color: #45a049;
-        }
-        .btn-secondary {
-            background-color: #666;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            width: 100%;
-            margin-top: 10px;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            box-sizing: border-box;
-        }
-        .btn-secondary:hover {
-            background-color: #555;
-        }
-        .error-message {
-            color: red;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #ffe6e6;
-            border-radius: 4px;
-        }
+        
         .info-text {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 0.9em;
             margin-top: 5px;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="register-card">
+<body class="bluevox">
+    <div class="bluevox-container">
+        <div class="bluevox-card register-card">
             <h1>Register New Course</h1>
             
             {% if error %}
-            <div class="error-message">
+            <div class="bluevox-message bluevox-message-error">
                 {{ error }}
             </div>
             {% endif %}
             
             <form method="post" action="/teacher/register-course" id="register-course-form">
-                <div class="form-group">
-                    <label for="course_number">Course Number:</label>
+                <div class="bluevox-form-group">
+                    <label for="course_number" class="bluevox-form-group label">Course Number:</label>
                     <input 
                         type="text" 
                         id="course_number" 
                         name="course_number" 
+                        class="bluevox-input"
                         required 
                         autofocus
                         placeholder="e.g., CSC376"
@@ -163,13 +121,14 @@
                     <p class="info-text">Enter the course code (will be converted to uppercase automatically)</p>
                 </div>
                 
-                <div class="form-group">
-                    <label>Sections:</label>
+                <div class="bluevox-form-group">
+                    <label class="bluevox-form-group label">Sections:</label>
                     <div class="sections-container" id="sections-container">
                         <div class="section-input-group">
                             <input 
                                 type="text" 
                                 name="sections[]" 
+                                class="bluevox-input"
                                 required 
                                 placeholder="e.g., 424"
                                 pattern="[0-9]+"
@@ -180,12 +139,12 @@
                     <button type="button" class="btn-add-section" id="add-section-btn">Add Another Section</button>
                 </div>
                 
-                <div class="form-group">
-                    <label>Quarter / Year:</label>
+                <div class="bluevox-form-group">
+                    <label class="bluevox-form-group label">Quarter / Year:</label>
                     <div class="quarter-year-group">
                         <div>
-                            <label for="quarter" style="margin-bottom: 8px;">Quarter:</label>
-                            <select id="quarter" name="quarter" required>
+                            <label for="quarter" class="bluevox-form-group label" style="margin-bottom: 8px;">Quarter:</label>
+                            <select id="quarter" name="quarter" class="bluevox-select" required>
                                 <option value="">Select Quarter</option>
                                 <option value="Fall">Fall</option>
                                 <option value="Winter">Winter</option>
@@ -194,8 +153,8 @@
                             </select>
                         </div>
                         <div>
-                            <label for="year" style="margin-bottom: 8px;">Year:</label>
-                                <select id="year" name="year" required>
+                            <label for="year" class="bluevox-form-group label" style="margin-bottom: 8px;">Year:</label>
+                                <select id="year" name="year" class="bluevox-select" required>
                                     <option value="">Select Year</option>
                                     {% for year in year_options %}
                                     <option value="{{ year }}">{{ year }}</option>
@@ -205,8 +164,8 @@
                     </div>
                 </div>
                 
-                <button type="submit" class="btn-primary">Register Course</button>
-                <a href="/teacher/dashboard" class="btn-secondary">Cancel</a>
+                <button type="submit" class="bluevox-btn" style="width: 100%;">Register Course</button>
+                <a href="/teacher/dashboard" class="bluevox-btn bluevox-btn-secondary" style="width: 100%; margin-top: 10px; text-align: center; display: block; box-sizing: border-box;">Cancel</a>
             </form>
         </div>
     </div>

@@ -2,115 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ course_number }} - Section {{ section }} - Teacher Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course_number }} - Section {{ section }} — DePaul BlueVox</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .course-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .course-header {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .course-header h1 {
-            margin: 0;
-            color: #333;
-            font-size: 1.8em;
-        }
-
-        .back-link {
-            color: #4CAF50;
-            text-decoration: none;
-            font-size: 0.95em;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .exams-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .exams-section h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
-        .exams-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .exams-list li {
-            padding: 15px;
+        .exams-list-item {
+            padding: 15px 20px;
             margin-bottom: 10px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border-left: 4px solid #4CAF50;
-            transition: background-color 0.2s;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(70, 170, 255, 0.6);
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
 
-        .exams-list li:hover {
-            background-color: #e9ecef;
+        .exams-list-item:hover {
+            background: rgba(2, 10, 28, 0.6);
+            border-color: rgba(120, 175, 255, 0.4);
+            transform: translateX(4px);
         }
 
-        .exams-list li a {
-            color: #333;
+        .exams-list-item a {
+            color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
             display: block;
             font-weight: 500;
         }
 
-        .exams-list li a:hover {
-            color: #4CAF50;
-        }
-
-        .exam-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 5px;
+        .exams-list-item a:hover {
+            color: rgba(255, 255, 255, 0.95);
         }
 
         .exam-name {
             font-size: 1.1em;
             font-weight: 600;
-            color: #4CAF50;
+            color: rgba(140, 195, 255, 0.9);
+            margin-bottom: 5px;
         }
 
         .exam-details {
             font-size: 0.9em;
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .no-exams {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-style: italic;
             padding: 20px;
             text-align: center;
@@ -118,27 +64,27 @@
 
         .section-divider {
             margin: 30px 0 20px 0;
-            border-top: 2px solid #ddd;
+            border-top: 1px solid rgba(120, 175, 255, 0.2);
             padding-top: 20px;
         }
     </style>
 </head>
-<body>
-    <div class="course-container">
-        <div class="course-header">
+<body class="bluevox">
+    <div class="bluevox-container">
+        <div class="bluevox-header">
             <h1>{{ course_number }} - Section {{ section }}</h1>
-            <a href="/teacher/dashboard" class="back-link">← Back to Dashboard</a>
+            <a href="/teacher/dashboard" class="bluevox-link">← Back to Dashboard</a>
         </div>
 
-        <div class="exams-section">
-            <h2>Exams</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Exams</h2>
             
             <!-- Open Exams -->
-            <h3 style="margin-top: 0; margin-bottom: 15px; color: #4CAF50; font-size: 1.2em;">Open Exams</h3>
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: rgba(86, 239, 172, 0.9); font-size: 1.2em;">Open Exams</h3>
             {% if open_exams %}
-            <ul class="exams-list">
+            <ul class="bluevox-list">
                 {% for exam in open_exams %}
-                <li>
+                <li class="exams-list-item">
                     <a href="/teacher/exam/{{ exam.exam_id }}">
                         <div class="exam-name">{{ exam.exam_name }}</div>
                         <div class="exam-info">
@@ -158,11 +104,11 @@
             <div class="section-divider"></div>
 
             <!-- Closed Exams -->
-            <h3 style="margin-top: 0; margin-bottom: 15px; color: #666; font-size: 1.2em;">Closed Exams</h3>
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: rgba(255, 255, 255, 0.6); font-size: 1.2em;">Closed Exams</h3>
             {% if closed_exams %}
-            <ul class="exams-list">
+            <ul class="bluevox-list">
                 {% for exam in closed_exams %}
-                <li>
+                <li class="exams-list-item">
                     <a href="/teacher/exam/{{ exam.exam_id }}">
                         <div class="exam-name">{{ exam.exam_name }}</div>
                         <div class="exam-info">

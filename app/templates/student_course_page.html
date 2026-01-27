@@ -2,170 +2,107 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ course_number }} - Section {{ section }} - Student Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course_number }} - Section {{ section }} — DePaul BlueVox</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .course-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .course-header {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .course-header h1 {
-            margin: 0;
-            color: #333;
-            font-size: 1.8em;
-        }
-
-        .back-link {
-            color: #4CAF50;
-            text-decoration: none;
-            font-size: 0.95em;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .exams-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .exams-section h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
-        .exams-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .exams-list li {
-            padding: 15px;
+        .exams-list-item {
+            padding: 15px 20px;
             margin-bottom: 10px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border-left: 4px solid #4CAF50;
-            transition: background-color 0.2s;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(70, 170, 255, 0.6);
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
 
-        .exams-list li:hover {
-            background-color: #e9ecef;
+        .exams-list-item:hover {
+            background: rgba(2, 10, 28, 0.6);
+            border-color: rgba(120, 175, 255, 0.4);
+            transform: translateX(4px);
         }
 
-        .exams-list li a {
-            color: #333;
+        .exams-list-item a {
+            color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
             display: block;
             font-weight: 500;
         }
 
-        .exams-list li a:hover {
-            color: #4CAF50;
-        }
-
-        .exam-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 5px;
+        .exams-list-item a:hover {
+            color: rgba(255, 255, 255, 0.95);
         }
 
         .exam-name {
             font-size: 1.1em;
             font-weight: 600;
-            color: #4CAF50;
+            color: rgba(140, 195, 255, 0.9);
+            margin-bottom: 5px;
         }
 
         .exam-details {
             font-size: 0.9em;
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .no-exams {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-style: italic;
             padding: 20px;
             text-align: center;
         }
-
-        .error-message {
-            background-color: #ffe6e6;
-            color: #cc0000;
-            padding: 12px 20px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border: 1px solid #ff9999;
-        }
     </style>
 </head>
-<body>
-    <div class="course-container">
-        <div class="course-header">
+<body class="bluevox">
+    <div class="bluevox-container">
+        <div class="bluevox-header">
             <h1>{{ course_number }} - Section {{ section }}</h1>
-            <a href="/student/dashboard" class="back-link">← Back to Dashboard</a>
+            <a href="/student/dashboard" class="bluevox-link">← Back to Dashboard</a>
         </div>
 
         {% if error %}
-        <div class="error-message">
+        <div class="bluevox-message bluevox-message-error">
             {{ error }}
         </div>
         {% endif %}
 
         {% if success %}
-        <div style="background-color: #e7f3ff; color: #1976D2; padding: 12px 20px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #90caf9;">
+        <div class="bluevox-message bluevox-message-success">
             {{ success }}
         </div>
         {% endif %}
 
         {% if not is_enrolled %}
         <!-- Registration Section -->
-        <div class="exams-section" style="text-align: center; padding: 40px;">
-            <h2 style="margin-bottom: 20px;">Register for {{ course_number }} - Section {{ section }}</h2>
-            <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
+        <div class="bluevox-card" style="text-align: center; padding: 40px;">
+            <h2 class="bluevox-section-title" style="margin-bottom: 20px;">Register for {{ course_number }} - Section {{ section }}</h2>
+            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 30px; font-size: 1.1em;">
                 You are not enrolled in this course yet. Register to view and take exams.
             </p>
             <form method="post" action="/student/course/{{ course_number }}/{{ section }}/register">
-                <button type="submit" style="background-color: #4CAF50; color: white; padding: 15px 40px; border: none; border-radius: 4px; font-size: 1.1em; cursor: pointer; font-weight: 600;">
+                <button type="submit" class="bluevox-btn" style="padding: 15px 40px; font-size: 1.1em;">
                     Register for this Course
                 </button>
             </form>
         </div>
         {% else %}
         <!-- Open Exams Section -->
-        <div class="exams-section">
-            <h2>Open Exams</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Open Exams</h2>
             {% if open_exams %}
-            <ul class="exams-list">
+            <ul class="bluevox-list">
                 {% for exam in open_exams %}
-                <li>
+                <li class="exams-list-item">
                     <a href="/student/exam/{{ exam.exam_id }}">
                         <div class="exam-name">{{ exam.exam_name }}</div>
                         <div class="exam-info">

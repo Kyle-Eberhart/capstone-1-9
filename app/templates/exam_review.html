@@ -2,83 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Review Exam - {{ exam.exam_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Exam - {{ exam.exam_name }} — DePaul BlueVox</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .exam-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .exam-header {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .exam-header h1 {
-            margin: 0;
-            color: #333;
-            font-size: 1.8em;
-        }
-
-        .back-link {
-            color: #4CAF50;
-            text-decoration: none;
-            font-size: 0.95em;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .alert {
-            padding: 12px 20px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .alert-error {
-            background-color: #ffe6e6;
-            color: #cc0000;
-            border: 1px solid #ff9999;
-        }
-
-        .alert-success {
-            background-color: #e6f7e6;
-            color: #006600;
-            border: 1px solid #99cc99;
-        }
-
-        .info-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .info-section h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
         .info-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -87,70 +24,26 @@
 
         .info-item {
             padding: 12px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-radius: 8px;
         }
 
         .info-label {
             font-weight: 600;
-            color: #666;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.9em;
             margin-bottom: 5px;
         }
 
         .info-value {
-            color: #333;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 1em;
-        }
-
-        .form-section {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .form-section h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 1.5em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-group textarea {
-            width: 100%;
-            min-height: 200px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: Arial, sans-serif;
-            font-size: 1em;
-            resize: vertical;
-            box-sizing: border-box;
-        }
-
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #4CAF50;
         }
 
         .help-text {
             font-size: 0.9em;
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             margin-top: 8px;
         }
 
@@ -159,79 +52,70 @@
             gap: 15px;
             justify-content: flex-end;
             margin-top: 25px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: background-color 0.2s;
-        }
-
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #45a049;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #5a6268;
+            flex-wrap: wrap;
         }
 
         .btn-publish {
-            background-color: #2196F3;
-            color: white;
+            background: linear-gradient(180deg, rgba(70, 150, 255, 0.92), rgba(35, 105, 245, 0.88));
+            border-color: rgba(170, 220, 255, 0.5);
         }
 
         .btn-publish:hover {
-            background-color: #0b7dda;
+            filter: brightness(1.05);
         }
 
-        .related-exams {
-            background: #fff3cd;
-            padding: 15px;
-            border-radius: 4px;
+        .question-item {
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(70, 170, 255, 0.6);
+            border-radius: 8px;
+            padding: 20px;
             margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
+        }
+
+        .question-item h3 {
+            margin-top: 0;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .question-item p {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+        .related-exams {
+            background: rgba(251, 191, 36, 0.15);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid rgba(251, 191, 36, 0.6);
+            border: 1px solid rgba(251, 191, 36, 0.2);
         }
 
         .related-exams strong {
-            color: #856404;
+            color: rgba(255, 255, 255, 0.95);
         }
     </style>
 </head>
-<body>
-    <div class="exam-container">
-        <div class="exam-header">
+<body class="bluevox">
+    <div class="bluevox-container">
+        <div class="bluevox-header">
             <h1>Review Exam: {{ exam.exam_name }}</h1>
-            <a href="/teacher/dashboard" class="back-link">← Back to Dashboard</a>
+            <a href="/teacher/dashboard" class="bluevox-link">← Back to Dashboard</a>
         </div>
 
         {% if error %}
-        <div class="alert alert-error">
+        <div class="bluevox-message bluevox-message-error">
             {{ error }}
         </div>
         {% endif %}
 
         {% if success %}
-        <div class="alert alert-success">
+        <div class="bluevox-message bluevox-message-success">
             {{ success }}
         </div>
         {% endif %}
 
-        <div class="alert" style="background-color: #e7f3ff; color: #004085; border: 1px solid #b3d9ff; padding: 15px 20px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+        <div class="bluevox-message bluevox-message-warning">
             <strong style="display: block; margin-bottom: 5px; font-size: 1.05em;">Important Notice:</strong>
             <p style="margin: 0; font-size: 1em;">This is only an example of one possible exam! Each student will have an exam unique to them to prevent cheating.</p>
         </div>
@@ -246,15 +130,15 @@
         </div>
         {% endif %}
 
-        <div class="info-section">
-            <h2>Exam Information</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Exam Information</h2>
             <div class="info-grid">
                 <div class="info-item" style="grid-column: 1 / -1;">
                     <div class="info-label">Exam ID</div>
                     <div class="info-value">
                         {{ combined_exam_id }}
                         {% if related_exams|length > 1 %}
-                            <br><span style="font-size: 0.85em; color: #666; font-style: italic;">
+                            <br><span style="font-size: 0.85em; color: rgba(255, 255, 255, 0.5); font-style: italic;">
                                 (Individual section IDs: {% for rel_exam in related_exams %}{{ rel_exam.exam_id }}{% if not loop.last %}, {% endif %}{% endfor %})
                             </span>
                         {% endif %}
@@ -275,9 +159,9 @@
                     <div class="info-label">Status</div>
                     <div class="info-value">
                         {% if exam.date_published %}
-                            <span style="color: #28a745; font-weight: 600;">Published</span>
+                            <span style="color: rgba(86, 239, 172, 0.9); font-weight: 600;">Published</span>
                         {% else %}
-                            <span style="color: #ffc107; font-weight: 600;">Draft (Not Published)</span>
+                            <span style="color: rgba(251, 191, 36, 0.9); font-weight: 600;">Draft (Not Published)</span>
                         {% endif %}
                     </div>
                 </div>
@@ -285,9 +169,9 @@
                     <div class="info-label">Timed Exam</div>
                     <div class="info-value">
                         {% if exam.is_timed and exam.duration_hours is not none and exam.duration_minutes is not none %}
-                            <span style="color: #2196F3; font-weight: 600;">Yes - {{ exam.duration_hours }}h {{ exam.duration_minutes }}m</span>
+                            <span style="color: rgba(140, 195, 255, 0.9); font-weight: 600;">Yes - {{ exam.duration_hours }}h {{ exam.duration_minutes }}m</span>
                         {% else %}
-                            <span style="color: #666;">No</span>
+                            <span style="color: rgba(255, 255, 255, 0.6);">No</span>
                         {% endif %}
                     </div>
                 </div>
@@ -296,25 +180,25 @@
 
         <!-- Display Generated Questions -->
         {% if questions %}
-        <div class="form-section">
-            <h2>Generated Questions</h2>
+        <div class="bluevox-card">
+            <h2 class="bluevox-section-title">Generated Questions</h2>
             {% for question in questions %}
-            <div style="margin-bottom: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 4px; border-left: 4px solid #4CAF50;">
-                <h3 style="margin-top: 0; color: #333;">Question {{ question.question_number }}</h3>
+            <div class="question-item">
+                <h3>Question {{ question.question_number }}</h3>
                 <div style="margin-bottom: 15px;">
-                    <strong style="color: #666;">Question:</strong>
-                    <p style="margin: 5px 0; color: #333;">{{ question.question_text }}</p>
+                    <strong style="color: rgba(255, 255, 255, 0.8);">Question:</strong>
+                    <p style="margin: 5px 0;">{{ question.question_text }}</p>
                 </div>
                 {% if question.context %}
                 <div style="margin-bottom: 15px;">
-                    <strong style="color: #666;">Context:</strong>
-                    <p style="margin: 5px 0; color: #333;">{{ question.context }}</p>
+                    <strong style="color: rgba(255, 255, 255, 0.8);">Context:</strong>
+                    <p style="margin: 5px 0;">{{ question.context }}</p>
                 </div>
                 {% endif %}
                 {% if question.rubric %}
                 <div>
-                    <strong style="color: #666;">Rubric:</strong>
-                    <p style="margin: 5px 0; color: #333;">{{ question.rubric }}</p>
+                    <strong style="color: rgba(255, 255, 255, 0.8);">Rubric:</strong>
+                    <p style="margin: 5px 0;">{{ question.rubric }}</p>
                 </div>
                 {% endif %}
             </div>
@@ -324,26 +208,28 @@
 
         <!-- Regenerate Questions Form -->
         <form method="post" action="/teacher/exam/{{ exam.exam_id }}/regenerate">
-            <div class="form-section">
-                <h2>Regenerate Exam Questions</h2>
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="bluevox-card">
+                <h2 class="bluevox-section-title">Regenerate Exam Questions</h2>
+                <div class="bluevox-form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
-                        <label for="exam_topic">Exam Topic: <span style="color: red;">*</span></label>
+                        <label for="exam_topic" class="bluevox-form-group label">Exam Topic: <span style="color: rgba(252, 165, 165, 0.9);">*</span></label>
                         <input 
                             type="text" 
                             id="exam_topic" 
                             name="exam_topic" 
+                            class="bluevox-input"
                             required 
                             value="{{ exam_topic }}"
                             placeholder="e.g. Data Structures and Algorithms"
                         >
                     </div>
                     <div>
-                        <label for="num_questions">Number of Questions: <span style="color: red;">*</span></label>
+                        <label for="num_questions" class="bluevox-form-group label">Number of Questions: <span style="color: rgba(252, 165, 165, 0.9);">*</span></label>
                         <input 
                             type="number" 
                             id="num_questions" 
                             name="num_questions" 
+                            class="bluevox-input"
                             required 
                             min="1" 
                             max="30"
@@ -351,11 +237,12 @@
                         >
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="additional_details">Additional Details (Optional but Recommended):</label>
+                <div class="bluevox-form-group">
+                    <label for="additional_details" class="bluevox-form-group label">Additional Details (Optional but Recommended):</label>
                     <textarea 
                         id="additional_details" 
                         name="additional_details" 
+                        class="bluevox-textarea"
                         placeholder="Please enter rubric, grading criteria, specific sub-topics, questions you want included, expected answers, or any further expectations."
                     >{{ additional_details }}</textarea>
                     <p class="help-text">
@@ -367,8 +254,8 @@
             </div>
 
             <div class="button-group">
-                <a href="/teacher/dashboard" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-primary">Generate and Review Again</button>
+                <a href="/teacher/dashboard" class="bluevox-btn bluevox-btn-secondary">Cancel</a>
+                <button type="submit" class="bluevox-btn">Generate and Review Again</button>
             </div>
         </form>
 
@@ -376,14 +263,14 @@
         <div style="margin-top: 20px;">
             <form method="post" action="/teacher/exam/{{ exam.exam_id }}/publish" onsubmit="return confirm('Are you sure you want to publish this exam? Once published, it will be available to all students in the specified sections.');">
                 <div class="button-group">
-                    <button type="submit" class="btn btn-publish">Publish Exam</button>
+                    <button type="submit" class="bluevox-btn btn-publish">Publish Exam</button>
                 </div>
             </form>
         </div>
         {% else %}
-        <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 4px; border-left: 4px solid #2196F3;">
+        <div class="bluevox-message bluevox-message-success" style="margin-top: 20px;">
             <strong>This exam has been published.</strong> 
-            <a href="/teacher/exam/{{ exam.exam_id }}">View exam details</a>
+            <a href="/teacher/exam/{{ exam.exam_id }}" class="bluevox-link">View exam details</a>
         </div>
         {% endif %}
     </div>

@@ -3,57 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create New Exam - Teacher Portal</title>
+    <title>Create New Exam — DePaul BlueVox</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
         .create-exam-card {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 1000px;
         }
+        
         .create-exam-card h1 {
             margin-top: 0;
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
+            color: rgba(255, 255, 255, 0.95);
+            border-bottom: 2px solid rgba(120, 175, 255, 0.3);
             padding-bottom: 10px;
         }
+        
         .form-group {
             margin-bottom: 25px;
         }
+        
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
+            color: rgba(255, 255, 255, 0.9);
             font-weight: 500;
-        }
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1em;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-        .form-group textarea {
-            min-height: 300px;
-            resize: vertical;
-        }
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-            color: #999;
         }
         .course-select-group {
             display: grid;
@@ -65,15 +47,20 @@
             display: flex;
             align-items: center;
             padding: 10px 12px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            transition: background-color 0.2s;
+            background: rgba(2, 10, 28, 0.4);
+            border-radius: 6px;
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            transition: all 0.2s ease;
         }
         
         .section-checkbox:hover {
-            background-color: #e9ecef;
-            border-color: #4CAF50;
+            background: rgba(2, 10, 28, 0.6);
+            border-color: rgba(70, 170, 255, 0.5);
+        }
+        
+        .section-checkbox:has(input:checked) {
+            background: rgba(30, 110, 255, 0.2);
+            border-color: rgba(70, 170, 255, 0.6);
         }
         
         .section-checkbox input[type="checkbox"] {
@@ -90,6 +77,7 @@
             font-weight: normal;
             flex: 1;
             user-select: none;
+            color: rgba(255, 255, 255, 0.85);
         }
         .exam-name-group {
             margin-top: 20px;
@@ -106,60 +94,57 @@
             gap: 15px;
             margin-top: 30px;
         }
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            flex: 1;
-        }
-        .btn-primary:hover {
-            background-color: #45a049;
-        }
+        
         .btn-primary:disabled {
-            background-color: #ccc;
+            opacity: 0.5;
             cursor: not-allowed;
         }
-        .btn-secondary {
-            background-color: #666;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            flex: 1;
-        }
-        .btn-secondary:hover {
-            background-color: #555;
-        }
-        .error-message {
-            color: red;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #ffe6e6;
-            border-radius: 4px;
-        }
+        
         .info-text {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 0.9em;
             margin-top: 5px;
         }
+        
         .back-link {
-            color: #4CAF50;
+            color: rgba(140, 195, 255, 0.75);
             text-decoration: none;
             font-size: 0.9em;
             margin-bottom: 20px;
             display: inline-block;
         }
+        
         .back-link:hover {
+            color: rgba(220, 245, 255, 0.95);
             text-decoration: underline;
+        }
+        
+        .duration-fields-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(2, 10, 28, 0.4);
+            border-radius: 8px;
+            border: 1px solid rgba(120, 175, 255, 0.2);
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .radio-group label {
+            display: inline-flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.85);
+            cursor: pointer;
+        }
+        
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -171,7 +156,7 @@
             <h1>Create New Exam</h1>
             
             {% if error %}
-            <div class="error-message">
+            <div class="bluevox-message bluevox-message-error">
                 {{ error }}
             </div>
             {% endif %}
@@ -182,8 +167,8 @@
                     <label>Course / Section / Quarter:</label>
                     <div class="course-select-group">
                         <div>
-                            <label for="course_number" style="margin-bottom: 8px;">Course Number:</label>
-                            <select id="course_number" name="course_number" required onchange="updateSections()">
+                            <label for="course_number" class="bluevox-form-group label" style="margin-bottom: 8px;">Course Number:</label>
+                            <select id="course_number" name="course_number" class="bluevox-select" required onchange="updateSections()">
                                 <option value="">Select Course</option>
                                 {% for course_num in unique_course_numbers %}
                                 <option value="{{ course_num }}">{{ course_num }}</option>
@@ -191,15 +176,15 @@
                             </select>
                         </div>
                         <div style="grid-column: 2; grid-row: 1 / 3;">
-                            <label style="margin-bottom: 8px;">Sections (select all that apply):</label>
+                            <label class="bluevox-form-group label" style="margin-bottom: 8px;">Sections (select all that apply):</label>
                             <div id="sections-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 5px; max-height: 200px; overflow-y: auto;">
                                 <!-- Sections will be populated here as checkboxes -->
                             </div>
                             <p class="info-text" style="margin-top: 10px; font-size: 0.85em;">Select one or more sections from the same quarter/year</p>
                         </div>
                         <div style="grid-column: 1; grid-row: 2;">
-                            <label for="quarter_year" style="margin-bottom: 8px;">Quarter / Year:</label>
-                            <select id="quarter_year" name="quarter_year" required>
+                            <label for="quarter_year" class="bluevox-form-group label" style="margin-bottom: 8px;">Quarter / Year:</label>
+                            <select id="quarter_year" name="quarter_year" class="bluevox-select" required>
                                 <option value="">Select Quarter/Year</option>
                             </select>
                         </div>
@@ -208,11 +193,12 @@
                 
                 <!-- Exam Name -->
                 <div class="form-group exam-name-group">
-                    <label for="exam_name">Exam Name:</label>
+                    <label for="exam_name" class="bluevox-form-group label">Exam Name:</label>
                     <input 
                         type="text" 
                         id="exam_name" 
                         name="exam_name" 
+                        class="bluevox-input"
                         required 
                         placeholder="e.g. Midterm"
                         autocomplete="off"
@@ -222,11 +208,12 @@
                 <!-- Topic and Number of Questions -->
                 <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
-                        <label for="exam_topic">Exam Topic: <span style="color: red;">*</span></label>
+                        <label for="exam_topic" class="bluevox-form-group label">Exam Topic: <span style="color: rgba(252, 165, 165, 0.9);">*</span></label>
                         <input 
                             type="text" 
                             id="exam_topic" 
                             name="exam_topic" 
+                            class="bluevox-input"
                             required 
                             placeholder="e.g. Data Structures and Algorithms"
                             autocomplete="off"
@@ -234,11 +221,12 @@
                         <p class="info-text">The main topic or subject area for the exam</p>
                     </div>
                     <div>
-                        <label for="num_questions">Number of Questions: <span style="color: red;">*</span></label>
+                        <label for="num_questions" class="bluevox-form-group label">Number of Questions: <span style="color: rgba(252, 165, 165, 0.9);">*</span></label>
                         <input 
                             type="number" 
                             id="num_questions" 
                             name="num_questions" 
+                            class="bluevox-input"
                             required 
                             min="1" 
                             max="30"
@@ -251,22 +239,22 @@
                 
                 <!-- Timed Exam Selection -->
                 <div class="form-group">
-                    <label>Timed Exam:</label>
-                    <div style="margin-bottom: 10px;">
-                        <label style="display: inline-flex; align-items: center; margin-right: 20px;">
-                            <input type="radio" name="is_timed" value="no" checked onchange="toggleDurationFields()" style="margin-right: 8px;">
+                    <label class="bluevox-form-group label">Timed Exam:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="is_timed" value="no" checked onchange="toggleDurationFields()">
                             No
                         </label>
-                        <label style="display: inline-flex; align-items: center;">
-                            <input type="radio" name="is_timed" value="yes" onchange="toggleDurationFields()" style="margin-right: 8px;">
+                        <label>
+                            <input type="radio" name="is_timed" value="yes" onchange="toggleDurationFields()">
                             Yes
                         </label>
                     </div>
-                    <div id="duration-fields" style="display: none; margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
-                        <label style="margin-bottom: 8px; display: block;">Exam Duration:</label>
+                    <div id="duration-fields" class="duration-fields-container" style="display: none;">
+                        <label class="bluevox-form-group label" style="margin-bottom: 8px; display: block;">Exam Duration:</label>
                         <div style="display: flex; gap: 15px; align-items: center;">
                             <div>
-                                <select id="duration_hours" name="duration_hours" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <select id="duration_hours" name="duration_hours" class="bluevox-select" style="width: auto; min-width: 80px;">
                                     <option value="0">0</option>
                                     <option value="1">1</option>
                                     <option value="2" selected>2</option>
@@ -275,16 +263,16 @@
                                     <option value="5">5</option>
                                     <option value="6">6</option>
                                 </select>
-                                <label for="duration_hours" style="margin-left: 5px;">hours</label>
+                                <label for="duration_hours" style="margin-left: 5px; color: rgba(255, 255, 255, 0.7);">hours</label>
                             </div>
                             <div>
-                                <select id="duration_minutes" name="duration_minutes" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <select id="duration_minutes" name="duration_minutes" class="bluevox-select" style="width: auto; min-width: 80px;">
                                     <option value="0" selected>0</option>
                                     <option value="15">15</option>
                                     <option value="30">30</option>
                                     <option value="45">45</option>
                                 </select>
-                                <label for="duration_minutes" style="margin-left: 5px;">minutes</label>
+                                <label for="duration_minutes" style="margin-left: 5px; color: rgba(255, 255, 255, 0.7);">minutes</label>
                             </div>
                         </div>
                     </div>
@@ -292,18 +280,19 @@
                 
                 <!-- Additional Details Input -->
                 <div class="form-group llm-prompt-group">
-                    <label for="llm_prompt">Additional Details (Optional but Recommended):</label>
+                    <label for="llm_prompt" class="bluevox-form-group label">Additional Details (Optional but Recommended):</label>
                     <textarea 
                         id="llm_prompt" 
                         name="llm_prompt" 
+                        class="bluevox-textarea"
                         placeholder="Please enter rubric, grading criteria, specific sub-topics, questions you want included, expected answers, or any further expectations. The AI can create a good exam from just the topic, but additional details will result in a stronger, more tailored exam."
                     ></textarea>
                     <p class="info-text">Provide additional context such as: rubric, grading criteria, specific sub-topics, questions you want included, expected answers, or any other expectations. This is optional - the AI can create a good exam from just the topic, but more details will result in a better exam.</p>
                 </div>
                 
                 <div class="button-group">
-                    <a href="/teacher/dashboard" class="btn-secondary">Cancel</a>
-                    <button type="submit" class="btn-primary" id="generate-btn">Generate and Review</button>
+                    <a href="/teacher/dashboard" class="bluevox-btn bluevox-btn-secondary" style="text-align: center;">Cancel</a>
+                    <button type="submit" class="bluevox-btn" id="generate-btn" style="flex: 1;">Generate and Review</button>
                 </div>
             </form>
         </div>

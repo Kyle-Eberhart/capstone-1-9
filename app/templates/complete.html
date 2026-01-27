@@ -3,22 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exam Complete - AI Oral Exam Grader</title>
+    <title>Exam Complete — DePaul BlueVox</title>
+    
+    <!-- UI font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Marck+Script&display=swap"
+      rel="stylesheet"
+    />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
+    <style>
+        .final-grade-box {
+            background: linear-gradient(135deg, rgba(70, 150, 255, 0.3), rgba(35, 105, 245, 0.3));
+            border: 2px solid rgba(70, 170, 255, 0.5);
+            color: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(70, 160, 255, 0.2);
+        }
+
+        .final-grade-box h2 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .explanation-box {
+            background: rgba(2, 10, 28, 0.4);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: left;
+            border: 1px solid rgba(120, 175, 255, 0.2);
+        }
+
+        .explanation-box h3 {
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 10px;
+        }
+
+        .explanation-box p {
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+        }
+
+        .question-result {
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(70, 170, 255, 0.6);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-header h3 {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .grade-badge {
+            background: rgba(70, 150, 255, 0.3);
+            color: rgba(170, 220, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            border: 1px solid rgba(70, 150, 255, 0.4);
+        }
+
+        .result-section {
+            margin-bottom: 15px;
+        }
+
+        .result-section strong {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .result-section p {
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.6;
+            background: rgba(2, 10, 28, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 0;
+            border: 1px solid rgba(120, 175, 255, 0.1);
+        }
+
+        .actions {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-warning {
+            background: linear-gradient(180deg, rgba(251, 191, 36, 0.9), rgba(217, 119, 6, 0.9));
+            border-color: rgba(251, 191, 36, 0.6);
+        }
+
+        .btn-warning:hover {
+            filter: brightness(1.1);
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <div class="complete-card">
-            <h1>Exam Complete!</h1>
+<body class="bluevox">
+    <div class="bluevox-container">
+        <div class="bluevox-card">
+            <h1 style="text-align: center; margin-bottom: 30px; color: rgba(255, 255, 255, 0.95); font-size: 2.2em;">Exam Complete!</h1>
             
             {% if request.query_params.get("success") %}
-            <div class="success-message" style="background-color: #d4edda; color: #155724; padding: 12px 20px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+            <div class="bluevox-message bluevox-message-success">
                 {{ request.query_params.get("success") }}
             </div>
             {% endif %}
             
             {% if request.query_params.get("error") %}
-            <div class="error-message" style="background-color: #f8d7da; color: #721c24; padding: 12px 20px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+            <div class="bluevox-message bluevox-message-error">
                 {{ request.query_params.get("error") }}
             </div>
             {% endif %}
@@ -28,7 +144,7 @@
                 <h2>Final Grade: {{ "%.1f"|format(exam.final_grade * 100) }}%</h2>
                 {% else %}
                 <h2>Exam Completed</h2>
-                <p>Your exam has been submitted. Grades will be available soon.</p>
+                <p style="color: rgba(255, 255, 255, 0.8);">Your exam has been submitted. Grades will be available soon.</p>
                 {% endif %}
                 {% if exam.final_explanation %}
                 <div class="explanation-box">
@@ -38,13 +154,13 @@
                 {% endif %}
             </div>
             
-            <div class="questions-summary">
-                <h2>Question Results</h2>
+            <div class="bluevox-section">
+                <h2 class="bluevox-section-title">Question Results</h2>
                 {% for question in questions %}
                 <div class="question-result">
                     <div class="result-header">
                         <h3>Question {{ question.question_number }}</h3>
-                        <span class="grade-badge">Grade: {{ "%.1f"|format(question.grade or 0) }}%</span>
+                        <span class="grade-badge">Grade: {{ "%.1f"|format(question.grade * 100 if question.grade else 0) }}%</span>
                     </div>
                     
                     <div class="result-content">
@@ -70,16 +186,15 @@
             </div>
             
             <div class="actions">
-                <a href="/student/dashboard" class="btn btn-primary">Back to Dashboard</a>
+                <a href="/student/dashboard" class="bluevox-btn">Back to Dashboard</a>
                 {% if exam.status == "completed" and exam.final_grade is not none and exam.status != "disputed" %}
-                <a href="/api/exam/{{ exam.id }}/dispute" class="btn btn-warning" style="background-color: #ff9800; color: white; margin-left: 10px;">Dispute Grade</a>
+                <a href="/api/exam/{{ exam.id }}/dispute" class="bluevox-btn btn-warning">Dispute Grade</a>
                 {% elif exam.status == "disputed" %}
-                <span class="btn" style="background-color: #ff9800; color: white; margin-left: 10px; cursor: default;">Grade Disputed</span>
+                <span class="bluevox-btn btn-warning" style="cursor: default; opacity: 0.7;">Grade Disputed</span>
                 {% endif %}
-                <a href="/" class="btn btn-secondary">Logout</a>
+                <a href="/" class="bluevox-btn bluevox-btn-secondary">Logout</a>
             </div>
         </div>
     </div>
 </body>
 </html>
-
