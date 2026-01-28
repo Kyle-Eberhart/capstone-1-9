@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Marck+Script&family=Playfair+Display:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     
@@ -146,21 +146,43 @@
         text-align: center;
       }
 
-      .sidebar-logo img {
-        width: 100%;
-        max-width: 200px;
-        height: auto;
-        margin-bottom: 12px;
-        filter: drop-shadow(0 0 10px rgba(90, 170, 255, 0.2));
+      .sidebar-brand-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
       }
 
-      .sidebar-logo .brand-tagline {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.5);
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        font-weight: 400;
-        margin-top: 4px;
+      .sidebar-depaul-logo {
+        height: 32px;
+        width: auto;
+        filter: drop-shadow(0 0 8px rgba(90, 170, 255, 0.2));
+      }
+
+      .sidebar-divider {
+        width: 1px;
+        height: 28px;
+        background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.5), transparent);
+        opacity: 0.7;
+      }
+
+      .sidebar-bluevox-text {
+        font-family: "Marck Script", cursive;
+        font-size: 32px;
+        line-height: 1;
+        color: rgba(205, 232, 255, 0.95);
+        text-shadow:
+          0 0 8px rgba(90, 170, 255, 0.2),
+          0 0 16px rgba(30, 120, 255, 0.1);
+        user-select: none;
+      }
+
+      .sidebar-shield {
+        width: 48px;
+        height: auto;
+        margin-top: 6px;
+        opacity: 0.95;
+        filter: drop-shadow(0 0 8px rgba(90, 170, 255, 0.15));
       }
 
       .nav-menu {
@@ -595,8 +617,12 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <img src="/static/assets/depaul-bluevox-logo.png" alt="DePaul BlueVox" />
-                <div class="brand-tagline">AI Exam Platform</div>
+                <div class="sidebar-brand-row">
+                    <img class="sidebar-depaul-logo" src="/static/assets/depaul-logo.png" alt="DePaul" />
+                    <div class="sidebar-divider" aria-hidden="true"></div>
+                    <div class="sidebar-bluevox-text">BlueVox</div>
+                </div>
+                <img class="sidebar-shield" src="/static/assets/depaul-shield.png" alt="DePaul Shield" />
             </div>
             
             <nav class="nav-menu">
