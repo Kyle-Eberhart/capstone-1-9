@@ -92,12 +92,50 @@ async def student_dashboard(request: Request, db: Session = Depends(get_db)):
                 })
     
     # Get open exams available to the student (published, not terminated, template exams)
+    # Only show exams for courses the student is enrolled in
     now = datetime.now(timezone.utc)
-    open_exams_query = db.query(Exam).filter(
-        Exam.date_published.isnot(None),  # Must be published
-        Exam.status != "terminated",  # Not terminated
-        Exam.student_id.is_(None)  # Only template exams (instructor-created)
-    ).order_by(Exam.date_published.desc())
+    
+    # Build list of enrolled course keys (course_number, section, quarter_year)
+    enrolled_course_keys = []
+    if student_record:
+        # Get enrollments for this student
+        enrollments = db.query(Enrollment).filter(
+            Enrollment.student_id == student_record.id
+        ).all()
+        
+        # Get courses the student is enrolled in
+        for enrollment in enrollments:
+            course = enrollment.course
+            if course:  # Course might be deleted
+                enrolled_course_keys.append((
+                    course.course_number.upper(),
+                    course.section,
+                    course.quarter_year
+                ))
+    
+    # Query open exams - filter by enrolled courses
+    if enrolled_course_keys:
+        # Build OR conditions for enrolled courses
+        course_filters = []
+        for course_num, section, quarter in enrolled_course_keys:
+            course_filters.append(
+                and_(
+                    Exam.course_number == course_num,
+                    Exam.section == section,
+                    Exam.quarter_year == quarter
+                )
+            )
+        
+        # Query exams matching enrolled courses
+        open_exams_query = db.query(Exam).filter(
+            Exam.date_published.isnot(None),  # Must be published
+            Exam.status != "terminated",  # Not terminated
+            Exam.student_id.is_(None),  # Only template exams (instructor-created)
+            or_(*course_filters)  # Only exams for enrolled courses
+        ).order_by(Exam.date_published.desc())
+    else:
+        # No enrolled courses - return empty query
+        open_exams_query = db.query(Exam).filter(False)  # Empty result
     
     open_exams = open_exams_query.all()
     
@@ -132,24 +170,7 @@ async def student_dashboard(request: Request, db: Session = Depends(get_db)):
                     "duration_hours": exam.duration_hours,
                     "duration_minutes": exam.duration_minutes
                 })
-    else:
-        # No student record yet, show all open exams
-        for exam in open_exams:
-            available_open_exams.append({
-                "exam_id": exam.exam_id,
-                "course_number": exam.course_number,
-                "section": exam.section,
-                "exam_name": exam.exam_name,
-                "quarter_year": exam.quarter_year,
-                "instructor_name": exam.instructor_name,
-                "status": "active" if exam.date_published else "not_started",
-                "date_published": exam.date_published,
-                "date_start": exam.date_start,
-                "date_end": exam.date_end,
-                "is_timed": exam.is_timed,
-                "duration_hours": exam.duration_hours,
-                "duration_minutes": exam.duration_minutes
-            })
+    # Removed else block - no student record means no exams shown
     
     # Get previous exams (completed by student or closed/terminated)
     previous_exams = []
@@ -484,6 +505,29 @@ async def student_exam_details_page(
     
     # Get or create Student record for this user
     student_record = db.query(Student).filter(Student.username == user.email).first()
+    if not student_record:
+        student_record = Student(username=user.email)
+        db.add(student_record)
+        db.commit()
+        db.refresh(student_record)
+    
+    # Check if student is enrolled in the course for this exam
+    course = db.query(Course).filter(
+        Course.course_number == exam.course_number.upper(),
+        Course.section == exam.section,
+        Course.quarter_year == exam.quarter_year
+    ).first()
+    
+    if not course:
+        return RedirectResponse(url="/student/dashboard?error=Course not found", status_code=302)
+    
+    enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == student_record.id,
+        Enrollment.course_id == course.id
+    ).first()
+    
+    if not enrollment:
+        return RedirectResponse(url="/student/dashboard?error=You are not enrolled in this course", status_code=302)
     
     # Check if student has already started this exam
     # Look for exam with same course, section, exam_name, quarter, and student
@@ -549,6 +593,24 @@ async def student_start_exam(
         db.add(student_record)
         db.commit()
         db.refresh(student_record)
+    
+    # Check if student is enrolled in the course for this exam
+    course = db.query(Course).filter(
+        Course.course_number == exam.course_number.upper(),
+        Course.section == exam.section,
+        Course.quarter_year == exam.quarter_year
+    ).first()
+    
+    if not course:
+        return RedirectResponse(url="/student/dashboard?error=Course not found", status_code=302)
+    
+    enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == student_record.id,
+        Enrollment.course_id == course.id
+    ).first()
+    
+    if not enrollment:
+        return RedirectResponse(url=f"/student/exam/{exam_id}?error=You are not enrolled in this course", status_code=302)
     
     # Check if student has already started this exam
     # Look for exam with same course, section, exam_name, quarter, and student
