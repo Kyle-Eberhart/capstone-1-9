@@ -191,7 +191,7 @@
             {% if notifications %}
             {% for notification in notifications %}
             <div class="notification-item {% if not notification.is_read %}unread{% endif %}" 
-                 onclick="window.location.href='/api/notification/{{ notification.id }}/read?redirect=/teacher/notifications'">
+                 onclick="if (window.location.pathname === '/teacher/notifications') { window.location.href='/api/notification/{{ notification.id }}/read?redirect=/teacher/notifications'; } else { window.location.href='/api/notification/{{ notification.id }}/read?redirect=/teacher/notifications'; }">
                 <div class="notification-title">{{ notification.title }}</div>
                 <div class="notification-message">{{ notification.message }}</div>
                 <div class="notification-time">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else '' }}</div>

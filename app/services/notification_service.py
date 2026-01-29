@@ -83,3 +83,17 @@ class NotificationService:
             Notification.user_id == user_id,
             Notification.is_read == False
         ).count()
+    
+    def delete_notification(self, db: Session, notification_id: int, user_id: int) -> bool:
+        """Delete a notification."""
+        notification = db.query(Notification).filter(
+            Notification.id == notification_id,
+            Notification.user_id == user_id
+        ).first()
+        
+        if notification:
+            db.delete(notification)
+            db.commit()
+            logger.info(f"Deleted notification {notification_id} for user {user_id}")
+            return True
+        return False

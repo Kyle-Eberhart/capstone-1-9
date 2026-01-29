@@ -81,3 +81,42 @@ async def mark_all_notifications_read(
         redirect_url = "/student/dashboard"
     
     return RedirectResponse(url=f"{redirect_url}?success={count} notifications marked as read", status_code=302)
+
+
+@router.delete("/notification/{notification_id}")
+async def delete_notification(
+    request: Request,
+    notification_id: int,
+    db: Session = Depends(get_db)
+):
+    """Delete a notification."""
+    from fastapi.responses import JSONResponse
+    
+    # Get user from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "error": "Login required"}
+        )
+    
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return JSONResponse(
+            status_code=401,
+            content={"success": False, "error": "Login required"}
+        )
+    
+    notification_service = NotificationService()
+    success = notification_service.delete_notification(db, notification_id, user.id)
+    
+    if success:
+        return JSONResponse(
+            status_code=200,
+            content={"success": True, "message": "Notification deleted"}
+        )
+    else:
+        return JSONResponse(
+            status_code=404,
+            content={"success": False, "error": "Notification not found"}
+        )

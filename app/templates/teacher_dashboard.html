@@ -481,6 +481,228 @@
         padding: 30px;
       }
 
+      /* ===== Notifications Page Styles (for SPA navigation) ===== */
+      .notifications-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .notifications-container .page-title {
+        font-size: 32px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 32px;
+        letter-spacing: -0.5px;
+      }
+
+      .notifications-container .panel {
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(120, 175, 255, 0.15);
+        border-radius: 10px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+
+      .notifications-container .notification-item {
+        padding: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      .notifications-container .notification-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .notifications-container .notification-item:last-child {
+        border-bottom: none;
+      }
+
+      .notifications-container .notification-item.unread {
+        background: rgba(70, 150, 255, 0.1);
+        border-left: 3px solid rgba(70, 150, 255, 0.6);
+        padding-left: 13px;
+      }
+
+      .notifications-container .notification-title {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 6px;
+        font-size: 15px;
+      }
+
+      .notifications-container .notification-message {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        margin-bottom: 6px;
+        line-height: 1.5;
+      }
+
+      .notifications-container .notification-time {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+      }
+
+      .notifications-container .empty-state {
+        padding: 40px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+      }
+
+      /* ===== Notification Modal Styles ===== */
+      .notification-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .notification-modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+      }
+
+      .notification-modal-content {
+        position: relative;
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(120, 175, 255, 0.3);
+        border-radius: 12px;
+        padding: 0;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        z-index: 10001;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .notification-modal-header {
+        padding: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .notification-modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin: 0;
+        flex: 1;
+      }
+
+      .notification-modal-close {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 28px;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .notification-modal-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .notification-modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .notification-modal-message {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 16px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .notification-modal-time {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .notification-modal-footer {
+        padding: 20px 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .notification-modal-footer .btn-primary,
+      .notification-modal-footer .btn-secondary {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+      }
+
+      .notification-modal-footer .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .notification-modal-footer .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .notification-modal-footer .btn-delete {
+        background: rgba(220, 38, 38, 0.8);
+        border: 1px solid rgba(220, 38, 38, 0.6);
+        color: rgba(255, 255, 255, 0.95);
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .notification-modal-footer .btn-delete:hover {
+        background: rgba(220, 38, 38, 0.95);
+        border-color: rgba(220, 38, 38, 0.8);
+        transform: translateY(-1px);
+      }
+
       .course-list {
         list-style: none;
       }
@@ -732,6 +954,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="/teacher/notifications" class="nav-link">
+                            Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="/teacher/settings" class="nav-link">
                             Settings
                         </a>
@@ -766,7 +993,7 @@
                 <!-- Notifications Panel -->
                 <div class="panel">
                     <div class="panel-header">
-                        <h2 class="panel-title">
+                        <h2 class="panel-title" style="cursor: pointer;" onclick="window.location.href='/teacher/notifications'">
                             Notifications
                             {% if unread_count > 0 %}
                             <span class="notification-badge">{{ unread_count }}</span>
@@ -778,7 +1005,12 @@
                     <div class="notifications-list">
                         {% for notification in notifications[:3] %}
                         <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" 
-                             onclick="window.location.href='/api/notification/{{ notification.id }}/read?redirect=/api/teacher/dashboard'">
+                             data-notification-id="{{ notification.id }}"
+                             data-notification-title="{{ notification.title }}"
+                             data-notification-message="{{ notification.message }}"
+                             data-notification-time="{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else '' }}"
+                             data-notification-unread="{{ 'true' if not notification.is_read else 'false' }}"
+                             onclick="openNotificationModal(this)">
                             <div class="notification-title">{{ notification.title }}</div>
                             <div class="notification-message">{{ notification.message[:80] }}{% if notification.message|length > 80 %}...{% endif %}</div>
                             <div class="notification-time">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else '' }}</div>
@@ -853,6 +1085,26 @@
         </main>
     </div>
 
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="notification-modal" style="display: none;">
+        <div class="notification-modal-overlay" id="notification-modal-overlay"></div>
+        <div class="notification-modal-content">
+            <div class="notification-modal-header">
+                <h2 id="modal-notification-title" class="notification-modal-title"></h2>
+                <button class="notification-modal-close" id="notification-modal-close-btn">&times;</button>
+            </div>
+            <div class="notification-modal-body">
+                <div id="modal-notification-message" class="notification-modal-message"></div>
+                <div id="modal-notification-time" class="notification-modal-time"></div>
+            </div>
+            <div class="notification-modal-footer">
+                <button id="modal-delete-btn" class="btn-delete">Delete</button>
+                <button id="modal-mark-read-btn" class="btn-primary" style="display: none;">Mark as Read</button>
+                <button id="notification-modal-close-btn-footer" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // SPA Navigation Handler
         (function() {
@@ -919,18 +1171,29 @@
                 if (!main) {
                     // For standalone pages like manage_students that have their own container
                     // Extract just the container content, not the whole page structure
-                    const container = doc.querySelector('.manage-container') || 
+                    // Check for specific containers first (order matters - most specific first)
+                    const container = doc.querySelector('.notifications-container') ||
+                                     doc.querySelector('.manage-container') || 
                                      doc.querySelector('.exams-container') ||
                                      doc.querySelector('.analytics-container') ||
                                      doc.querySelector('.settings-container') ||
-                                     doc.querySelector('.notifications-container') ||
                                      doc.querySelector('.review-container') ||
                                      doc.querySelector('.details-container') ||
                                      doc.querySelector('.form-container') ||
                                      doc.querySelector('.container');
                     if (container) {
                         // Return the container's innerHTML - this is the page content
-                        return container.innerHTML;
+                        // Also include any style tags that might be needed
+                        const styles = doc.querySelectorAll('style');
+                        let stylesHTML = '';
+                        styles.forEach(style => {
+                            stylesHTML += style.outerHTML;
+                        });
+                        const content = container.innerHTML;
+                        if (!content || content.trim().length === 0) {
+                            console.warn('Container found but content is empty:', container.className);
+                        }
+                        return stylesHTML + content;
                     }
                 }
                 
@@ -1020,6 +1283,13 @@
                         
                         // Only replace the main content, never the sidebar
                         if (mainContent && mainContent.parentNode === dashboardLayout) {
+                            // Check if content was extracted successfully
+                            if (!content || content.trim().length === 0) {
+                                console.error('No content extracted, reloading page');
+                                window.location.href = url;
+                                return;
+                            }
+                            
                             mainContent.innerHTML = content;
                             updateActiveNav(url);
                             
@@ -1050,12 +1320,233 @@
                 }
             }
             
+            // Notification Modal Functions
+            let currentNotificationId = null;
+            let currentNotificationElement = null;
+            
+            function openNotificationModal(element) {
+                currentNotificationElement = element;
+                currentNotificationId = parseInt(element.getAttribute('data-notification-id'));
+                const title = element.getAttribute('data-notification-title');
+                const message = element.getAttribute('data-notification-message');
+                const time = element.getAttribute('data-notification-time');
+                const isUnread = element.getAttribute('data-notification-unread') === 'true';
+                
+                document.getElementById('modal-notification-title').textContent = title;
+                document.getElementById('modal-notification-message').textContent = message;
+                document.getElementById('modal-notification-time').textContent = 'Received: ' + time;
+                
+                const markReadBtn = document.getElementById('modal-mark-read-btn');
+                if (isUnread) {
+                    markReadBtn.style.display = 'inline-block';
+                } else {
+                    markReadBtn.style.display = 'none';
+                }
+                
+                const modal = document.getElementById('notification-modal');
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeNotificationModal() {
+                const modal = document.getElementById('notification-modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+                document.body.style.overflow = '';
+                currentNotificationId = null;
+                currentNotificationElement = null;
+            }
+            
+            // Set up modal event listeners
+            (function setupModalListeners() {
+                const modal = document.getElementById('notification-modal');
+                const overlay = document.getElementById('notification-modal-overlay');
+                const closeBtn = document.getElementById('notification-modal-close-btn');
+                const closeBtnFooter = document.getElementById('notification-modal-close-btn-footer');
+                const modalContent = document.querySelector('.notification-modal-content');
+                
+                if (overlay) {
+                    overlay.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        closeNotificationModal();
+                    });
+                }
+                
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        closeNotificationModal();
+                    });
+                }
+                
+                if (closeBtnFooter) {
+                    closeBtnFooter.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        closeNotificationModal();
+                    });
+                }
+                
+                if (modalContent) {
+                    modalContent.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                }
+                
+                if (modal) {
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            closeNotificationModal();
+                        }
+                    });
+                }
+            })();
+            
+            async function markNotificationAsRead() {
+                if (!currentNotificationId) return;
+                
+                try {
+                    const response = await fetch(`/api/notification/${currentNotificationId}/read?redirect=/teacher/dashboard`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    
+                    if (response.ok || response.redirected) {
+                        // Update the notification item in the list
+                        if (currentNotificationElement) {
+                            currentNotificationElement.classList.remove('unread');
+                            currentNotificationElement.classList.add('read');
+                            currentNotificationElement.setAttribute('data-notification-unread', 'false');
+                        }
+                        
+                        // Hide the mark as read button
+                        document.getElementById('modal-mark-read-btn').style.display = 'none';
+                        
+                        // Update unread count badge if it exists
+                        const badge = document.querySelector('.notification-badge');
+                        if (badge) {
+                            const currentCount = parseInt(badge.textContent) || 0;
+                            if (currentCount > 1) {
+                                badge.textContent = currentCount - 1;
+                            } else {
+                                badge.remove();
+                            }
+                        }
+                        
+                        // Reload the page to refresh notification count and list
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    }
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                    alert('Error marking notification as read. Please try again.');
+                }
+            }
+            
+            async function deleteNotification() {
+                if (!currentNotificationId) return;
+                
+                if (!confirm('Are you sure you want to delete this notification?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/notification/${currentNotificationId}`, {
+                        method: 'DELETE',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Remove the notification item from the list
+                        if (currentNotificationElement) {
+                            currentNotificationElement.style.transition = 'opacity 0.3s ease';
+                            currentNotificationElement.style.opacity = '0';
+                            setTimeout(() => {
+                                currentNotificationElement.remove();
+                            }, 300);
+                        }
+                        
+                        // Update unread count badge if it exists
+                        const badge = document.querySelector('.notification-badge');
+                        if (badge && currentNotificationElement && currentNotificationElement.classList.contains('unread')) {
+                            const currentCount = parseInt(badge.textContent) || 0;
+                            if (currentCount > 1) {
+                                badge.textContent = currentCount - 1;
+                            } else {
+                                badge.remove();
+                            }
+                        }
+                        
+                        // Close the modal
+                        closeNotificationModal();
+                        
+                        // Reload the page to refresh the notification list
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    } else {
+                        alert('Error deleting notification: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error deleting notification:', error);
+                    alert('Error deleting notification. Please try again.');
+                }
+            }
+            
+            // Set up delete button listener
+            (function setupDeleteButton() {
+                const deleteBtn = document.getElementById('modal-delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        deleteNotification();
+                    });
+                }
+            })();
+            
+            // Set up mark as read button listener
+            (function setupMarkReadButton() {
+                const markReadBtn = document.getElementById('modal-mark-read-btn');
+                if (markReadBtn) {
+                    markReadBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        markNotificationAsRead();
+                    });
+                }
+            })();
+            
+            // Close modal on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('notification-modal');
+                    if (modal && modal.style.display === 'flex') {
+                        closeNotificationModal(e);
+                    }
+                }
+            });
+            
             // Initialize page-specific content
             function initializePageContent() {
                 // Re-attach event listeners for any dynamic content
                 const newLinks = mainContent.querySelectorAll('a[href^="/teacher/"]');
                 newLinks.forEach(link => {
                     link.addEventListener('click', handleLinkClick);
+                });
+                
+                // Re-initialize notification items for modal
+                const notificationItems = mainContent.querySelectorAll('.notification-item[data-notification-id]');
+                notificationItems.forEach(item => {
+                    // Remove any existing click handlers and add the modal handler
+                    item.onclick = function(e) {
+                        e.stopPropagation();
+                        openNotificationModal(this);
+                    };
                 });
                 
                 // Re-initialize forms if needed
@@ -1183,6 +1674,17 @@
             
             // Initialize on page load
             initializePageContent();
+            
+            // Also initialize notification items on initial page load
+            document.addEventListener('DOMContentLoaded', function() {
+                const notificationItems = document.querySelectorAll('.notification-item[data-notification-id]');
+                notificationItems.forEach(item => {
+                    item.onclick = function(e) {
+                        e.stopPropagation();
+                        openNotificationModal(this);
+                    };
+                });
+            });
         })();
     </script>
 </body>
