@@ -1,5 +1,6 @@
 """Main FastAPI application."""
 import logging
+from app import db
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -16,6 +17,9 @@ from app.db.models import User, Course, Exam, Student, Enrollment, Question, Not
 from app.db.repo import QuestionRepository, StudentRepository
 from app.core.grading.generator import QuestionGenerator
 from app.logging_config import setup_logging
+from fastapi.templating import Jinja2Templates
+
+templates = Jinja2Templates(directory="app/templates")
 
 logger = logging.getLogger(__name__)
 
@@ -519,6 +523,9 @@ async def student_start_exam(
     db: Session = Depends(get_db)
 ):
     """Start an exam for a student."""
+    form_data = await request.form()
+    provided_passcode = (form_data.get("exam_passcode") or "").strip()
+
     # Get email from cookie
     email = request.cookies.get("username")
     if not email:
@@ -623,6 +630,9 @@ async def student_start_exam(
         # Continue existing exam - redirect to exam taking page
         return RedirectResponse(url=f"/api/exam/{student_exam.id}", status_code=302)
     else:
+        if exam.exam_passcode and provided_passcode != exam.exam_passcode:
+            return RedirectResponse(url=f"/student/exam/{exam_id}?error=Incorrect passcode", status_code=302)
+
         # Create new exam session for this student
         # Generate unique exam_id for this student's exam session
         new_exam_id = f"{exam.exam_id}-student-{student_record.id}-{int(now.timestamp())}"
@@ -1017,8 +1027,31 @@ async def create_exam_page(request: Request, db: Session = Depends(get_db)):
     if not user or user.role != "teacher":
         return RedirectResponse(url="/?error=login_required", status_code=302)
     
+    # Get all courses for this instructor
+    all_courses = (
+        db.query(Course)
+        .filter(Course.instructor_id == user.id)
+        .all()
+    )
+
     # Get courses for this instructor and group by course_number
-    all_courses = db.query(Course).filter(Course.instructor_id == user.id).all()
+    courses_for_js = [
+    {
+        "course_number": c.course_number,
+        "section": c.section,
+        "quarter_year": c.quarter_year
+    }
+    for c in all_courses
+]
+    # DEBUG PRINT — make sure the template sees proper dicts
+    print("courses_for_js:", courses_for_js)
+
+    # Debug
+    print("all_courses:", all_courses)
+
+    for course in all_courses:
+        print(course.course_number, course.section, course.quarter_year)
+
     
     # Get unique course numbers (to avoid duplicates in dropdown)
     unique_course_numbers = sorted(set(course.course_number for course in all_courses))
@@ -1032,13 +1065,18 @@ async def create_exam_page(request: Request, db: Session = Depends(get_db)):
     
     error = request.query_params.get("error", "")
     
-    return render_template("create_exam.html", {
-        "request": request,
-        "all_courses": all_courses,  # Full list for JavaScript
-        "unique_course_numbers": unique_course_numbers,  # For dropdown
-        "courses_by_number": courses_by_number,  # For grouping
+    return templates.TemplateResponse(
+    "create_exam.html",
+    {
+        "request": request,  # required
+        "all_courses": courses_for_js,
+        "unique_course_numbers": unique_course_numbers,
         "error": error
-    })
+    }
+)
+
+
+
 
 @app.post("/teacher/create-exam")
 async def create_exam(
@@ -1066,8 +1104,19 @@ async def create_exam(
         exam_name = form_data.get("exam_name", "").strip()
         exam_topic = form_data.get("exam_topic", "").strip()
         num_questions_str = form_data.get("num_questions", "").strip()
+        exam_passcode = form_data.get("exam_passcode", "").strip()
         llm_prompt = form_data.get("llm_prompt", "").strip()  # Additional details (optional)
         
+        # --- Passcode validation ---
+        if not exam_passcode:
+            return RedirectResponse(
+                url="/teacher/create-exam?error=Exam passcode is required", status_code=302
+            )
+        if not exam_passcode.isdigit() or len(exam_passcode) != 4:
+            return RedirectResponse(
+                url="/teacher/create-exam?error=Exam passcode must be exactly 4 digits", status_code=302
+        )
+
         # Extract timed exam fields
         is_timed = form_data.get("is_timed", "no") == "yes"
         duration_hours = None
@@ -1235,7 +1284,8 @@ async def create_exam(
                 duration_hours=duration_hours if is_timed else None,
                 duration_minutes=duration_minutes if is_timed else None,
                 # student_id is None for teacher-created exam templates (students will be assigned when they start)
-                student_id=None
+                student_id=None,
+                exam_passcode=exam_passcode
             )
             
             try:

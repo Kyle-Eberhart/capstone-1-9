@@ -16,6 +16,7 @@
     
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="/static/bluevox.css">
+    <script src="/static/create_exam.js" defer></script>
     <style>
       :root {
         --page-text: rgba(255, 255, 255, 0.9);
@@ -426,6 +427,10 @@
                 {{ error }}
             </div>
             {% endif %}
+
+            <script id="all-courses-data" type="application/json">
+                {{ all_courses | tojson }}
+            </script>
             
             <form method="post" action="/teacher/create-exam" id="create-exam-form">
                 <!-- Course Selection -->
@@ -434,7 +439,8 @@
                     <div class="course-select-group">
                         <div>
                             <label for="course_number" style="margin-bottom: 8px; display: block;">Course Number</label>
-                            <select id="course_number" name="course_number" required onchange="updateSections()">
+                            <select id="course_number" name="course_number" required>
+
                                 <option value="">Select Course</option>
                                 {% for course_num in unique_course_numbers %}
                                 <option value="{{ course_num }}">{{ course_num }}</option>
@@ -516,6 +522,7 @@
                             <label for="timed_yes">Yes</label>
                         </div>
                     </div>
+
                     <div id="duration-fields" class="duration-fields">
                         <label style="margin-bottom: 8px; display: block;">Exam Duration</label>
                         <div class="duration-controls">
@@ -542,6 +549,24 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="form-group" style="margin-top: 16px;">
+                      <label for="exam_passcode">
+                        Exam Pass Code
+                      </label>
+                      <input
+                        type="text"
+                        id="exam_passcode"
+                        name="exam_passcode"
+                        inputmode="numeric"
+                        pattern="[0-9]{4}"
+                        maxlength="4"
+                        placeholder="Enter a 4 digit passcode e.g. 4012"
+                        required
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4);"
+                    >
+                    <p class="info-text">Must be exactly 4 digits (numbers only)</p>
+                </div>
                 </div>
                 
                 <!-- Additional Details Input -->
@@ -564,180 +589,20 @@
         </div>
     </div>
 
-    <script>
-        // Store courses data for JavaScript
-        const coursesData = [
-            {% for course in all_courses %}
-            {
-                course_number: "{{ course.course_number }}",
-                section: "{{ course.section }}",
-                quarter_year: "{{ course.quarter_year }}"
-            }{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ];
+ 
 
-        function updateSections() {
-            const courseSelect = document.getElementById('course_number');
-            const sectionsContainer = document.getElementById('sections-container');
-            const quarterSelect = document.getElementById('quarter_year');
-            
-            const selectedCourse = courseSelect.value;
-            
-            // Clear sections and quarters
-            sectionsContainer.innerHTML = '';
-            quarterSelect.innerHTML = '<option value="">Select Quarter/Year</option>';
-            
-            if (!selectedCourse) return;
-            
-            // Get unique sections and quarter/years for this course
-            const sectionsByQuarter = {};
-            const quarterYears = new Set();
-            
-            coursesData.forEach(course => {
-                if (course.course_number === selectedCourse) {
-                    quarterYears.add(course.quarter_year);
-                    // Group sections by quarter/year
-                    if (!sectionsByQuarter[course.quarter_year]) {
-                        sectionsByQuarter[course.quarter_year] = new Set();
-                    }
-                    sectionsByQuarter[course.quarter_year].add(course.section);
-                }
-            });
-            
-            // Create checkboxes for each section
-            Object.keys(sectionsByQuarter).sort().forEach(quarter => {
-                Array.from(sectionsByQuarter[quarter]).sort().forEach(section => {
-                    const checkboxDiv = document.createElement('div');
-                    checkboxDiv.className = 'section-checkbox';
-                    checkboxDiv.innerHTML = `
-                        <input type="checkbox" id="section_${section}_${quarter}" name="sections[]" value="${section}" data-quarter="${quarter}">
-                        <label for="section_${section}_${quarter}">Section ${section}</label>
-                    `;
-                    sectionsContainer.appendChild(checkboxDiv);
-                });
-            });
-            
-            // Populate quarter/years dropdown
-            Array.from(quarterYears).sort().forEach(qy => {
-                const option = document.createElement('option');
-                option.value = qy;
-                option.textContent = qy;
-                quarterSelect.appendChild(option);
-            });
-            
-            // Auto-select quarter/year if only one option
-            if (quarterYears.size === 1) {
-                quarterSelect.value = Array.from(quarterYears)[0];
-            }
-            
-            // Update quarter when section checkbox changes (ensure consistency)
-            // Track selected quarter to ensure all sections are from the same quarter
-            let selectedQuarter = null;
-            document.querySelectorAll('input[name="sections[]"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const quarter = this.getAttribute('data-quarter');
-                    
-                    if (this.checked) {
-                        // If no quarter selected yet, set it
-                        if (!selectedQuarter) {
-                            selectedQuarter = quarter;
-                            quarterSelect.value = quarter;
-                            // Disable checkboxes from other quarters
-                            document.querySelectorAll('input[name="sections[]"]').forEach(cb => {
-                                if (cb.getAttribute('data-quarter') !== quarter) {
-                                    cb.disabled = true;
-                                    cb.parentElement.style.opacity = '0.5';
-                                }
-                            });
-                        } else if (quarter !== selectedQuarter) {
-                            // Trying to select section from different quarter - uncheck it
-                            this.checked = false;
-                            alert(`Please select sections from the same quarter/year (${selectedQuarter}).`);
-                        }
-                    } else {
-                        // Unchecked - check if any other sections are still selected
-                        const checkedBoxes = document.querySelectorAll('input[name="sections[]"]:checked');
-                        if (checkedBoxes.length === 0) {
-                            // No sections selected, reset everything
-                            selectedQuarter = null;
-                            quarterSelect.value = '';
-                            document.querySelectorAll('input[name="sections[]"]').forEach(cb => {
-                                cb.disabled = false;
-                                cb.parentElement.style.opacity = '1';
-                            });
-                        }
-                    }
-                });
-            });
-        }
 
-        // Update sections when course changes
-        document.getElementById('course_number').addEventListener('change', updateSections);
-        
-        // Toggle duration fields based on timed selection
-        function toggleDurationFields() {
-            const isTimedRadio = document.querySelector('input[name="is_timed"]:checked');
-            if (!isTimedRadio) return;
-            
-            const isTimed = isTimedRadio.value === 'yes';
-            const durationFields = document.getElementById('duration-fields');
-            if (durationFields) {
-                if (isTimed) {
-                    durationFields.classList.add('active');
-                } else {
-                    durationFields.classList.remove('active');
-                }
-                
-                // Make duration required if timed
-                const hoursSelect = document.getElementById('duration_hours');
-                const minutesSelect = document.getElementById('duration_minutes');
-                if (hoursSelect) hoursSelect.required = isTimed;
-                if (minutesSelect) minutesSelect.required = isTimed;
-            }
-        }
-        
-        // Make function globally accessible
-        window.toggleDurationFields = toggleDurationFields;
-        
-        // Initialize duration fields visibility on page load
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', toggleDurationFields);
-        } else {
-            // DOM already loaded
-            toggleDurationFields();
-        }
-        
-        // Validate at least one section is selected on form submit
-        document.getElementById('create-exam-form').addEventListener('submit', function(e) {
-            console.log('Form submit event triggered');
-            const checkedSections = document.querySelectorAll('input[name="sections[]"]:checked');
-            console.log('Checked sections:', checkedSections.length);
-            
-            if (checkedSections.length === 0) {
-                e.preventDefault();
-                alert('Please select at least one section.');
-                return false;
-            }
-            
-            // Validate duration if timed
-            const isTimed = document.querySelector('input[name="is_timed"]:checked').value === 'yes';
-            if (isTimed) {
-                const hours = parseInt(document.getElementById('duration_hours').value) || 0;
-                const minutes = parseInt(document.getElementById('duration_minutes').value) || 0;
-                if (hours === 0 && minutes === 0) {
-                    e.preventDefault();
-                    alert('Please select a duration for the timed exam.');
-                    return false;
-                }
-            }
-            
-            // Log form data being submitted
-            const formData = new FormData(this);
-            console.log('Form data:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`  ${key}: ${value}`);
-            }
-        });
-    </script>
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 </html>

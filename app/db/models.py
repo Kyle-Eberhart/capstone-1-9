@@ -47,6 +47,7 @@ class Exam(Base):
     quarter_year = Column(String(20), nullable=False)  # e.g., "Spring26"
     instructor_name = Column(String(200), nullable=True)  # Instructor's full name
     instructor_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)  # FK to instructor
+    exam_passcode = Column(String(4), nullable=True)
     
     # Date/time fields
     date_start = Column(DateTime(timezone=True), nullable=True)  # Exam start date/time
