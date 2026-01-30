@@ -28,7 +28,8 @@ def migrate_exams_table():
             ("date_start", "DATETIME"),
             ("date_end", "DATETIME"),
             ("date_published", "DATETIME"),
-            ("date_end_availability", "DATETIME")
+            ("date_end_availability", "DATETIME"),
+            ("exam_passcode", "VARCHAR(4)")
         ]
         
         # Check which columns already exist

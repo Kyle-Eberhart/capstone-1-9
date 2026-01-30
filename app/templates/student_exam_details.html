@@ -141,6 +141,23 @@
                 </div>
             {% endif %}
             <form method="post" action="/student/exam/{{ exam.exam_id }}/start" style="margin-top: 20px;">
+                {% if not student_exam %}
+                <div class="form-group" style="max-width: 360px; margin: 0 auto 18px;">
+                    <label for="exam_passcode">Exam Passcode</label>
+                    <input
+                        type="text"
+                        id="exam_passcode"
+                        name="exam_passcode"
+                        inputmode="numeric"
+                        pattern="[0-9]{4}"
+                        maxlength="4"
+                        placeholder="Enter the 4 digit passcode"
+                        required
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4);"
+                    >
+                    <p class="info-text" style="margin-top: 6px;">Ask your instructor for the exam passcode.</p>
+                </div>
+                {% endif %}
                 <button type="submit" class="bluevox-btn">
                     {% if student_exam and student_exam.status != 'completed' %}Continue Exam{% else %}Start Exam{% endif %}
                 </button>
